@@ -3,17 +3,12 @@ description: "코치가 팀의 최종 프로젝트에 대한 피드백을 제공
 title: "[최종 피드백] 팀N"
 labels: ["피드백"]
 body:
-  - type: dropdown
+  - type: input
     id: team
     attributes:
       label: "팀"
-      description: "피드백 대상 팀을 선택하세요."
-      options:
-        - Team 1
-        - Team 2
-        - Team 3
-        - Team 4
-        - Team 5
+      description: "피드백 대상 팀을 입력하세요."
+      placeholder: "예: team1-newscatcher"
     validations:
       required: true
   - type: input
