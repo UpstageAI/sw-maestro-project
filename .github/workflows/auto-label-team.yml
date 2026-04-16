@@ -24,35 +24,32 @@ jobs:
               labelsToAdd.push({ name: teamLabel, color: '1D76DB', description: `팀 ${teamMatch[1]}` });
             }
 
-            // 코치별 고유 색상 팔레트 (12명)
-            const coachColors = [
-              '6F42C1', // 보라
-              '0E8A16', // 초록
-              'D93F0B', // 주황
-              '1D76DB', // 파랑 (진)
-              'E4E669', // 노랑
-              'C2185B', // 분홍
-              '0D47A1', // 남색
-              '00897B', // 청록
-              '8D6E63', // 갈색
-              'F57C00', // 오렌지
-              '5C6BC0', // 인디고
-              '43A047', // 연두
-            ];
+            // 코치별 고유 색상 매핑
+            const coachColorMap = {
+              '강천성 코치': 'D93F0B', // 주황
+              '고지형 코치': 'C2185B', // 분홍
+              '권용훈 코치': '0D47A1', // 남색
+              '박현병 코치': '00897B', // 청록
+              '윤형근 코치': '8D6E63', // 갈색
+              '이동빈 코치': 'F57C00', // 오렌지
+              '이원빈 코치': '5C6BC0', // 인디고
+              '이유진 코치': '6F42C1', // 보라
+              '전상민 코치': 'E4E669', // 노랑
+              '최성욱 코치': '43A047', // 연두
+              '최홍준 코치': 'B60205', // 빨강
+              '황태백 코치': '006B75', // 틸
+              '최선웅 코치': 'FCA326', // 황금
+              '공정필 코치': '1AA8E8', // 하늘
+              '최윤주 코치': 'D876E3', // 라벤더
+            };
 
             // 코치 이름 추출 ("### 코치" 섹션 아래 텍스트)
             const coachMatch = body.match(/###\s*코치\s*\n\s*(.+)/);
             if (coachMatch) {
               const coachName = coachMatch[1].trim();
               if (coachName) {
-                // 코치 이름으로 해시 생성하여 일관된 색상 배정
-                let hash = 0;
-                for (let i = 0; i < coachName.length; i++) {
-                  hash = ((hash << 5) - hash) + coachName.charCodeAt(i);
-                  hash = hash & hash;
-                }
-                const colorIndex = Math.abs(hash) % coachColors.length;
-                labelsToAdd.push({ name: coachName, color: coachColors[colorIndex], description: `${coachName} 피드백` });
+                const color = coachColorMap[coachName] || 'BFDADC';
+                labelsToAdd.push({ name: coachName, color, description: `${coachName} 피드백` });
               }
             }
 
