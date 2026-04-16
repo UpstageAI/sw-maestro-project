@@ -1,6 +1,6 @@
-name: "최종 프로젝트 피드백"
-description: "코치가 팀의 최종 프로젝트에 대한 피드백을 제공합니다."
-title: "[최종 피드백] 팀N"
+name: "제출물 피드백"
+description: "코치가 팀의 제출물에 대한 피드백을 제공합니다."
+title: "[제출물 피드백] 팀N"
 labels: ["피드백"]
 body:
   - type: input
