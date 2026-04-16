@@ -38,33 +38,39 @@ jobs:
               return;
             }
 
-            // 라벨이 없으면 생성
+            // 라벨별로 개별 처리 (하나가 실패해도 나머지는 계속 진행)
             for (const label of labelsToAdd) {
               try {
-                await github.rest.issues.getLabel({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  name: label.name,
-                });
-              } catch (e) {
-                if (e.status === 404) {
-                  await github.rest.issues.createLabel({
+                // 라벨 존재 여부 확인
+                try {
+                  await github.rest.issues.getLabel({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     name: label.name,
-                    color: label.color,
-                    description: label.description,
                   });
+                  console.log(`라벨 "${label.name}" 이미 존재합니다.`);
+                } catch (e) {
+                  if (e.status === 404) {
+                    await github.rest.issues.createLabel({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      name: label.name,
+                      color: label.color,
+                      description: label.description,
+                    });
+                    console.log(`라벨 "${label.name}" 생성 완료.`);
+                  }
                 }
+
+                // 이슈에 라벨 추가
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  labels: [label.name],
+                });
+                console.log(`라벨 "${label.name}" 부여 완료.`);
+              } catch (e) {
+                console.log(`라벨 "${label.name}" 처리 실패: ${e.message}`);
               }
             }
-
-            // 이슈에 라벨 추가
-            await github.rest.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              labels: labelsToAdd.map(l => l.name),
-            });
-
-            console.log(`라벨 부여 완료: ${labelsToAdd.map(l => l.name).join(', ')}`);
