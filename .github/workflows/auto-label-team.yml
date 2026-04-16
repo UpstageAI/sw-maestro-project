@@ -1,0 +1,56 @@
+name: 팀 라벨 자동 부여
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  add-team-label:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: 이슈 본문에서 팀 번호 추출 후 라벨 부여
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.issue.body || '';
+
+            // "팀" 필드에서 team{번호} 패턴 추출
+            const match = body.match(/team(\d+)/i);
+            if (!match) {
+              console.log('팀 번호를 찾을 수 없습니다.');
+              return;
+            }
+
+            const teamNumber = match[1];
+            const labelName = `Team ${teamNumber}`;
+
+            // 라벨이 없으면 생성
+            try {
+              await github.rest.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: labelName,
+              });
+            } catch (e) {
+              if (e.status === 404) {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: labelName,
+                  color: '1D76DB',
+                  description: `팀 ${teamNumber}`,
+                });
+              }
+            }
+
+            // 이슈에 라벨 추가
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: [labelName],
+            });
+
+            console.log(`"${labelName}" 라벨을 부여했습니다.`);
