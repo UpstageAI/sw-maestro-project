@@ -25,6 +25,11 @@
 | OrderStatusResponse | 주문 상태 조회 응답 |
 | CancelOrderResponse | 주문 취소 응답 |
 | ErrorResponse | 공통 오류 응답 |
+| AgentRunState | AI 오케스트레이터 내부 상태 객체 |
+| GateDecision | AI의 허용/차단/보류 판단 객체 |
+| VerificationResult | 단계별 검증 결과 객체 |
+| AgentDecisionTrace | Agent 단위 판단 근거와 최종 액션 객체 |
+| RunDecisionTrace | 전체 run 기준 판단 요약 객체 |
 
 ## 2. 주요 데이터 객체
 
@@ -152,6 +157,89 @@
   "detail": "timestamp 또는 signature를 확인하세요.",
   "request_id": "req_001",
   "timestamp": "2026-05-04T09:02:00+09:00"
+}
+```
+
+### 2.9 AgentRunState
+
+```json
+{
+  "run_id": "airun_001",
+  "lifecycle_status": "RISK_REVIEW",
+  "request_type": "PLACE_ORDER",
+  "final_action": "HOLD"
+}
+```
+
+### 2.10 GateDecision
+
+```json
+{
+  "decision": "REJECT",
+  "reason_codes": ["INSUFFICIENT_BALANCE"],
+  "stage": "risk_gate"
+}
+```
+
+### 2.11 VerificationResult
+
+```json
+{
+  "name": "min_notional_check",
+  "result": "pass",
+  "evidence_refs": ["exchange_rules.MIN_NOTIONAL", "normalized_order_intent.quoteOrderQty"]
+}
+```
+
+### 2.12 AgentDecisionTrace
+
+```json
+{
+  "reason_codes": ["LIMIT_PRICE_REQUIRED"],
+  "evidence_refs": ["normalized_order_intent.type"],
+  "final_action": "NO_ORDER",
+  "notes": "지정가 주문 필수 필드 누락"
+}
+```
+
+### 2.13 RunDecisionTrace
+
+```json
+{
+  "run_id": "airun_001",
+  "final_action": "BE_REJECTED",
+  "be_override": true,
+  "gate_decision": "PASS",
+  "notes": "AI gate 통과 후 BE 재검증에서 차단"
+}
+```
+
+### 2.14 Internal AI Report Payload
+
+```json
+{
+  "run_id": "airun_001",
+  "gate_decision": "PASS",
+  "final_action": "REPORT_READY",
+  "decision_trace": {
+    "policy": {
+      "reason_codes": ["ORDER_INTENT_NORMALIZED"],
+      "final_action": "READY_FOR_BE"
+    },
+    "risk": {
+      "reason_codes": ["ALL_CHECKS_PASSED"],
+      "final_action": "READY_FOR_BE"
+    },
+    "execution": {
+      "reason_codes": ["ORDER_RESPONSE_VERIFIED"],
+      "final_action": "REPORT_READY"
+    },
+    "run_summary": {
+      "final_action": "REPORT_READY",
+      "be_override": false
+    }
+  },
+  "user_summary": "주문 테스트 요청이 정책과 거래소 규칙을 충족해 Backend 검증 후 제출되었습니다."
 }
 ```
 
@@ -376,6 +464,8 @@
 | `stream_events` | `event_id`, `stream_name`, `event_json`, `created_at` |
 | `reports` | `report_id`, `report_json`, `created_at` |
 
+`reports.report_json`에는 사용자용 요약뿐 아니라 `decision_trace.policy`, `decision_trace.risk`, `decision_trace.execution`, `decision_trace.run_summary` 같은 구조화 trace를 함께 저장할 수 있다. 다만 API Key, Secret, signature, production host 문자열은 저장 대상이 아니다.
+
 ## 7. Mermaid ERD
 
 ```mermaid
@@ -437,9 +527,12 @@ erDiagram
 - `BINANCE_TESTNET_*`가 아닌 변수명을 사용하지 않는다.
 - WebSocket stream symbol은 소문자여야 한다.
 - 많은 Binance 숫자 응답 값은 문자열이라는 점을 유지한다.
+- AI 내부 trace에는 비밀키, signature, raw auth header를 저장하지 않는다.
 
 ## 9. 확정 구현 기준
 
 - REST 예시는 모두 Testnet 기준만 사용한다.
 - WebSocket 예시는 stream endpoint 기준만 사용한다.
 - 주문 응답 예시는 Spot 현물 주문 결과만 사용한다.
+- 내부 AI 객체는 공개 REST 계약과 분리되며, 판단 trace와 gate 결과를 표현하는 용도로만 사용한다.
+- `BE_REJECTED`는 BE 재검증 단계에서만 생성되는 상태다.

@@ -26,10 +26,12 @@ Coin Agent는 다음 다섯 계층으로 구성된다.
 
 - FE는 입력과 시각화에 집중한다.
 - BE는 Binance Spot Testnet REST/WebSocket 연동과 시그니처 처리, 주문 테스트 흐름을 담당한다.
-- AI는 요청 해석, 리스크 게이트, 결과 설명을 담당한다.
+- AI는 상태 기반 요청 해석, 리스크 게이트, 결과 설명을 담당한다.
 - 실거래는 다루지 않는다.
 - API 호출은 모두 Testnet 환경에서만 수행한다.
 - API Key/Secret은 서버 환경 변수에만 저장한다.
+- AI의 `PASS` 판단은 실행 허가가 아니라 BE 재검증 전 단계 결과다.
+- 주문 테스트 흐름은 하나의 AI run 상태를 resume하며 진행하고, 독립된 두 번의 프롬프트 호출 체인으로 구현하지 않는다.
 
 ## 2. 시스템 관계도
 
@@ -59,7 +61,11 @@ flowchart TB
     AIGW --> ORCH[LangGraph Orchestrator]
     ORCH --> P[Policy/Planning Agent]
     ORCH --> R[Market/Risk Agent]
-    ORCH --> E[Execution/Report Agent]
+    R --> G{Risk Gate}
+    G -->|Pass| ORDER
+    G -->|Reject/Hold| E[Execution/Report Agent]
+    ORDER --> E[Execution/Report Agent]
+    E --> LOG
     ACCOUNT --> BREST[Binance Testnet REST]
     MARKET --> BREST
     ORDER --> BREST
@@ -74,8 +80,8 @@ flowchart TB
 | 계층 | 책임 | 하지 않는 일 |
 |---|---|---|
 | FE | 환경 변수 설정 상태 확인, 잔고/시세/주문 화면, 상태 시각화 | Binance 직접 호출, 시그니처 생성, API Key 원문 처리 |
-| BE | REST/WebSocket 연동, 시그니처 생성, 주문 요청, 상태 조회, 취소 | 브라우저 렌더링, 실거래 전송 |
-| AI | 요청 해석, 리스크 게이트, 결과 설명 | Binance 직접 서명 요청, 실거래 전략 운용 |
+| BE | REST/WebSocket 연동, 시그니처 생성, 주문 요청, 상태 조회, 취소, AI 통과 요청 재검증 | 브라우저 렌더링, 실거래 전송 |
+| AI | 요청 해석, 상태 전이 관리, 리스크 게이트, 결과 설명 | Binance 직접 서명 요청, 실거래 전략 운용, BE 검증 우회 |
 | DB | 환경 설정, 요청 로그, 주문 로그, 리포트 저장 | 시장 데이터의 영구 원본 저장 |
 | Binance Spot Testnet | 가상 자금 기반 현물 API/WS 제공 | 내부 정책 판단 |
 
@@ -104,11 +110,14 @@ sequenceDiagram
     B-->>F: 상태 카드 반환
     U->>F: 주문 테스트 요청
     F->>B: order 요청
-    B->>A: 리스크 체크
-    A-->>B: 허용/보류 판단
+    B->>A: AI run 시작 (run_id) + 정책/시장/잔고 전달
+    A-->>B: 동일 run의 gate 결과 + execution_request 또는 hold/no-order 사유
+    B->>B: deterministic 재검증 / signature 생성
     B->>T: Testnet spot order 요청
     T-->>B: 주문 응답
-    B->>D: 주문 로그 저장
+    B->>A: 동일 run resume + execution_result 주입
+    A-->>B: 설명 가능한 결과 + per-agent trace + run summary
+    B->>D: 주문 로그 / report 저장
     B-->>F: 주문 결과 반환
 ```
 
@@ -129,12 +138,14 @@ flowchart LR
 - 시그니처 생성 실패 시 즉시 에러를 반환한다.
 - WebSocket 연결 실패 시 수동 조회 fallback을 사용한다.
 - 실거래 URL 또는 잘못된 API Key 사용이 감지되면 즉시 실행을 차단한다.
+- AI가 `PASS`를 반환해도 BE 재검증 실패 시 `BE_REJECTED`로 종료한다.
 
 ## 7. 신뢰 경계 및 보안 관점
 
 - 브라우저는 Binance Testnet REST/WS를 직접 호출하지 않는다.
 - API Key/Secret은 서버 측 환경 변수로만 보관한다.
 - BE만 `timestamp`, `signature`, `X-MBX-APIKEY`를 처리한다.
+- AI에는 API Key, Secret, signature 원문을 전달하지 않는다.
 - 실거래 host 문자열은 설정값과 문서에서 금지한다.
 - FE는 API Key/Secret 원문을 입력받거나 저장하지 않는다.
 
