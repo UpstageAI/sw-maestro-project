@@ -2,7 +2,7 @@
 
 ## 문서 목적
 
-이 문서는 Coin Agent MVP의 전체 시스템 구조와 FE/BE/AI/DB/외부 API의 책임 경계를 정의한다. 이 문서는 구조와 흐름을 설명하며, 세부 계약은 `DATA.md`를 기준으로 한다.
+이 문서는 Coin Agent MVP의 전체 시스템 구조와 FE/BE/AI/DB/Binance Spot Testnet의 책임 경계를 설명한다. 이 프로젝트는 **Binance Spot Testnet 전용 가상 자금 현물 주문 테스트** 구조를 가진다.
 
 ## 관련 문서
 
@@ -19,16 +19,17 @@ Coin Agent는 다음 다섯 계층으로 구성된다.
 1. Next.js 기반 Frontend
 2. FastAPI 기반 Backend API
 3. LangGraph 기반 AI Orchestrator
-4. DB 저장소
-5. Upbit API
+4. SQLite 저장소
+5. Binance Spot Testnet REST / WebSocket
 
 핵심 원칙은 다음과 같다.
 
 - FE는 입력과 시각화에 집중한다.
-- BE는 시스템 API, 저장, Upbit 연동, 페이퍼 실행 어댑터를 담당한다.
-- AI는 정책 해석, 리스크 판단, 실행 요약을 담당한다.
-- 정책과 리스크 게이트를 통과하지 못하면 기본값은 무거래 또는 판단 보류다.
-- 실제 자동매매가 아니라 페이퍼 실행 중심 MVP다.
+- BE는 Binance Spot Testnet REST/WebSocket 연동과 시그니처 처리, 주문 테스트 흐름을 담당한다.
+- AI는 요청 해석, 리스크 게이트, 결과 설명을 담당한다.
+- 실거래는 다루지 않는다.
+- API 호출은 모두 Testnet 환경에서만 수행한다.
+- API Key/Secret은 서버 환경 변수에만 저장한다.
 
 ## 2. 시스템 관계도
 
@@ -36,11 +37,10 @@ Coin Agent는 다음 다섯 계층으로 구성된다.
 flowchart LR
     USER[사용자] --> FE[Next.js FE]
     FE --> BE[FastAPI BE]
-    BE --> DB[(DB)]
+    BE --> DB[(SQLite)]
     BE --> AI[LangGraph AI]
-    BE --> UPBIT[Upbit API]
-    AI --> DB
-    AI --> BE
+    BE --> REST[Binance Spot Testnet REST]
+    BE --> WS[Binance Spot Testnet WebSocket]
 ```
 
 ## 3. 상세 아키텍처
@@ -49,18 +49,22 @@ flowchart LR
 flowchart TB
     USER[User] --> UI[Next.js UI]
     UI --> API[FastAPI REST API]
-    API --> POLICY[Policy Service]
-    API --> MARKET[Market Service]
-    API --> EXEC[Paper Execution Adapter]
+    API --> CONFIG[Testnet Config Service]
+    API --> ACCOUNT[Balance / Account Service]
+    API --> MARKET[Price / Order Book / Kline Service]
+    API --> ORDER[Spot Order Service]
+    API --> STREAM[WebSocket Stream Service]
     API --> LOG[Log / Report Service]
     API --> AIGW[AI Gateway]
     AIGW --> ORCH[LangGraph Orchestrator]
     ORCH --> P[Policy/Planning Agent]
     ORCH --> R[Market/Risk Agent]
     ORCH --> E[Execution/Report Agent]
-    MARKET --> UPBIT[Upbit Quotation API]
-    POLICY --> DB[(SQLite)]
-    EXEC --> DB
+    ACCOUNT --> BREST[Binance Testnet REST]
+    MARKET --> BREST
+    ORDER --> BREST
+    STREAM --> BWS[Binance Testnet WS]
+    ORDER --> DB
     LOG --> DB
     E --> DB
 ```
@@ -69,15 +73,15 @@ flowchart TB
 
 | 계층 | 책임 | 하지 않는 일 |
 |---|---|---|
-| FE | 정책 입력, 상태 카드, 자동 대응 카드, 로그/리포트 UI | 거래소 직접 호출, 정책 판정, 주문 실행 |
-| BE | 정책 저장/조회, 업비트 조회, 페이퍼 실행 어댑터, 로그/리포트 저장, AI 호출 | UI 렌더링, 프롬프트 생성의 최종 책임 |
-| AI | 정책 해석, 지표 해석, 리스크 게이트, 실행 설명, 리포트 생성 | 실거래 실행, 브라우저 렌더링 |
-| DB | 정책, 로그, 리포트, 실행 기록 저장 | 비즈니스 판단 |
-| Upbit API | 시세 및 캔들 데이터 제공 | 내부 정책/리스크 판단 |
+| FE | 환경 변수 설정 상태 확인, 잔고/시세/주문 화면, 상태 시각화 | Binance 직접 호출, 시그니처 생성, API Key 원문 처리 |
+| BE | REST/WebSocket 연동, 시그니처 생성, 주문 요청, 상태 조회, 취소 | 브라우저 렌더링, 실거래 전송 |
+| AI | 요청 해석, 리스크 게이트, 결과 설명 | Binance 직접 서명 요청, 실거래 전략 운용 |
+| DB | 환경 설정, 요청 로그, 주문 로그, 리포트 저장 | 시장 데이터의 영구 원본 저장 |
+| Binance Spot Testnet | 가상 자금 기반 현물 API/WS 제공 | 내부 정책 판단 |
 
 ## 5. 핵심 흐름
 
-### 5.1 정책 입력 → 시장 조회 → 리스크 판단 → 페이퍼 실행 → 리포트
+### 5.1 설정 상태 확인 → 잔고 조회 → 시세 조회 → 주문 테스트 → 상태 확인 → 취소
 
 ```mermaid
 sequenceDiagram
@@ -85,50 +89,60 @@ sequenceDiagram
     participant F as FE
     participant B as BE
     participant A as AI
+    participant T as Binance Testnet
     participant D as DB
-    participant P as Upbit
 
-    U->>F: 정책 입력/조회 요청
+    U->>F: Testnet 설정 상태 확인
+    F->>B: 설정 상태 조회
+    B->>D: 마지막 설정 상태 읽기
+    U->>F: 잔고/시세 조회 요청
     F->>B: REST 요청
-    B->>D: 정책 저장/조회
-    B->>A: 정책 분석 요청
-    A->>P: 시세/캔들 조회 필요 정보 요청
-    P-->>A: 시장 데이터 반환
-    A-->>B: 리스크 판정 / 후보 행동 / 설명
-    B->>D: 실행 로그 / 리포트 저장
-    B-->>F: 상태 카드 / 결과 반환
-    F-->>U: 화면 표시
+    B->>T: account / ticker / depth / klines 조회
+    T-->>B: 응답 반환
+    B->>A: 결과 요약 요청
+    A-->>B: 설명 생성
+    B-->>F: 상태 카드 반환
+    U->>F: 주문 테스트 요청
+    F->>B: order 요청
+    B->>A: 리스크 체크
+    A-->>B: 허용/보류 판단
+    B->>T: Testnet spot order 요청
+    T-->>B: 주문 응답
+    B->>D: 주문 로그 저장
+    B-->>F: 주문 결과 반환
 ```
 
-### 5.2 단계 설명
+### 5.2 WebSocket 시세 수신 흐름
 
-1. 사용자가 정책을 저장하거나 현재 상태 조회를 요청한다.
-2. BE는 정책을 저장/조회하고 AI 오케스트레이터 호출 조건을 결정한다.
-3. AI는 정책 객체와 시장 데이터를 기반으로 리스크 게이트를 판정한다.
-4. 실행 허용 시에도 실제 주문은 하지 않고 페이퍼 실행만 수행한다.
-5. 결과는 로그와 리포트로 저장되고 FE에 구조화 응답으로 전달된다.
+```mermaid
+flowchart LR
+    FE[Next.js] --> BE[FastAPI]
+    BE --> WS[wss://stream.testnet.binance.vision/ws]
+    WS --> BE
+    BE --> FE
+```
 
 ## 6. 장애 및 예외 기본 원칙
 
-- 외부 데이터가 불완전하거나 실패하면 신규 실행을 차단한다.
-- 정책 검증 실패 시 기본값은 무거래 또는 판단 보류다.
-- AI 응답이 스키마를 벗어나면 룰 엔진 재검증 후 실패로 처리한다.
-- DB 저장 실패 시 실행 결과를 성공으로 표시하지 않는다.
-- UI는 마지막 정상 상태와 현재 오류 상태를 함께 보여준다.
+- Testnet REST 실패 시 신규 주문 테스트를 중단한다.
+- 잔고 조회 실패 시 주문 화면에서 주문 요청을 차단한다.
+- 시그니처 생성 실패 시 즉시 에러를 반환한다.
+- WebSocket 연결 실패 시 수동 조회 fallback을 사용한다.
+- 실거래 URL 또는 잘못된 API Key 사용이 감지되면 즉시 실행을 차단한다.
 
 ## 7. 신뢰 경계 및 보안 관점
 
-- 브라우저는 Upbit API를 직접 호출하지 않는다.
-- 업비트 시세 API와 LLM API 키는 서버 측 환경 변수로만 관리한다.
-- MVP에서는 업비트 private API를 사용하지 않으며, 페이퍼 실행은 내부 어댑터로만 처리한다.
-- 로그에는 민감 정보 원문을 남기지 않는다.
+- 브라우저는 Binance Testnet REST/WS를 직접 호출하지 않는다.
+- API Key/Secret은 서버 측 환경 변수로만 보관한다.
+- BE만 `timestamp`, `signature`, `X-MBX-APIKEY`를 처리한다.
+- 실거래 host 문자열은 설정값과 문서에서 금지한다.
+- FE는 API Key/Secret 원문을 입력받거나 저장하지 않는다.
 
 ## 8. 확정 구현 기준
 
-- DB는 로컬 개인용 Agent 기준으로 SQLite를 사용한다.
-- AI 서비스 인터페이스는 MVP에서 HTTP만 사용한다.
-- 데모는 업비트 실시간 시세/캔들 API를 사용하고 실행은 페이퍼 실행으로 유지한다.
-- 배치 스케줄러는 후순위로 두고, MVP에서는 요청 기반 흐름과 간단한 주기성 감시만 반영한다.
-- AI는 별도 서비스가 아니라 BE 내부 프로세스로 실행한다.
-- 시세 캐시 계층은 두지 않고, 요청 시점 조회를 기본으로 한다.
-- 야간 자동 감시는 배치 작업 대신 요청 기반 시뮬레이션으로 처리한다.
+- REST Base URL은 `https://testnet.binance.vision/api`로 고정한다.
+- WebSocket Streams URL은 `wss://stream.testnet.binance.vision/ws`로 고정한다.
+- WebSocket API URL은 `wss://ws-api.testnet.binance.vision/ws-api/v3`로 고정한다.
+- AI는 BE 내부 프로세스가 아니라 별도 HTTP 서비스로 두되, 로컬 동일 머신에서만 실행한다.
+- 주문 예시는 Spot 현물 시장가/지정가만 다룬다.
+- orderbook은 `depth` snapshot 기준으로 정의한다.

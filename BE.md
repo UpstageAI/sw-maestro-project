@@ -2,7 +2,7 @@
 
 ## 문서 목적
 
-이 문서는 FastAPI 기반 Backend의 라우터 구조, 서비스 모듈, Upbit 커넥터, 페이퍼 실행 어댑터, 로그/리포트 저장, 예외 처리 기준을 정의한다.
+이 문서는 FastAPI 기반 Backend의 Binance Spot Testnet REST / WebSocket 연동, 인증/시그니처, 주문 테스트, 주문 상태 조회, 주문 취소, Python 예제 기준을 정의한다.
 
 ## 관련 문서
 
@@ -12,119 +12,280 @@
 
 ## 1. BE 역할
 
-BE는 시스템의 도메인 중심 계층이다. FE 요청을 수신하고, 정책 저장/조회, 시장 데이터 조회, 페이퍼 실행 어댑터 호출, AI 오케스트레이터 연계, 로그/리포트 저장을 담당한다.
+BE는 Binance Spot Testnet과 직접 통신하는 유일한 계층이다. 잔고 조회, 현재가/호가/캔들 조회, 주문 생성, 주문 상태 조회, 주문 취소, WebSocket 시세 수신을 담당한다.
 
-## 2. 라우터 구조
+## 2. REST / WebSocket 기준 엔드포인트
 
-라우터 구조는 다음과 같다.
+| 구분 | 값 |
+|---|---|
+| REST Base URL | `https://testnet.binance.vision/api` |
+| WebSocket Streams | `wss://stream.testnet.binance.vision/ws` |
+| WebSocket API | `wss://ws-api.testnet.binance.vision/ws-api/v3` |
+
+## 3. 라우터 구조
 
 | 라우터 | 역할 |
 |---|---|
-| `/api/v1/policies` | 정책 저장/조회 |
-| `/api/v1/market` | 시장 요약/캔들/지표 조회 |
-| `/api/v1/actions` | 자동 대응 후보 평가 |
-| `/api/v1/executions` | 페이퍼 실행 로그 조회 |
-| `/api/v1/reports` | 리포트 조회 |
-| `/api/v1/health` | 상태 점검 |
+| `/api/v1/testnet/account` | Testnet 계정 잔고 조회 |
+| `/api/v1/testnet/ticker/price` | 현재가 조회 |
+| `/api/v1/testnet/ticker/book` | 호가 조회 |
+| `/api/v1/testnet/klines` | 캔들 조회 |
+| `/api/v1/testnet/orders` | 주문 생성 / 취소 |
+| `/api/v1/testnet/orders/status` | 주문 상태 조회 |
+| `/api/v1/testnet/stream/status` | WebSocket 연결 상태 확인 |
 
-## 3. 서비스 모듈 구조
+## 4. 서비스 모듈 구조
 
 | 모듈 | 책임 |
 |---|---|
-| `policy_service` | 정책 검증 전 저장/조회 처리 |
-| `market_service` | 업비트 시세/캔들 조회, 응답 정규화 |
-| `ai_gateway` | LangGraph 오케스트레이터 호출 |
-| `execution_service` | 페이퍼 실행 요청 및 결과 저장 |
-| `report_service` | 리포트 저장/조회 |
-| `log_service` | 이벤트/에러/판정 로그 기록 |
+| `binance_auth_service` | `timestamp`, `signature`, `X-MBX-APIKEY` 처리 |
+| `account_service` | `GET /api/v3/account` 호출 |
+| `market_service` | `ticker/price`, `bookTicker`, `depth`, `klines`, `exchangeInfo` 호출 |
+| `order_service` | `POST /api/v3/order`, `GET /api/v3/order`, `DELETE /api/v3/order` 호출 |
+| `stream_service` | WebSocket stream 구독 및 최근 이벤트 저장 |
+| `report_service` | 주문/조회 결과를 설명 가능한 결과로 변환 |
 
-## 4. 정책 저장/조회
+## 5. 인증 방식
 
-- 정책은 구조화 검증을 통과한 후 저장한다.
-- 조회 시 FE와 AI가 재사용할 수 있는 동일 구조를 반환한다.
-- 필수값 누락 시 4xx 오류를 반환한다.
-- 단일 사용자 MVP 기준에서도 정책 버전 관리 필드를 유지하는 것을 권장한다.
+### 5.1 REST 인증
 
-## 5. Upbit 시세 조회 커넥터
+Binance Testnet의 signed endpoint 호출 시 다음 요소가 필요하다.
 
-Upbit 커넥터는 다음 책임을 가진다.
-
-- 티커/현재가 조회
-- 캔들 조회
-- 응답 정규화
-- 레이트 리밋/실패 응답 처리
-
-### 외부 API 호출 원칙
-
-- 브라우저가 아니라 BE만 Upbit API를 호출한다.
-- 외부 응답은 내부 표준 포맷으로 정규화한다.
-- 데이터 부족 또는 실패 시 신규 실행을 차단한다.
-
-## 6. Paper Execution Adapter
-
-Paper Execution Adapter는 실거래를 수행하지 않는다. 이 모듈은 AI 또는 BE가 전달한 실행 후보를 받아, 시뮬레이션 결과를 생성하고 저장한다.
-
-포함 책임:
-
-- 실행 후보 검증
-- 모의 체결 결과 생성
-- 실행 상태 기록
-- 실패/보류 사유 기록
-
-제외 책임:
-
-- 실제 주문 전송
-- 출금/입금 처리
-- 거래소 주문 상태 동기화
-
-## 7. 실행 로그 및 리포트 저장
-
-- 실행 로그는 액션 단위로 저장한다.
-- 리포트는 실행 로그 및 분석 결과를 요약한 결과물로 저장한다.
-- 실행 로그와 리포트는 서로 참조 가능해야 한다.
-- 최소 필드 구조는 `DATA.md`를 따른다.
-
-## 8. 예외 처리 포맷
-
-모든 API는 공통 에러 응답 포맷을 사용한다.
-
-- `error_code`
-- `message`
-- `detail`
-- `request_id`
+- `X-MBX-APIKEY` header
 - `timestamp`
+- `signature`
+- 선택적으로 `recvWindow`
 
-세부 스키마는 `DATA.md`의 `ErrorResponse`를 따른다.
+서명 방식은 HMAC SHA256 기준으로 구현한다.
 
-## 9. 외부 API 실패 대응 원칙
+### 5.2 WebSocket API 인증
 
-- 429 또는 제한 응답 시 재시도 횟수를 제한한다.
-- 연속 실패 시 실행 평가를 중단하고 오류 상태를 반환한다.
-- 마지막 정상 상태가 있으면 FE에 함께 전달한다.
-- 외부 API 실패를 자동 실행 허용 조건으로 해석하지 않는다.
+이 문서 범위에서는 WebSocket API는 base URL만 정의하고, 실제 핵심 구현은 market data stream 수신에 집중한다. 주문 테스트는 REST 기준으로 수행한다.
 
-## 10. API 요약
+## 6. 계정 잔고 조회
 
-| Method | Path | 목적 |
-|---|---|---|
-| `GET` | `/api/v1/policies/current` | 현재 정책 조회 |
-| `POST` | `/api/v1/policies` | 정책 저장 |
-| `GET` | `/api/v1/market/summary` | 시장 상태 요약 조회 |
-| `POST` | `/api/v1/actions/evaluate` | 정책 기반 후보 평가 |
-| `GET` | `/api/v1/executions` | 실행 로그 목록 조회 |
-| `GET` | `/api/v1/reports/daily` | 일간 리포트 조회 |
+- 엔드포인트: `GET /api/v3/account`
+- 주요 응답 필드: `balances[].asset`, `balances[].free`, `balances[].locked`
+- signed endpoint이므로 header/signature/timestamp 필요
 
-## 11. 관측성 및 로그 원칙
+## 7. 현재가 / 호가 / 캔들 조회
 
-- 정책 저장, 리스크 판정, 실행 시도, 실행 보류, 외부 API 실패는 모두 로그 남김
-- request id 기준 추적 가능
-- 민감 정보는 마스킹 처리
+### 현재가
 
-## 12. 확정 구현 기준
+- `GET /api/v3/ticker/price`
+- 주요 파라미터: `symbol=BTCUSDT`
 
-- 단일 사용자 기준 정책 1세트 활성 구조로 시작
-- SQLite 기반 저장소 사용
-- 인증은 생략하거나 최소화하고, 관리자 없는 로컬 데모 중심 구성
-- 업비트는 실시간 시세/캔들 조회 API를 사용하고, 실행은 항상 페이퍼 실행으로 제한
-- policy versioning은 최신 10개 버전 저장만 지원하고 롤백 기능은 제외한다.
-- Upbit 응답 캐시는 두지 않는다.
+### 최우선 호가
+
+- `GET /api/v3/ticker/bookTicker`
+- 주요 응답: `bidPrice`, `bidQty`, `askPrice`, `askQty`
+
+### 오더북
+
+- `GET /api/v3/depth`
+- 주요 파라미터: `symbol`, `limit`
+- FE에서 말하는 orderbook은 이 `depth` snapshot을 의미한다.
+
+### 캔들
+
+- `GET /api/v3/klines`
+- 주요 파라미터: `symbol`, `interval`, `limit`
+
+## 8. 현물 매수/매도 주문 테스트
+
+### 시장가 매수 예시
+
+- 엔드포인트: `POST /api/v3/order`
+- 필드: `symbol`, `side=BUY`, `type=MARKET`, `quoteOrderQty`, `timestamp`, `signature`
+
+### 시장가 매도 예시
+
+- 엔드포인트: `POST /api/v3/order`
+- 필드: `symbol`, `side=SELL`, `type=MARKET`, `quantity`, `timestamp`, `signature`
+
+### 지정가 주문 예시
+
+- 엔드포인트: `POST /api/v3/order`
+- 필드: `symbol`, `side`, `type=LIMIT`, `timeInForce=GTC`, `price`, `quantity`, `timestamp`, `signature`
+
+### 주문 파라미터 검증 원칙
+
+- `GET /api/v3/exchangeInfo`를 기준으로 `PRICE_FILTER`, `LOT_SIZE`, `MIN_NOTIONAL`을 검증한다.
+- `quantity`는 `minQty`와 `stepSize`를 만족해야 한다.
+- `price`는 `tickSize`를 만족해야 한다.
+- `quoteOrderQty` 기반 주문도 최소 notion 조건을 만족해야 한다.
+
+## 9. 주문 상태 조회
+
+- 엔드포인트: `GET /api/v3/order`
+- 필수 파라미터: `symbol`, `timestamp`, 그리고 `orderId` 또는 `origClientOrderId`
+- 주요 응답 필드: `status`, `origQty`, `executedQty`, `price`, `type`, `side`
+
+## 10. 주문 취소
+
+- 엔드포인트: `DELETE /api/v3/order`
+- 필수 파라미터: `symbol`, `timestamp`, 그리고 `orderId` 또는 `origClientOrderId`
+- 취소 제한이 필요하면 `cancelRestrictions` 사용 가능
+
+## 11. WebSocket 시세 수신
+
+### Streams Endpoint
+
+- `wss://stream.testnet.binance.vision/ws`
+
+### 대표 stream 예시
+
+- `btcusdt@ticker`
+- `btcusdt@bookTicker`
+- `btcusdt@kline_1m`
+
+stream 이름의 심볼은 반드시 소문자를 사용한다.
+
+## 12. Python 예제 코드
+
+### 12.1 HMAC 시그니처 유틸
+
+```python
+import hmac
+import hashlib
+import time
+from urllib.parse import urlencode
+
+
+def sign_params(secret_key: str, params: dict) -> str:
+    query_string = urlencode(params)
+    return hmac.new(
+        secret_key.encode("utf-8"),
+        query_string.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+
+def make_timestamp() -> int:
+    return int(time.time() * 1000)
+```
+
+### 12.2 잔고 조회
+
+```python
+import os
+import requests
+
+BASE_URL = os.environ["BINANCE_TESTNET_REST_BASE_URL"]
+API_KEY = os.environ["BINANCE_TESTNET_API_KEY"]
+SECRET_KEY = os.environ["BINANCE_TESTNET_SECRET_KEY"]
+
+params = {"timestamp": make_timestamp()}
+params["signature"] = sign_params(SECRET_KEY, params)
+
+resp = requests.get(
+    f"{BASE_URL}/v3/account",
+    headers={"X-MBX-APIKEY": API_KEY},
+    params=params,
+    timeout=10,
+)
+print(resp.json())
+```
+
+### 12.3 현재가 조회
+
+```python
+resp = requests.get(
+    f"{BASE_URL}/v3/ticker/price",
+    params={"symbol": "BTCUSDT"},
+    timeout=10,
+)
+print(resp.json())
+```
+
+### 12.4 시장가 매수 주문
+
+```python
+params = {
+    "symbol": "BTCUSDT",
+    "side": "BUY",
+    "type": "MARKET",
+    "quoteOrderQty": "50",
+    "timestamp": make_timestamp(),
+}
+params["signature"] = sign_params(SECRET_KEY, params)
+
+resp = requests.post(
+    f"{BASE_URL}/v3/order",
+    headers={"X-MBX-APIKEY": API_KEY},
+    params=params,
+    timeout=10,
+)
+print(resp.json())
+```
+
+### 12.5 주문 상태 조회
+
+```python
+params = {
+    "symbol": "BTCUSDT",
+    "orderId": 123456,
+    "timestamp": make_timestamp(),
+}
+params["signature"] = sign_params(SECRET_KEY, params)
+
+resp = requests.get(
+    f"{BASE_URL}/v3/order",
+    headers={"X-MBX-APIKEY": API_KEY},
+    params=params,
+    timeout=10,
+)
+print(resp.json())
+```
+
+### 12.6 주문 취소
+
+```python
+params = {
+    "symbol": "BTCUSDT",
+    "orderId": 123456,
+    "timestamp": make_timestamp(),
+}
+params["signature"] = sign_params(SECRET_KEY, params)
+
+resp = requests.delete(
+    f"{BASE_URL}/v3/order",
+    headers={"X-MBX-APIKEY": API_KEY},
+    params=params,
+    timeout=10,
+)
+print(resp.json())
+```
+
+### 12.7 WebSocket ticker 수신
+
+```python
+import json
+from websocket import create_connection
+
+ws = create_connection("wss://stream.testnet.binance.vision/ws/btcusdt@ticker")
+message = ws.recv()
+print(json.loads(message))
+ws.close()
+```
+
+## 13. 실수 방지 주의사항
+
+- `https://api.binance.com` 사용 금지
+- `wss://stream.binance.com` 사용 금지
+- 실거래 API Key 사용 금지
+- Testnet 심볼 예시와 stream 소문자 규칙을 혼동하지 않기
+- `quoteOrderQty`와 `quantity` 사용 위치를 혼동하지 않기
+
+## 14. 확정 구현 기준
+
+- 로컬 개인용 Agent에서만 실행한다.
+- 주문 테스트는 Binance Spot Testnet REST 기준으로만 수행한다.
+- 시세 stream 수신은 WebSocket Streams endpoint 기준으로 수행한다.
+- 실거래 기능은 문서와 구현 모두에서 제외한다.
+
+## 15. 응답 포맷 기준
+
+- `/api/v1/testnet/*` 응답은 FE 친화적인 정규화 포맷으로 반환한다.
+- Binance 원본 전체 payload는 로그/SQLite에 보관할 수 있지만, 기본 API 응답은 필요한 필드만 노출한다.
+- 주문 상태 값은 Binance 원본 enum을 유지한다.
