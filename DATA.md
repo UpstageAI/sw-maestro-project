@@ -414,9 +414,6 @@ erDiagram
 - 정책 구조가 바뀌면 정책 버전을 명시한다.
 - API는 `/api/v1` 기준으로 시작한다.
 - DB는 SQLite를 기준으로 시작하며, 마이그레이션은 최소 테이블 생성 수준으로 시작한다.
-
-## 결정 필요 사항
-
-- **MVP 기준 제안**으로 `action` enum에 `watch_only`를 추가할지 확정이 필요하다.
-- **MVP 기준 제안**으로 `market_snapshots`를 DB에 영구 저장할지, 캐시성 데이터로만 둘지 확정이 필요하다.
-- **MVP 기준 제안**으로 리포트 생성 결과를 JSON + 자연어 원문 둘 다 저장할지 확정이 필요하다.
+- `action` enum은 `buy`, `sell`, `reduce_position`, `hold` 4개만 사용한다.
+- `market_snapshots`는 DB에 영구 저장하지 않고 요청 시 계산 또는 임시 저장만 사용한다.
+- 리포트는 JSON 구조와 자연어 요약 문자열을 함께 저장한다.
