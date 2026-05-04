@@ -169,7 +169,7 @@ Coin Agent는 해석, 조회, 분석, 요약, 제한형 자동 판단까지는 �
 | BE | 1 | FastAPI 기반 REST API, 인증/설정/로그/실행 API, Upbit 연동 어댑터, 데이터 저장소 설계 | API 서버, Upbit 커넥터, DB 스키마, 실행 로그 관리 |
 | AI-1 | 1 | Policy/Planning Agent 설계, 사용자 정책 해석, 정책 스키마 검증, 실행 계획 작성 | 정책 파서, 플래닝 노드, 정책 검증 로직 |
 | AI-2 | 1 | Market/Risk Agent 설계, 지표 계산, 리스크 룰 엔진, 조건 감지 로직 | 데이터 분석 노드, 리스크 게이트, 조건 판별 로직 |
-| AI-3 | 1 | Execution/Report Agent 설계, 페이퍼 실행, 결과 설명, 리포트 생성, 인터페이스 확장 | 실행 노드, 리포트 노드, gRPC/HTTP AI 인터페이스 |
+| AI-3 | 1 | Execution/Report Agent 설계, 페이퍼 실행, 결과 설명, 리포트 생성, HTTP 인터페이스 연동 | 실행 노드, 리포트 노드, HTTP AI 인터페이스 |
 
 ---
 
@@ -183,10 +183,10 @@ flowchart LR
     ORCH --> A2[AI-2 Market / Risk Agent]
     ORCH --> A3[AI-3 Execution / Report Agent]
     A2 --> UPBIT[Upbit API]
-    A1 --> DB[(SQLite / Postgres)]
+    A1 --> DB[(SQLite)]
     A2 --> DB
     A3 --> DB
-    A3 --> IFACE[HTTP / gRPC Interface]
+    A3 --> IFACE[HTTP Interface]
 ```
 
 **설계 설명**
@@ -195,7 +195,7 @@ flowchart LR
 2. FastAPI는 사용자 요청을 수신하고 도메인 API, 저장소, Upbit 연동을 담당한다.
 3. LangGraph Orchestrator는 단일 진입점으로 동작하며 내부에서 세 AI Agent를 순서대로 또는 조건부로 호출한다.
 4. 각 AI Agent는 역할이 다르지만 사용자에게는 하나의 Coin Agent로 보인다.
-5. 결과는 REST API를 통해 FE로 전달되고, 내부 서비스 간 연동에는 gRPC 또는 HTTP 인터페이스를 사용할 수 있다.
+5. 결과는 REST API를 통해 FE로 전달되고, AI 연동은 HTTP 인터페이스를 사용한다.
 
 ---
 
@@ -352,7 +352,7 @@ flowchart TD
 
 - 통과된 자동 대응 후보를 페이퍼 실행으로 처리한다.
 - 실행 결과와 보류 사유를 자연어 리포트로 요약한다.
-- HTTP/gRPC 인터페이스를 통해 다른 서비스가 재사용할 수 있도록 한다.
+- HTTP 인터페이스를 통해 다른 서비스가 재사용할 수 있도록 한다.
 
 #### 시퀀스 다이어그램
 
@@ -378,7 +378,7 @@ sequenceDiagram
 2. FastAPI의 주문 어댑터를 호출해 실제 주문이 아닌 페이퍼 실행을 수행한다.
 3. 실행 결과, 실패 사유, 리스크 요약, 정책 근거를 구조화된 결과로 정리한다.
 4. 결과를 로그와 리포트 형태로 DB에 저장한다.
-5. 외부 소비자를 위해 HTTP 또는 gRPC 인터페이스로 결과를 노출할 수 있게 한다.
+5. 외부 소비자를 위해 HTTP 인터페이스로 결과를 노출할 수 있게 한다.
 
 ---
 
@@ -391,9 +391,9 @@ sequenceDiagram
 | Frontend / UI | Next.js 15 기준 웹 애플리케이션 | 정책 설정, 상태 확인, 실행 이력, 리포트 조회를 구조적으로 나누기 쉽고 대시보드 UI 구현에 적합하다. |
 | Backend API | FastAPI | REST API, Upbit 커넥트, 인증/설정/로그 API, 비동기 처리 구성이 명확하다. |
 | AI Orchestration | LangGraph | 정책 해석, 분석, 리스크 검증, 실행, 리포트 흐름을 상태 기반 그래프로 명확하게 구성할 수 있다. |
-| AI Interface | HTTP + gRPC | 브라우저/외부 서비스에는 HTTP를, 내부 AI 서비스 간 고성능 연동과 확장에는 gRPC를 사용한다. |
+| AI Interface | HTTP | BE와 AI 사이의 단순하고 명확한 연동을 위해 HTTP 인터페이스만 사용한다. |
 | LLM / Model | OpenAI GPT-4o 계열 1종 | 정책 해석, 분석 설명, 자연어 리포트 생성에 활용하고, 최종 위험 판단은 룰 엔진이 담당한다. |
-| Database / Storage | SQLite 또는 PostgreSQL | MVP에서는 SQLite로 빠르게 시작하고, 확장 시 PostgreSQL로 전환 가능하도록 설계한다. |
+| Database / Storage | SQLite | 로컬에서만 실행하는 개인용 Agent 구조에 맞춰 SQLite를 사용한다. |
 | 기타 도구 | pyupbit 또는 Upbit REST 직접 연동, pandas, plotly | Upbit 시세 조회, 기본 지표 계산, 결과 시각화와 데이터 가공에 적합하다. |
 
 ---
@@ -416,7 +416,7 @@ flowchart TB
     AUTH --> DB[(DB)]
     EXEC --> DB
     P3 --> DB
-    LG --> GRPC[gRPC / HTTP Service Interface]
+    LG --> HTTPIF[HTTP Service Interface]
 ```
 
 **설계 요점**
@@ -424,7 +424,7 @@ flowchart TB
 1. FE는 사용자 경험과 시각화에 집중하고, 비즈니스 로직은 직접 갖지 않는다.
 2. BE는 시스템의 도메인 중심 계층으로서 정책, 로그, Upbit 연동, 실행 API를 담당한다.
 3. AI 계층은 별도의 통합 오케스트레이터로 묶어 두고, 역할별 Agent를 내부 모듈로 운영한다.
-4. AI 서비스는 FastAPI와 HTTP/gRPC 양쪽 인터페이스로 연결 가능하게 설계해 이후 서비스 확장을 쉽게 한다.
+4. AI 서비스는 FastAPI와 HTTP 인터페이스로 연결해 구조를 단순하게 유지한다.
 5. 외부 거래소 직접 호출, 실행 로그, 리포트 저장은 모두 서버 측에서만 처리한다.
 
 ---
@@ -435,7 +435,7 @@ flowchart TB
 |---|---|---|---|
 | FE (Next.js) | 사용자 입력과 결과 시각화 | 정책 입력 폼, 상태 카드, 실행 이력, 리포트 화면, API 호출 | 거래소 직접 호출, 정책 판단, 주문 실행 |
 | BE (FastAPI) | 시스템 API와 도메인 처리 | REST API, 정책 저장, 로그 저장, Upbit 커넥터, 페이퍼 실행 어댑터 | 대규모 UI 렌더링, 프롬프트 직접 생성 |
-| AI (LangGraph) | 정책 해석, 분석, 리스크 판단, 실행 요약 | Agent orchestration, 지표 해석, 리스크 게이트, 리포트 생성, HTTP/gRPC 인터페이스 | 브라우저 렌더링, 거래소 인증 정보 직접 관리 UI |
+| AI (LangGraph) | 정책 해석, 분석, 리스크 판단, 실행 요약 | Agent orchestration, 지표 해석, 리스크 게이트, 리포트 생성, HTTP 인터페이스 | 브라우저 렌더링, 거래소 인증 정보 직접 관리 UI |
 
 ---
 
@@ -467,14 +467,13 @@ flowchart LR
 
 | 인터페이스 | 사용 대상 | 용도 | 비고 |
 |---|---|---|---|
-| REST / HTTP | Next.js, 관리자 화면, 외부 연동 | 정책 해석 요청, 상태 조회, 리포트 조회, 실행 요청 | 브라우저 친화적, 디버깅 용이 |
-| gRPC | FastAPI 내부 서비스 연동, 향후 멀티 서비스 확장 | 스트리밍 응답, 고성능 내부 통신, 강한 계약 기반 API | 향후 AI 기능 확장과 모듈 분리에 유리 |
+| REST / HTTP | Next.js, FastAPI 내부 연동 | 정책 해석 요청, 상태 조회, 리포트 조회, 실행 요청 | 구조가 단순하고 로컬 개인용 Agent에 적합 |
 
 **인터페이스 설계 설명**
 
-1. 사용자 요청과 화면 표시 중심 기능은 REST API로 충분하다.
-2. AI 응답 스트리밍, 서비스 간 고성능 통신, 다중 AI 모듈 확장에는 gRPC가 유리하다.
-3. 따라서 MVP는 REST 중심으로 시작하되, AI 계층은 gRPC 추가가 가능한 구조로 설계한다.
+1. 사용자 요청과 AI 연동은 REST API로 충분하다.
+2. 로컬 개인용 Agent 구조에서는 단순성과 유지보수성이 우선이므로 HTTP 인터페이스만 사용한다.
+3. 데모는 업비트 실시간 시세/캔들 API를 사용하고, 실행은 끝까지 페이퍼 실행으로 유지한다.
 
 ---
 
@@ -591,7 +590,7 @@ FastAPI와 LangGraph 기반 Coin Agent 시스템이 Upbit 시세를 조회해 �
 |---:|---|---|---|
 | 1단계 | 아키텍처 뼈대 구축 | Next.js 기본 화면, FastAPI 기본 API, LangGraph Orchestrator, 정책 스키마, Upbit 조회 연결 | 정책 입력 → 시세 조회 → 상태 카드 표시까지 연결 |
 | 2단계 | 핵심 자동 대응 구현 | 리스크 룰 엔진, 자동 대응 카드, 페이퍼 실행, 실행 로그 저장 | 핵심 시나리오 1개 이상을 end-to-end 시연 가능 |
-| 3단계 | 설명 가능성과 안정성 보강 | 자연어 리포트, 예외 처리, 리스크 경고, HTTP/gRPC 인터페이스 정리 | 자동 시나리오 3개를 안정적으로 시연 가능 |
+| 3단계 | 설명 가능성과 안정성 보강 | 자연어 리포트, 예외 처리, 리스크 경고, HTTP 인터페이스 정리 | 자동 시나리오 3개를 안정적으로 시연 가능 |
 | 4단계 | 최종 발표 준비 | UI 정리, 데모 스크립트, 장표 작성, 로그/리포트 검수 | 발표 자료와 데모 흐름 준비 완료 |
 
 ---
@@ -604,7 +603,7 @@ FastAPI와 LangGraph 기반 Coin Agent 시스템이 Upbit 시세를 조회해 �
 | BE1 | FastAPI 라우터 → 정책/로그 API → Upbit 어댑터 → 페이퍼 실행 API |
 | AI-1 | 정책 파서 → 정책 검증 → 실행 계획 노드 |
 | AI-2 | 시세 수집 → 지표 계산 → 리스크 게이트 |
-| AI-3 | 페이퍼 실행 노드 → 리포트 노드 → HTTP/gRPC 인터페이스 |
+| AI-3 | 페이퍼 실행 노드 → 리포트 노드 → HTTP 인터페이스 |
 
 ---
 
@@ -632,7 +631,7 @@ FastAPI와 LangGraph 기반 Coin Agent 시스템이 Upbit 시세를 조회해 �
 | 각 AI Agent별 로직과 Mermaid 다이어그램이 포함되어 있는가? | ☑ |
 | Frontend가 Next.js 기반으로 정의되어 있는가? | ☑ |
 | Backend가 FastAPI + Upbit 커넥트 기반으로 정의되어 있는가? | ☑ |
-| AI가 LangGraph 기반 모듈형 아키텍처와 HTTP/gRPC 인터페이스를 포함하는가? | ☑ |
+| AI가 LangGraph 기반 모듈형 아키텍처와 HTTP 인터페이스를 포함하는가? | ☑ |
 | 제약사항과 예외 처리가 포함되어 있는가? | ☑ |
 | 데모 기준이 명확한가? | ☑ |
 
@@ -640,6 +639,6 @@ FastAPI와 LangGraph 기반 Coin Agent 시스템이 Upbit 시세를 조회해 �
 
 ## 결정 필요 사항
 
-- **MVP 기준 제안**으로 DB를 SQLite로 시작한 뒤 PostgreSQL로 확장할지 확정이 필요하다.
-- **MVP 기준 제안**으로 AI 서비스 인터페이스를 HTTP 우선으로만 열지, gRPC까지 초기부터 포함할지 확정이 필요하다.
 - **MVP 기준 제안**으로 야간 자동 감시를 요청 기반 시뮬레이션으로 제한할지, 간단한 배치 흐름까지 포함할지 확정이 필요하다.
+- 로컬 개인용 Agent에서 정책 이력 보존 기간을 얼마나 둘지 확정이 필요하다.
+- 업비트 API 장애 시 샘플 데이터 fallback을 자동화할지 수동 전환으로 둘지 확정이 필요하다.

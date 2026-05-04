@@ -59,7 +59,7 @@ flowchart TB
     ORCH --> R[Market/Risk Agent]
     ORCH --> E[Execution/Report Agent]
     MARKET --> UPBIT[Upbit Quotation API]
-    POLICY --> DB[(SQLite / PostgreSQL)]
+    POLICY --> DB[(SQLite)]
     EXEC --> DB
     LOG --> DB
     E --> DB
@@ -119,14 +119,15 @@ sequenceDiagram
 ## 7. 신뢰 경계 및 보안 관점
 
 - 브라우저는 Upbit API를 직접 호출하지 않는다.
-- 업비트 키와 LLM API 키는 서버 측 환경 변수로만 관리한다.
-- AI는 private key를 직접 보관하지 않고, 필요한 경우에도 BE를 통해 간접 호출한다.
+- 업비트 시세 API와 LLM API 키는 서버 측 환경 변수로만 관리한다.
+- MVP에서는 업비트 private API를 사용하지 않으며, 페이퍼 실행은 내부 어댑터로만 처리한다.
 - 로그에는 민감 정보 원문을 남기지 않는다.
 
 ## 8. MVP 기준 제안
 
-- DB는 초기 단계에서 SQLite를 기본으로 한다.
-- AI 서비스 인터페이스는 MVP에서 HTTP 우선, gRPC 확장 가능 구조로 설계한다.
+- DB는 로컬 개인용 Agent 기준으로 SQLite를 사용한다.
+- AI 서비스 인터페이스는 MVP에서 HTTP만 사용한다.
+- 데모는 업비트 실시간 시세/캔들 API를 사용하고 실행은 페이퍼 실행으로 유지한다.
 - 배치 스케줄러는 후순위로 두고, MVP에서는 요청 기반 흐름과 간단한 주기성 감시만 반영한다.
 
 ## 결정 필요 사항

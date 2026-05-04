@@ -4,7 +4,7 @@
 
 ## 문서 목적
 
-이 레포지토리는 Coin Agent MVP를 실제로 구현하기 위한 기준 문서 세트를 관리한다. 이 프로젝트는 **실제 자동매매가 아니라 페이퍼 실행 중심 MVP**이며, 사용자의 정책과 리스크 게이트를 통과하지 못하면 기본값은 **무거래 또는 판단 보류**로 한다.
+이 레포지토리는 Coin Agent MVP를 실제로 구현하기 위한 기준 문서 세트를 관리한다. 이 프로젝트는 **로컬에서만 실행하는 개인용 Agent**이며, **실제 자동매매가 아니라 페이퍼 실행 중심 MVP**다. 사용자의 정책과 리스크 게이트를 통과하지 못하면 기본값은 **무거래 또는 판단 보류**로 한다.
 
 ## 문서 읽는 순서
 
@@ -46,7 +46,7 @@
 - FE: Next.js
 - BE: FastAPI
 - AI: LangGraph 실행 서비스
-- DB: SQLite 또는 PostgreSQL
+- DB: SQLite
 - External: Upbit API
 
 ### 환경 변수 목록
@@ -54,13 +54,12 @@
 | 변수명 | 설명 | 필수 여부 |
 |---|---|---:|
 | `OPENAI_API_KEY` | LLM 호출용 API 키 | 예 |
-| `UPBIT_ACCESS_KEY` | 업비트 private API 접근 키. 실거래가 아닌 경우에도 private 테스트 경로 설계 시 사용 가능 | 선택 |
-| `UPBIT_SECRET_KEY` | 업비트 secret 키 | 선택 |
+| `UPBIT_ACCESS_KEY` | 현재 MVP 범위에서는 사용하지 않음. 향후 확장 대비 예약 변수 | 선택 |
+| `UPBIT_SECRET_KEY` | 현재 MVP 범위에서는 사용하지 않음. 향후 확장 대비 예약 변수 | 선택 |
 | `UPBIT_BASE_URL` | Upbit API 기본 URL | 예 |
-| `DATABASE_URL` | SQLite 또는 PostgreSQL 연결 문자열 | 예 |
+| `DATABASE_URL` | SQLite 연결 문자열 | 예 |
 | `NEXT_PUBLIC_API_BASE_URL` | FE에서 호출할 BE 기본 URL | 예 |
 | `AI_SERVICE_HTTP_URL` | BE가 호출하는 AI HTTP 엔드포인트 | 선택 |
-| `AI_SERVICE_GRPC_TARGET` | 내부 AI gRPC 타깃 주소 | 선택 |
 | `APP_ENV` | `local`, `dev`, `demo` 등 실행 환경 구분 | 예 |
 | `LOG_LEVEL` | 애플리케이션 로그 레벨 | 예 |
 
@@ -68,8 +67,9 @@
 
 1. FE는 `.env.local`에 `NEXT_PUBLIC_API_BASE_URL`을 설정한다.
 2. BE는 `.env`에 `DATABASE_URL`, `UPBIT_BASE_URL`, `OPENAI_API_KEY`를 설정한다.
-3. AI 서비스는 BE와 동일 네트워크에서 HTTP 또는 gRPC 인터페이스를 제공한다.
-4. **MVP 기준 제안**으로 로컬 데모는 SQLite를 기본 저장소로 사용한다.
+3. AI 서비스는 BE와 동일 네트워크에서 HTTP 인터페이스만 제공한다.
+4. 로컬 데모와 개인용 실행 환경 모두 SQLite를 기본 저장소로 사용한다.
+5. 데모는 업비트 실시간 시세/캔들 API를 사용하고, 실행은 내부 페이퍼 실행으로 처리한다.
 
 ### 실행 순서 기준
 
@@ -87,6 +87,6 @@
 
 ## 결정 필요 사항
 
-- **MVP 기준 제안**으로 DB는 SQLite로 시작하고, 필요 시 PostgreSQL로 확장할지 확정이 필요하다.
-- AI 서비스 인터페이스를 MVP에서 HTTP만 사용할지, gRPC까지 같이 열지 확정이 필요하다.
-- 업비트 private API 키를 데모에서 실제로 사용할지, quotation API만으로 데모를 구성할지 확정이 필요하다.
+- 로컬 개인용 Agent 기준의 데이터 보존 기간을 얼마나 둘지 확정이 필요하다.
+- 업비트 실시간 API 호출 빈도를 폴링 기준으로 몇 초 단위까지 허용할지 확정이 필요하다.
+- 단일 사용자 환경에서 정책 히스토리를 몇 개 버전까지 유지할지 확정이 필요하다.
