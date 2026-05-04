@@ -84,7 +84,7 @@ Coin Agent의 핵심 가치는 “실거래 없이도 전체 현물 주문 테�
 | 이름/유형 | 김현우 / 개인용 모의투자 Agent 실험 사용자 |
 | 연령대 | 20대 후반 ~ 30대 후반 |
 | 직업/역할 | 개발자 또는 개발 친화적 개인 사용자 |
-| 사용 환경 | 로컬 PC에서 Next.js 화면과 FastAPI 서버를 함께 실행하며 Spot Testnet으로 테스트한다. |
+| 사용 환경 | 로컬 PC에서 React 화면과 FastAPI 서버를 함께 실행하며 Spot Testnet으로 테스트한다. |
 | 주요 니즈 | 실거래 없는 안전한 주문 테스트, 시그니처/인증 이해, 체결 상태 확인, 실패 원인 파악 |
 | 주요 불편함 | 실제 거래소 API 문서가 방대하고, 어떤 엔드포인트를 어떤 순서로 써야 하는지 빠르게 파악하기 어렵다. |
 
@@ -173,7 +173,7 @@ flowchart TD
 
 | 영역 | 사용 기술 | 선택 이유 |
 |---|---|---|
-| Frontend / UI | Next.js | 테스트넷 시세/주문/로그 화면 구성에 적합 |
+| Frontend / UI | React | 테스트넷 시세/주문/로그 화면 구성에 적합 |
 | Backend API | FastAPI | REST API, 시그니처 처리, Binance 연동 구현에 적합 |
 | AI Orchestration | LangGraph | 입력 해석, 주문 결과 설명, 리포트 생성에 적합 |
 | AI Interface | HTTP | 로컬 단일 환경에서 가장 단순함 |
@@ -185,7 +185,7 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    FE[Next.js] --> BE[FastAPI]
+    FE[React] --> BE[FastAPI]
     BE --> AI[LangGraph]
     BE --> DB[(SQLite)]
     BE --> REST[Binance Spot Testnet REST]

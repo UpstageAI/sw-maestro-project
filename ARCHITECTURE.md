@@ -16,7 +16,7 @@
 
 Coin Agent는 다음 다섯 계층으로 구성된다.
 
-1. Next.js 기반 Frontend
+1. React 기반 Frontend
 2. FastAPI 기반 Backend API
 3. LangGraph 기반 AI Orchestrator
 4. SQLite 저장소
@@ -37,7 +37,7 @@ Coin Agent는 다음 다섯 계층으로 구성된다.
 
 ```mermaid
 flowchart LR
-    USER[사용자] --> FE[Next.js FE]
+    USER[사용자] --> FE[React FE]
     FE --> BE[FastAPI BE]
     BE --> DB[(SQLite)]
     BE --> AI[LangGraph AI]
@@ -49,7 +49,7 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-    USER[User] --> UI[Next.js UI]
+    USER[User] --> UI[React UI]
     UI --> API[FastAPI REST API]
     API --> CONFIG[Testnet Config Service]
     API --> ACCOUNT[Balance / Account Service]
@@ -125,7 +125,7 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    FE[Next.js] --> BE[FastAPI]
+    FE[React] --> BE[FastAPI]
     BE --> WS[wss://stream.testnet.binance.vision/ws]
     WS --> BE
     BE --> FE

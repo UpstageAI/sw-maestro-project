@@ -2,7 +2,7 @@
 
 ## 문서 목적
 
-이 문서는 Next.js 기반 Frontend의 페이지, 컴포넌트, UI 상태, Binance Spot Testnet 전용 시각화 요구사항을 정의한다.
+이 문서는 React 기반 Frontend의 페이지, 컴포넌트, UI 상태, Binance Spot Testnet 전용 시각화 요구사항을 정의한다.
 
 ## 관련 문서
 
