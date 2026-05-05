@@ -31,6 +31,10 @@
 | T-08 | 주문 취소 | 취소 응답 확인 | FR-09 |
 | T-09 | WebSocket 시세 수신 | ticker 또는 kline 이벤트 수신 | FR-10 |
 | T-10 | Python 예제 | 예제 코드가 Testnet URL만 사용하는지 확인 | FR-11, FR-12 |
+| T-11 | run resume | 동일 `run_id` 기준 재개 흐름 확인 | FR-13 |
+| T-12 | HOLD subtype | `HOLD_REVIEW_REQUIRED`, `HOLD_DATA_INSUFFICIENT` 구분 확인 | FR-14 |
+| T-13 | structured output | AI 노드 출력 schema 검증 | FR-15, FR-16 |
+| T-14 | BE 재검증 분리 | `BE_REJECTED`와 일반 실패 구분 확인 | FR-17 |
 
 ## 3. 테스트 체크리스트
 
@@ -53,6 +57,8 @@
 - 주문 상태 조회 성공
 - 주문 취소 성공
 - WebSocket 이벤트 수신 성공
+- 동일 `run_id` resume 성공
+- HOLD 사유가 UI/API에서 구분 표시됨
 
 ### 안전 체크
 
@@ -60,8 +66,21 @@
 - 실거래 API Key 사용 흔적 없음
 - WebSocket stream 심볼 소문자 사용 확인
 - REST 심볼 대문자 사용 확인
+- schema mismatch가 조용히 통과되지 않음
 
-## 4. Python 예제 테스트
+## 4.1 Agent 계약 검증 매트릭스
+
+| 시나리오 | 입력 조건 | 기대 gate | 기대 최종 상태 | 검증 포인트 |
+|---|---|---|---|---|
+| A-01 | 필수 파라미터 누락 | `REJECT` 또는 `HOLD` | `NO_ORDER` 또는 `HOLD` + `hold_reason=HOLD_DATA_INSUFFICIENT` | `verification_checks.input_validation` 존재 |
+| A-02 | 잔고 부족 | `REJECT` | `NO_ORDER` | `INSUFFICIENT_BALANCE` reason code 존재 |
+| A-03 | stale market snapshot | `HOLD` | `HOLD` + `hold_reason=HOLD_DATA_INSUFFICIENT` | resume 필요 여부 표시 |
+| A-04 | 사람 승인 필요 정책 | `HOLD` | `HOLD` + `hold_reason=HOLD_REVIEW_REQUIRED` | 승인 전 주문 미제출 |
+| A-05 | AI PASS 후 BE 규칙 위반 | `PASS` | `BE_REJECTED` | AI와 BE 책임 경계 구분 |
+| A-06 | execution_result schema mismatch | `PASS` | `FAILED` | schema 검증 실패 로그 존재 |
+| A-07 | resume 후 시장 데이터 보완 | `HOLD` | `REPORT_READY`, `BE_REJECTED`, `NO_ORDER`, `FAILED` 중 하나 | 동일 `run_id` 유지 |
+
+## 5. Python 예제 테스트
 
 - 잔고 조회 예제 실행
 - 현재가 조회 예제 실행
@@ -70,7 +89,7 @@
 - 주문 취소 예제 실행
 - WebSocket ticker 수신 예제 실행
 
-## 5. Binance Spot Testnet 실패 테스트
+## 6. Binance Spot Testnet 실패 테스트
 
 - 잘못된 API Key 사용 시 인증 실패 확인
 - 잘못된 `timestamp` 사용 시 요청 실패 확인
@@ -78,8 +97,9 @@
 - 잘못된 `symbol` 사용 시 실패 확인
 - 부족한 잔고에서 주문 시 실패 확인
 - WebSocket 연결 실패 시 수동 조회 fallback 안내 확인
+- schema 필수 필드 누락 시 `FAILED` 또는 `HOLD` + `hold_reason=HOLD_DATA_INSUFFICIENT` 확인
 
-## 6. E2E 테스트
+## 7. E2E 테스트
 
 ### E2E-01 Testnet 설정부터 잔고 조회까지
 
@@ -113,7 +133,21 @@
 2. 이벤트 수신
 3. FE에 최신 이벤트 표시 확인
 
-## 7. 발표 데모 시나리오
+### E2E-05 HOLD_REVIEW_REQUIRED 후 resume
+
+1. 사람 승인 필요한 정책 조건으로 주문 요청
+2. `HOLD` + `hold_reason=HOLD_REVIEW_REQUIRED` 응답 확인
+3. 승인 후 같은 `run_id`로 resume
+4. 이후 `REPORT_READY` 또는 `BE_REJECTED` 결과 확인
+
+### E2E-06 HOLD_DATA_INSUFFICIENT 후 resume
+
+1. 데이터 부족 상태를 유도
+2. `HOLD` + `hold_reason=HOLD_DATA_INSUFFICIENT` 응답 확인
+3. 재조회/보완 입력 후 같은 `run_id`로 resume
+4. 최종 상태가 `REPORT_READY`, `BE_REJECTED`, `NO_ORDER`, `FAILED` 중 하나로 설명 가능해야 함
+
+## 8. 발표 데모 시나리오
 
 ### 데모 1. Spot Testnet 환경 확인
 
@@ -141,21 +175,27 @@
 
 - `btcusdt@ticker` 이벤트 실시간 수신 시연
 
-## 8. 데모용 초기 데이터
+### 데모 6. HOLD와 resume 시연
+
+- 정책상 검토 필요 주문으로 `HOLD` + `hold_reason=HOLD_REVIEW_REQUIRED` 발생
+- 승인 후 동일 `run_id`로 재개되는 흐름 설명
+
+## 9. 데모용 초기 데이터
 
 - 기본 심볼: `BTCUSDT`, `ETHUSDT`
 - 기본 interval: `1m`
 - 테스트용 quote 금액: `50`
 - 테스트용 수량 예시: `0.001`
 
-## 9. 백업 플랜
+## 10. 백업 플랜
 
 - REST 호출 실패 시 직전 정상 응답 JSON을 데모용 백업으로 사용
 - WebSocket 실패 시 동일 심볼의 REST 조회로 대체
 - 주문 취소 실패 시 상태 조회 결과로 미체결 상태를 설명
 
-## 10. 확정 구현 기준
+## 11. 확정 구현 기준
 
 - 발표 데모는 반드시 Spot Testnet 환경에서만 수행한다.
 - 예제 코드는 모두 Testnet URL만 사용한다.
 - 실거래 기능은 문서와 시연 모두에서 배제한다.
+- `PASS`, `NO_ORDER`, `HOLD` + `hold_reason`, `BE_REJECTED`, `FAILED`를 구분 검증한다.

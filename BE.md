@@ -9,6 +9,8 @@
 - 제품 요구사항: `SPEC.md`
 - 아키텍처: `ARCHITECTURE.md`
 - 데이터 계약: `DATA.md`
+- AI 계약: `AI.md`
+- 테스트 기준: `TEST_AND_DEMO.md`
 
 ## 1. BE 역할
 
@@ -44,6 +46,8 @@ BE는 Binance Spot Testnet과 직접 통신하는 유일한 계층이다. 잔고
 | `order_service` | `POST /api/v3/order`, `GET /api/v3/order`, `DELETE /api/v3/order` 호출 |
 | `stream_service` | WebSocket stream 구독 및 최근 이벤트 저장 |
 | `report_service` | 주문/조회 결과를 설명 가능한 결과로 변환 |
+| `ai_gateway_service` | AI run 시작, checkpoint 저장, resume 호출, schema 검증 |
+| `checkpoint_service` | `run_id` 기준 상태 저장/복원/만료 처리 |
 
 ## 5. 인증 방식
 
@@ -115,6 +119,13 @@ Binance Testnet의 signed endpoint 호출 시 다음 요소가 필요하다.
 - `price`는 `tickSize`를 만족해야 한다.
 - `quoteOrderQty` 기반 주문도 최소 notion 조건을 만족해야 한다.
 
+### AI handoff / resume 원칙
+
+- 주문 테스트 요청은 먼저 AI run으로 전달한다.
+- AI 응답이 `READY_FOR_BE`가 아니면 Binance 주문 제출로 진행하지 않는다.
+- `HOLD_REVIEW_REQUIRED`, `HOLD_DATA_INSUFFICIENT`는 checkpoint 저장 후 FE에 반환한다.
+- resume 요청은 반드시 동일 `run_id`를 포함해야 한다.
+
 ## 9. 주문 상태 조회
 
 - 엔드포인트: `GET /api/v3/order`
@@ -126,6 +137,12 @@ Binance Testnet의 signed endpoint 호출 시 다음 요소가 필요하다.
 - 엔드포인트: `DELETE /api/v3/order`
 - 필수 파라미터: `symbol`, `timestamp`, 그리고 `orderId` 또는 `origClientOrderId`
 - 취소 제한이 필요하면 `cancelRestrictions` 사용 가능
+
+## 10.1 AI output schema 검증
+
+- BE는 AI 응답을 신뢰하기 전에 `NormalizedOrderIntent`, `GateDecision`, `HoldDecision`, `VerificationResult`, `AgentDecisionTrace`, `ReportPayload` 같은 이름 있는 schema로 검증한다.
+- 필수 필드 누락이 복구 가능하면 `HOLD` + `hold_reason=HOLD_DATA_INSUFFICIENT`로, 복구 불가하면 `FAILED`로 처리한다.
+- schema mismatch 상태에서는 Binance signed endpoint를 호출하지 않는다.
 
 ## 11. WebSocket 시세 수신
 
@@ -140,6 +157,22 @@ Binance Testnet의 signed endpoint 호출 시 다음 요소가 필요하다.
 - `btcusdt@kline_1m`
 
 stream 이름의 심볼은 반드시 소문자를 사용한다.
+
+## 11.1 checkpoint / resume 저장 규칙
+
+| 항목 | 기준 |
+|---|---|
+| key | `run_id` |
+| 저장 시점 | AI 첫 응답 수신 시, BE 재검증 전, execution_result resume 전 |
+| 저장 내용 | lifecycle 상태, hold_reason, trace, verification_checks, schema_version |
+| overwrite 금지 | 원본 request/policy/auth 관련 원문 |
+| TTL 만료 후 | resume 거부 + run 재시작 안내 |
+
+## 11.2 deterministic 재검증 경계
+
+- BE는 `exchangeInfo`, 계정 잔고, signed request 제약을 deterministic하게 다시 검증한다.
+- AI `PASS`라도 BE 규칙 위반이면 `BE_REJECTED`로 종료한다.
+- `BE_REJECTED` 사유는 FE/리포트에 설명 가능한 코드로 남겨야 한다.
 
 ## 12. Python 예제 코드
 
@@ -289,3 +322,4 @@ ws.close()
 - `/api/v1/testnet/*` 응답은 FE 친화적인 정규화 포맷으로 반환한다.
 - Binance 원본 전체 payload는 로그/SQLite에 보관할 수 있지만, 기본 API 응답은 필요한 필드만 노출한다.
 - 주문 상태 값은 Binance 원본 enum을 유지한다.
+- AI 관련 응답에는 필요 시 `run_id`, `gate_decision`, `hold_reason`, `decision_trace` 요약을 포함한다.

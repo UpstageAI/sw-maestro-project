@@ -52,6 +52,14 @@
 - 사용자의 정책과 리스크 게이트를 통과하지 못하면 기본값은 무주문 또는 판단 보류다.
 - 브라우저는 Binance API를 직접 호출하지 않고, 모든 호출은 BE를 통해 수행한다.
 
+## 최신 문서 계약 요약
+
+- `HOLD`는 상위 상태이며, 실제 원인은 `HOLD_REVIEW_REQUIRED` 또는 `HOLD_DATA_INSUFFICIENT`로 구분한다.
+- 모든 주문 테스트 run은 `run_id`로 추적하며, resume는 동일 `run_id` 기준으로 진행한다.
+- AI는 Binance를 직접 호출하지 않고, 정규화 도구와 구조화 schema 계약 위에서만 동작한다.
+- `BE_REJECTED`는 AI `PASS` 이후 BE 재검증에서만 생성된다.
+- 검증 기준과 상태별 기대 결과는 `TEST_AND_DEMO.md`를 기준으로 본다.
+
 ## API Key 생성 절차
 
 1. `https://testnet.binance.vision/` 에 접속한다.
@@ -137,3 +145,4 @@
 - WebSocket stream 이름은 `btcusdt@ticker`처럼 소문자 stream symbol을 사용한다.
 - 기본 주문 예시는 Spot 시장가 매수/매도와 주문 상태 조회/취소까지로 제한한다.
 - 실거래 기능, 출금, 선물, 마진은 문서에 포함하지 않는다.
+- `run_id`, `hold_reason`, `decision_trace` 같은 핵심 계약 용어는 문서 간 동일하게 유지한다.

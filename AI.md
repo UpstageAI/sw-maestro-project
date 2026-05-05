@@ -29,6 +29,7 @@ AI 계층의 목적은 다음 네 가지다.
 - **Reasoning With Artifacts**: 사고 과정은 자유 서술형 프롬프트가 아니라 `reason_codes`, `evidence_refs`, `verification_checks`, `final_action` 같은 구조화 결과로 남긴다.
 - **Deterministic Guard First**: 심볼 형식, 필수 파라미터, 수량/가격 규칙, 실거래 차단은 룰 엔진이 우선한다.
 - **Human-Review Ready**: 주문 제출 직전 또는 불확실성이 남는 경우 사람이 개입할 수 있도록 `HOLD` 상태를 유지한다.
+- **Schema-Enforced Outputs**: 각 노드의 산출물은 이름 있는 schema를 따라야 하며, schema mismatch는 무시하지 않는다.
 - **No Secret Handling**: AI는 API Key, Secret, signature, timestamp 생성 책임을 가지지 않는다.
 - **Single Authority for Execution**: Binance 제출 권한은 BE만 가진다.
 
@@ -88,8 +89,27 @@ flowchart LR
 | `execution_result` | 주문 응답, 상태 조회 결과, 취소 결과 | BE | Execution | Binance 제출 이후에만 생성 |
 | `verification_checks` | 입력/리스크/실행 결과 검증 목록 | 각 Agent | 전체 | 각 단계가 자신의 검증만 추가 |
 | `decision_trace` | `reason_codes`, `evidence_refs`, `final_action`, `notes` | 각 Agent | Report, Audit | 자유 문장보다 구조화 우선 |
+| `hold_reason` | `HOLD`의 세부 원인 | Policy, Risk, BE | FE, Execution, Audit | `HOLD_REVIEW_REQUIRED`, `HOLD_DATA_INSUFFICIENT` 중 하나 |
 | `errors` | 에러 코드와 실패 위치 | 전체 | 전체 | 예외는 누락하지 않고 누적 |
 | `lifecycle_status` | 현재 상태 | Orchestrator | 전체 | 아래 상태 집합만 사용 |
+
+### 5.1 Shared State merge / reducer 기준
+
+| 필드 | merge 방식 | 비고 |
+|---|---|---|
+| `request_context` | immutable | 최초 요청 이후 변경 금지 |
+| `policy_context` | immutable | BE가 시작 시점에만 주입 |
+| `normalized_order_intent` | 최초 생성 후 보완 병합 | 보완 입력이 필요한 경우 누락 필드만 채움 |
+| `market_snapshot` | latest overwrite | 재조회 시 최신 스냅샷으로 대체 |
+| `account_balance` | latest overwrite | signed 조회 최신값 우선 |
+| `exchange_rules` | latest overwrite | `exchangeInfo` 최신값 우선 |
+| `risk_assessment` | stage overwrite | Risk 단계 최신 산출물 1개 유지 |
+| `gate_decision` | stage overwrite | Risk 또는 BE 결과 최신값 유지 |
+| `verification_checks` | append | 단계별 결과 누적 |
+| `decision_trace` | agent-key merge | `policy`, `risk`, `execution`, `run_summary`를 키 단위로 병합 |
+| `hold_reason` | latest overwrite | `HOLD` 상태일 때만 필수 |
+| `errors` | append | 에러 누적, 삭제 금지 |
+| `lifecycle_status` | state transition only | 허용된 전이만 가능 |
 
 ## 6. 상태 전이 기준
 
@@ -99,7 +119,7 @@ flowchart LR
 | `NORMALIZING` | Policy Agent가 의도를 정규화 중 | `NEEDS_INPUT`, `RISK_REVIEW`, `NO_ORDER` |
 | `NEEDS_INPUT` | 필수 값 누락 또는 해석 불가인 내부 상태 | `NO_ORDER`, `HOLD`, `RISK_REVIEW` |
 | `RISK_REVIEW` | Risk Agent가 시장/잔고/규칙 검증 중 | `READY_FOR_BE`, `HOLD`, `NO_ORDER` |
-| `HOLD` | 사람 검토 또는 추가 데이터 필요 | `RISK_REVIEW`, `NO_ORDER` |
+| `HOLD` | 사람 검토 또는 추가 데이터 필요 | `RISK_REVIEW`, `NO_ORDER`, `READY_FOR_BE` |
 | `READY_FOR_BE` | AI 기준 통과, BE 재검증 대기 | `BE_REJECTED`, `EXECUTING` |
 | `BE_REJECTED` | BE 규칙 또는 서명/호출 단계에서 차단 | `REPORT_READY` |
 | `EXECUTING` | Binance Testnet 제출 및 응답 대기 | `RESULT_VERIFYING`, `FAILED` |
@@ -113,6 +133,15 @@ flowchart LR
 - `PASS`는 `READY_FOR_BE`를 의미할 뿐, 곧바로 주문 제출을 의미하지 않는다.
 - `HOLD`는 애매하지만 위험한 상태를 숨기지 않고 드러내기 위한 안전 상태다.
 - `BE_REJECTED`는 AI가 통과시켰더라도 BE가 deterministic 검증으로 다시 차단할 수 있음을 의미하며, 이 상태는 BE만 생성할 수 있다.
+
+### 6.1 HOLD subtype 해석 기준
+
+| hold_reason | 의미 | FE/BE 처리 |
+|---|---|---|
+| `HOLD_REVIEW_REQUIRED` | 정책상 자동 진행이 부적절해 사람 승인 또는 명시적 확인이 필요한 상태 | 승인/거절 UI 또는 관리자 확인 절차 제공 |
+| `HOLD_DATA_INSUFFICIENT` | 시장 데이터, 정책 입력, 응답 필수 필드가 부족해 재조회 또는 보완 입력이 필요한 상태 | 재조회/재입력 후 같은 `run_id` resume |
+
+`HOLD`는 lifecycle 상태이고, `hold_reason`은 그 상태의 원인을 설명하는 세부 계약이다.
 
 ## 7. Agent별 계약
 
@@ -162,6 +191,15 @@ flowchart LR
 - 필수 값 누락: 내부 상태로 `NEEDS_INPUT`을 기록한 뒤 `NO_ORDER` 또는 `HOLD`
 - 명백한 금지 요청: `NO_ORDER`
 
+#### 허용 도구 / 계약
+
+| 도구 | 목적 | 출력 schema |
+|---|---|---|
+| `normalize_order_request` | 구조화 주문 의도 생성 | `NormalizedOrderIntent` |
+| `validate_order_fields` | 주문 타입별 필수 필드 검증 | `VerificationResult[]` |
+| `classify_request_type` | 조회/주문/상태조회/취소 구분 | `request_type` 문자열 |
+| `detect_disallowed_live_trading_terms` | 실거래 전환 시도 감지 | `VerificationResult[]` |
+
 ### 7.2 Market / Risk Agent
 
 #### 역할
@@ -209,6 +247,15 @@ flowchart LR
 - `REJECT`: `NO_ORDER`
 - `HOLD`: `HOLD`
 
+#### 허용 도구 / 계약
+
+| 도구 | 목적 | 출력 schema |
+|---|---|---|
+| `evaluate_market_snapshot` | 시세/호가/캔들 요약 해석 | `RiskAssessment` |
+| `validate_exchange_rules` | `PRICE_FILTER`, `LOT_SIZE`, `MIN_NOTIONAL` 검증 | `VerificationResult[]` |
+| `check_policy_limits` | 정책상 최대 수량/금액/시간대 검증 | `VerificationResult[]` |
+| `assess_hold_reason` | 보류가 필요한 경우 subtype 결정 | `HoldDecision` |
+
 ### 7.3 Execution / Report Agent
 
 #### 역할
@@ -251,6 +298,23 @@ flowchart LR
 - 응답 검증 성공: `REPORT_READY`
 - 응답 불일치 또는 필수 필드 결손: `FAILED`
 
+#### 허용 도구 / 계약
+
+| 도구 | 목적 | 출력 schema |
+|---|---|---|
+| `validate_execution_result` | 주문 응답/상태 응답 검증 | `VerificationResult[]` |
+| `build_report_payload` | 사용자용 리포트 조립 | `ReportPayload` |
+| `summarize_block_or_failure` | 차단/실패 설명 | `AgentDecisionTrace` |
+
+### 7.4 Resume payload와 immutable 규칙
+
+resume 시점에는 다음 규칙을 따른다.
+
+- immutable: `request_context`, 최초 `policy_context`, 이전 단계 `decision_trace`, 과거 `errors`
+- patch 가능: `market_snapshot`, `account_balance`, `execution_result`, 보완 입력 필드, 사용자 승인 결과
+- `run_summary`는 최종 상태가 결정되기 전까지 확정하지 않는다.
+- resume payload는 반드시 `run_id`, `resume_reason`, `patch_fields`를 포함해야 한다.
+
 ## 8. Agent Reasoning / Thinking 설계
 
 이 문서에서 말하는 Reasoning은 숨겨진 장문 사고를 의미하지 않는다. 구현 기준은 **검증 가능한 사고 산출물**이다.
@@ -287,6 +351,21 @@ flowchart LR
 
 `run_summary`에는 최종 상태와 BE override 여부를 남기고, 각 agent trace에는 해당 단계에서만 생성된 `reason_codes`와 `verification_checks`를 남긴다.
 
+### 8.1 Structured output 계약
+
+각 노드는 아래 이름 있는 schema를 따라야 한다.
+
+- Policy Node → `NormalizedOrderIntent`, `AgentDecisionTrace`
+- Risk Node → `RiskAssessment`, `GateDecision`, `HoldDecision`
+- Execution Node → `VerificationResult[]`, `AgentDecisionTrace`
+- Report Node → `ReportPayload`, `RunDecisionTrace`
+
+schema mismatch 처리 기준은 다음과 같다.
+
+- 필수 필드 누락 + 보완 가능 → `HOLD` + `hold_reason=HOLD_DATA_INSUFFICIENT`
+- 필수 필드 누락 + 의미 복구 불가 → `NO_ORDER` 또는 `FAILED`
+- 금지 값/실거래 흔적 포함 → `NO_ORDER`
+
 ## 9. 리스크 게이트와 안전 제약
 
 ### 9.1 Hard Guardrails
@@ -296,7 +375,7 @@ flowchart LR
 - 실거래 URL 또는 실거래 키 사용 정황
 - Binance Production host 문자열 사용
 - 정책상 금지된 심볼 또는 주문 타입
-- 필수 파라미터 누락
+- 사용자가 명시적으로 제공했어야 하는 필수 파라미터가 모순되거나 복구 불가능하게 누락됨
 - 서명/인증 책임을 AI에게 넘기려는 시도
 
 ### 9.2 Risk Gate Checks
@@ -307,6 +386,7 @@ flowchart LR
 - `PRICE_FILTER`, `LOT_SIZE`, `MIN_NOTIONAL`을 만족하는가
 - 시장 데이터가 너무 오래되지 않았는가
 - 프로젝트 정책의 최대 수량/금액/시간대 조건을 넘지 않는가
+- 구조화 출력 schema가 다음 단계에서 해석 가능한가
 
 ### 9.3 BE 재검증 원칙
 
@@ -314,6 +394,12 @@ flowchart LR
 - BE는 주문 제출 직전에 동일 제약을 deterministic하게 다시 검증한다.
 - BE는 필요 시 AI의 `PASS`를 `BE_REJECTED`로 낮출 수 있다.
 - `BE_REJECTED`는 BE 재검증 단계에서만 생성된다.
+
+### 9.4 Tool boundary 원칙
+
+- AI는 Binance REST/WS를 직접 호출하지 않는다.
+- AI가 사용하는 도구는 BE 또는 내부 런타임이 제공하는 정규화 도구여야 한다.
+- tool output은 모두 `DATA.md`의 이름 있는 schema에 매핑되어야 한다.
 
 ## 10. LLM 사용 지점과 룰 엔진 사용 지점
 
@@ -324,6 +410,7 @@ flowchart LR
 - 주문 결과 설명
 - 에러 해석 요약
 - 테스트 리포트 생성
+- `HOLD_REVIEW_REQUIRED` vs `HOLD_DATA_INSUFFICIENT` 판별
 
 ### 룰 엔진 사용 지점
 
@@ -338,14 +425,16 @@ flowchart LR
 
 ## 11. 실패 처리와 복구 기본값
 
-- 파라미터 누락: `NO_ORDER`
-- 시그니처 실패: `BE_REJECTED`
+- 파라미터 누락(보완 가능): `HOLD` + `hold_reason=HOLD_DATA_INSUFFICIENT`
+- 파라미터 누락(복구 불가): `NO_ORDER`
+- 시그니처 실패: `FAILED`
 - 잔고 부족: `NO_ORDER`
 - 거래소 규칙 위반: `NO_ORDER`
 - API 실패: `FAILED`
 - stream 실패: 수동 조회 fallback 안내
 - 응답 필수 필드 누락: `FAILED`
 - Agent 판단 근거 부족: `HOLD`
+- schema mismatch: `FAILED` 또는 `HOLD` + `hold_reason=HOLD_DATA_INSUFFICIENT`
 
 복구 원칙은 다음과 같다.
 
@@ -377,11 +466,11 @@ AI가 최종적으로 남겨야 하는 보고 산출물은 다음을 포함한�
 
 | 노드 | 입력 | 출력 |
 |---|---|---|
-| Policy Node | 사용자 요청, 정책 컨텍스트 | 구조화 주문 의도, 입력 검증 결과 |
-| Risk Node | 구조화 주문 의도, 시장 데이터, 잔고, 거래소 규칙 | 위험 평가, gate 결과 |
+| Policy Node | 사용자 요청, 정책 컨텍스트 | `NormalizedOrderIntent`, 입력 검증 결과, `AgentDecisionTrace` |
+| Risk Node | 구조화 주문 의도, 시장 데이터, 잔고, 거래소 규칙 | `RiskAssessment`, `GateDecision`, `HoldDecision` |
 | BE Handoff | gate 통과 요청 | 재검증된 실행 요청 또는 `BE_REJECTED` |
-| Execution Node | BE 실행 결과 | 결과 검증, 상태 해석 |
-| Report Node | 실행 결과/차단 결과/실패 결과 | 설명 가능한 결과, 저장용 report payload |
+| Execution Node | BE 실행 결과 | `VerificationResult[]`, `AgentDecisionTrace` |
+| Report Node | 실행 결과/차단 결과/실패 결과 | `ReportPayload`, `RunDecisionTrace` |
 
 ## 14. 평가 기준
 
@@ -393,6 +482,17 @@ AI가 최종적으로 남겨야 하는 보고 산출물은 다음을 포함한�
 - 실거래 방지 문구 유지 여부
 - BE 재검증과 AI 판단 경계가 문서상 분명한지
 
+### 14.1 최소 평가 시나리오
+
+| 시나리오 | 기대 gate | 기대 최종 상태 |
+|---|---|---|
+| 필수 파라미터 누락 | `REJECT` 또는 `HOLD` | `NO_ORDER` 또는 `HOLD` + `hold_reason=HOLD_DATA_INSUFFICIENT` |
+| 잔고 부족 | `REJECT` | `NO_ORDER` |
+| stale market data | `HOLD` | `HOLD` + `hold_reason=HOLD_DATA_INSUFFICIENT` |
+| 사람 승인 필요 정책 | `HOLD` | `HOLD` + `hold_reason=HOLD_REVIEW_REQUIRED` |
+| BE 재검증 실패 | `PASS` | `BE_REJECTED` |
+| execution_result schema mismatch | `PASS` | `FAILED` |
+
 ## 15. 확정 구현 기준
 
 - 자연어 정책 입력은 제외하고 폼/구조화 입력만 지원한다.
@@ -402,3 +502,5 @@ AI가 최종적으로 남겨야 하는 보고 산출물은 다음을 포함한�
 - AI는 Binance에 직접 요청하지 않는다.
 - AI는 실거래 전환 로직을 갖지 않는다.
 - 사람 승인 또는 추가 확인이 필요한 경우 `HOLD`를 유지한다.
+- `HOLD` 상태에는 반드시 `hold_reason`가 함께 기록되어야 한다.
+- shared state merge 규칙과 node output schema는 문서상 이름으로 고정되어야 한다.

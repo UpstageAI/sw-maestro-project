@@ -200,6 +200,14 @@ flowchart LR
 - 실거래 URL, 실거래 키, 실거래 주문은 다루지 않는다.
 - 심볼은 REST에서 `BTCUSDT`, stream에서는 `btcusdt`를 사용한다.
 
+### 4.4 통합 Agent 계약 요약
+
+- Agent의 자율성은 임의 실행 권한이 아니라 **구조화 판단 + 상태 기반 오케스트레이션**으로 정의한다.
+- 주문 테스트 run은 `run_id`로 추적하며, 필요 시 같은 run을 resume한다.
+- 판단 보류는 단일 `HOLD`로 뭉뚱그리지 않고 `HOLD_REVIEW_REQUIRED`, `HOLD_DATA_INSUFFICIENT`로 해석 가능해야 한다.
+- AI 산출물은 구조화 schema 계약을 따르며, BE는 이를 재검증한 뒤에만 Testnet 주문을 제출한다.
+- `BE_REJECTED`는 AI 실패가 아니라 BE 재검증 차단이라는 점을 사용자에게 설명 가능해야 한다.
+
 ---
 
 ## 5. 성과 평가 및 실행 계획
@@ -212,6 +220,7 @@ flowchart LR
 | 안전성 | 실거래 URL/API Key 사용 0건 | 환경 설정 및 grep 검증 |
 | 문서 정확성 | 모든 엔드포인트가 Testnet 기준 | 문서 검수 |
 | 데모 가능 여부 | 로컬 환경에서 주문 테스트 end-to-end 시연 가능 | 발표 전 리허설 |
+| 계약 완성도 | `run_id`, `hold_reason`, `decision_trace`, `BE_REJECTED` 경계가 문서와 데모에서 일관됨 | 문서 교차 검수 + 데모 체크 |
 
 ### 5.2 MVP 완료 기준
 
@@ -227,3 +236,5 @@ flowchart LR
 - Binance Spot Testnet만 지원한다.
 - 실거래 주문은 문서와 시스템 범위에서 제외한다.
 - 시장가 매수/매도, 상태 조회, 취소, 시세 수신을 우선 구현한다.
+- 상태 기반 Agent run과 resume 계약을 문서로 명시한다.
+- 보류, 차단, 실패를 서로 다른 상태와 설명으로 구분한다.
