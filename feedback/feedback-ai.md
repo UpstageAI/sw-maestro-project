@@ -1,6 +1,6 @@
 # AI 문서 리뷰 업데이트 — 최신 Coin Agent 문서 기준
 
-> 검토 대상: `AI.md`, `ARCHITECTURE.md`, `PROPOSAL.md`, `SPEC.md`
+> 검토 대상: `README.md`, `PROPOSAL.md`, `SPEC.md`, `ARCHITECTURE.md`, `AI.md`, `DATA.md`, `FE.md`, `BE.md`, `TEST_AND_DEMO.md`
 > 검토 기준: 현재 저장소의 **Binance Spot Testnet 전용 Coin Agent** 범위와 문서 간 정합성
 > 한 줄 결론: **기존 `feedback-ai.md`의 "agentic이 아니다"라는 비판은 현재 문서 세트 기준으로는 그대로 유지되기 어렵다.** 최신 문서는 이미 상태 기반 오케스트레이션, 권한 경계, fail-closed, BE 재검증, 구조화 trace 방향을 명시하고 있으며, 현재의 핵심 이슈는 "agentic 부재"보다 **구현 계약의 구체성 부족**에 가깝다.
 
