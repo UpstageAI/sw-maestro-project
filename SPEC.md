@@ -96,7 +96,7 @@ AI는 이 정책을 완화하거나 재정의하지 않고, 구조화된 주문 
 - API 실패 시 신규 주문 테스트 중단
 - AI 판단 결과가 `PASS`여도 BE가 제출 직전에 다시 검증한다.
 - AI는 시그니처 생성, 실거래 전환, 리스크 게이트 우회를 수행하지 않는다.
-- LLM은 action proposal 또는 action path를 만들 수 있지만, 실행 결정권은 deterministic rule 기반 Risk Engine과 BE에 있다.
+- LLM은 action proposal 또는 action path를 만들 수 있지만, gate 판단은 AI가 수행하고 실행 결정권은 BE의 deterministic 재검증과 제출 단계에 있다.
 
 ## 7. 기능 요구사항
 

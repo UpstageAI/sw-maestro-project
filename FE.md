@@ -96,12 +96,12 @@ flowchart LR
 | `NO_ORDER` | 차단 사유, `reason_codes` | 입력 수정 |
 | `HOLD` + `hold_reason=HOLD_REVIEW_REQUIRED` | 검토 필요 사유, 승인 필요 배지 | 승인/거절 또는 취소 |
 | `HOLD` + `hold_reason=HOLD_DATA_INSUFFICIENT` | 누락/오래된 데이터 설명 | 재조회/재입력 후 resume |
-| `BE_REJECTED` | AI 통과 후 BE 차단 설명 | 상세 사유 보기 |
+| `BE_REJECTED` | AI 통과 후 BE 차단 설명, 필요 시 최종 보고 전 단계 표시 | 상세 사유 보기 |
 | `FAILED` | 기술 실패 원인, 재시도 가능 여부 | 재시도 또는 run 종료 |
 
 ### 6.2 Agent 단계 표시 원칙
 
-- FE는 가능하면 `decision_trace.policy`, `decision_trace.risk`, `decision_trace.execution`, `decision_trace.run_summary`를 단계 카드로 구분한다.
+- FE는 가능하면 `decision_trace.policy`, `decision_trace.risk`, `decision_trace.evaluator`, `decision_trace.execution`, `decision_trace.run_summary`를 단계 카드로 구분한다.
 - Policy/Planning 단계에는 policy retrieval 근거가 요약되어야 한다.
 - Risk 단계에는 `verification_checks`와 `gate_decision`이 보여야 한다.
 - `PASS` 배지는 단독으로 초록 완료 의미를 주지 않고, “BE 재검증 대기” 설명과 함께 표시한다.

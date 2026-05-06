@@ -108,7 +108,7 @@ flowchart LR
 | `account_balance` | latest overwrite | signed 조회 최신값 우선 |
 | `exchange_rules` | latest overwrite | `exchangeInfo` 최신값 우선 |
 | `risk_assessment` | stage overwrite | Risk 단계 최신 산출물 1개 유지 |
-| `gate_decision` | stage overwrite | Risk 또는 BE 결과 최신값 유지 |
+| `gate_decision` | stage overwrite | Risk 단계 최신 산출물 1개 유지 |
 | `evaluation_result` | stage overwrite | evaluator 최신 산출물 1개 유지 |
 | `verification_checks` | append | 단계별 결과 누적 |
 | `decision_trace` | agent-key merge | `policy`, `risk`, `evaluator`, `execution`, `run_summary`를 키 단위로 병합 |
@@ -126,7 +126,7 @@ flowchart LR
 | `RISK_REVIEW` | Risk Agent가 시장/잔고/규칙 검증 중 | `READY_FOR_BE`, `HOLD`, `NO_ORDER` |
 | `HOLD` | 사람 검토 또는 추가 데이터 필요 | `RISK_REVIEW`, `NO_ORDER`, `READY_FOR_BE` |
 | `READY_FOR_BE` | AI 기준 통과, BE 재검증 대기 | `BE_REJECTED`, `EXECUTING` |
-| `BE_REJECTED` | BE 규칙 또는 서명/호출 단계에서 차단 | `REPORT_READY` |
+| `BE_REJECTED` | BE deterministic 재검증 단계에서 차단 | `REPORT_READY` |
 | `EXECUTING` | Binance Testnet 제출 및 응답 대기 | `RESULT_VERIFYING`, `FAILED` |
 | `RESULT_VERIFYING` | Execution Agent가 응답 의미를 검증 중 | `REPORT_READY`, `FAILED` |
 | `REPORT_READY` | 사용자용 결과 설명 준비 완료 | 종료 |
@@ -138,6 +138,7 @@ flowchart LR
 - `PASS`는 `READY_FOR_BE`를 의미할 뿐, 곧바로 주문 제출을 의미하지 않는다.
 - `HOLD`는 애매하지만 위험한 상태를 숨기지 않고 드러내기 위한 안전 상태다.
 - `BE_REJECTED`는 AI가 통과시켰더라도 BE가 deterministic 검증으로 다시 차단할 수 있음을 의미하며, 이 상태는 BE만 생성할 수 있다.
+- `BE_REJECTED`는 차단 결과를 설명하는 핵심 상태이며, 사용자용 보고 payload 생성 이후 내부 lifecycle은 `REPORT_READY`로 진행할 수 있다.
 
 ### 6.1 HOLD subtype 해석 기준
 

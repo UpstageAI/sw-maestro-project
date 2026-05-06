@@ -82,7 +82,7 @@
 | A-02 | 잔고 부족 | `REJECT` | `NO_ORDER` | `INSUFFICIENT_BALANCE` reason code 존재 |
 | A-03 | stale market snapshot | `HOLD` | `HOLD` + `hold_reason=HOLD_DATA_INSUFFICIENT` | resume 필요 여부 표시 |
 | A-04 | 사람 승인 필요 정책 | `HOLD` | `HOLD` + `hold_reason=HOLD_REVIEW_REQUIRED` | 승인 전 주문 미제출 |
-| A-05 | AI PASS 후 BE 규칙 위반 | `PASS` | `BE_REJECTED` | AI와 BE 책임 경계 구분 |
+| A-05 | AI PASS 후 BE 규칙 위반 | `PASS` | 최종 결과 `BE_REJECTED` | AI와 BE 책임 경계 구분 |
 | A-06 | execution_result schema mismatch | `PASS` | `FAILED` | schema 검증 실패 로그 존재 |
 | A-07 | resume 후 시장 데이터 보완 | `HOLD` | `REPORT_READY`, `BE_REJECTED`, `NO_ORDER`, `FAILED` 중 하나 | 동일 `run_id` 유지 |
 | A-08 | 정책 retrieval 결과 충돌 | `HOLD` 또는 `REJECT` | `HOLD` + `hold_reason=HOLD_DATA_INSUFFICIENT` 또는 `NO_ORDER` | policy refs와 평가 로그 존재 |
@@ -146,14 +146,14 @@
 1. 사람 승인 필요한 정책 조건으로 주문 요청
 2. `HOLD` + `hold_reason=HOLD_REVIEW_REQUIRED` 응답 확인
 3. 승인 후 같은 `run_id`로 resume
-4. 이후 `REPORT_READY` 또는 `BE_REJECTED` 결과 확인
+4. 이후 최종 결과 `BE_REJECTED`가 보고되거나 내부 lifecycle이 `REPORT_READY`로 마무리되는지 확인
 
 ### E2E-06 HOLD_DATA_INSUFFICIENT 후 resume
 
 1. 데이터 부족 상태를 유도
 2. `HOLD` + `hold_reason=HOLD_DATA_INSUFFICIENT` 응답 확인
 3. 재조회/보완 입력 후 같은 `run_id`로 resume
-4. 최종 상태가 `REPORT_READY`, `BE_REJECTED`, `NO_ORDER`, `FAILED` 중 하나로 설명 가능해야 함
+4. 최종 결과가 `BE_REJECTED`, `NO_ORDER`, `FAILED` 중 하나이거나 내부 lifecycle이 `REPORT_READY`로 마무리되는 흐름이 설명 가능해야 함
 
 ### E2E-07 정책 preset 별 분기 데모
 

@@ -27,7 +27,7 @@
 | ErrorResponse | 공통 오류 응답 |
 | AgentRunState | AI 오케스트레이터 내부 상태 객체 |
 | GateDecision | AI의 허용/차단/보류 판단 객체 |
-| AgentDecisionTrace | Policy/Risk/Execution 공통 판단 근거와 최종 액션 객체 |
+| AgentDecisionTrace | Policy/Risk/Evaluator/Execution 공통 판단 근거와 최종 액션 객체 |
 | RunDecisionTrace | 전체 run 기준 판단 요약 객체 |
 | HoldDecision | `HOLD` 상태의 세부 원인 객체 |
 | ResumeCommandPayload | 동일 run 재개를 위한 payload |
@@ -36,7 +36,7 @@
 | ReportPayload | 최종 사용자/저장용 리포트 객체 |
 | VerificationResult | 공통 검증 결과 객체 |
 | PolicyRetrievalPacket | Policy/Planning 단계의 정책 검색 결과 |
-| EvaluationRecord | evaluator/reflection 단계 점수와 retry 기록 |
+| EvaluationResult | evaluator/reflection 단계 점수와 retry 기록 |
 | ReportCadenceEvent | 단계별 보고 시점 기록 |
 
 ## 2. 주요 데이터 객체
@@ -238,6 +238,10 @@
       "reason_codes": ["ALL_CHECKS_PASSED"],
       "final_action": "READY_FOR_BE"
     },
+    "evaluator": {
+      "reason_codes": ["EVIDENCE_SUFFICIENT"],
+      "final_action": "READY_FOR_BE"
+    },
     "execution": {
       "reason_codes": ["ORDER_RESPONSE_VERIFIED"],
       "final_action": "REPORT_READY"
@@ -298,11 +302,11 @@
 | 모델 이름 | 용도 | 최소 필수 필드 |
 |---|---|---|
 | `NormalizedOrderIntent` | Policy Node 출력 | `symbol`, `side`, `type` |
-| `PolicyDecisionTrace` | Policy trace | `reason_codes`, `final_action` |
+| `AgentDecisionTrace` | Policy/Risk/Evaluator/Execution trace | `reason_codes`, `final_action` |
 | `RiskAssessment` | Risk 해석 결과 | `reason_codes`, `verification_checks` |
 | `GateDecision` | gate 결과 | `decision`, `reason_codes` |
 | `HoldDecision` | hold 세부 원인 | `decision`, `hold_reason`, `resume_required` |
-| `ExecutionValidationResult` | 실행 결과 검증 | `verification_checks`, `final_action` |
+| `VerificationResult` | 실행 결과를 포함한 공통 검증 결과 | `name`, `result`, `evidence_refs` |
 | `ReportPayload` | 사용자/저장 리포트 | `run_id`, `gate_decision`, `final_action`, `decision_trace`, `user_summary` |
 | `RunDecisionTrace` | run 요약 | `run_id`, `final_action`, `be_override` |
 
@@ -320,7 +324,7 @@
 }
 ```
 
-### 2.20 EvaluationRecord
+### 2.20 EvaluationResult
 
 ```json
 {

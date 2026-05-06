@@ -16,7 +16,7 @@
 
 BE는 Binance Spot Testnet과 직접 통신하는 유일한 계층이다. 잔고 조회, 현재가/호가/캔들 조회, 주문 생성, 주문 상태 조회, 주문 취소, WebSocket 시세 수신을 담당한다.
 
-또한 BE는 deterministic rule 기반 Risk Engine과 실행 권한자의 역할을 함께 가진다. AI가 후보 action path를 제안해도, Binance 제출 여부를 확정하는 주체는 BE뿐이다.
+또한 BE는 실행 권한자이자 deterministic 재검증 주체다. AI가 후보 action path와 gate 결정을 제안하더라도, Binance 제출 여부를 최종 확정하는 주체는 BE뿐이다.
 
 ## 2. REST / WebSocket 기준 엔드포인트
 
@@ -143,7 +143,7 @@ Binance Testnet의 signed endpoint 호출 시 다음 요소가 필요하다.
 
 ## 11. AI output schema 검증
 
-- BE는 AI 응답을 신뢰하기 전에 `NormalizedOrderIntent`, `GateDecision`, `HoldDecision`, `VerificationResult`, `AgentDecisionTrace`, `ReportPayload` 같은 이름 있는 schema로 검증한다.
+- BE는 AI 응답을 신뢰하기 전에 `NormalizedOrderIntent`, `GateDecision`, `HoldDecision`, `EvaluationResult`, `VerificationResult`, `AgentDecisionTrace`, `ReportPayload` 같은 이름 있는 schema로 검증한다.
 - 필수 필드 누락이 복구 가능하면 `HOLD` + `hold_reason=HOLD_DATA_INSUFFICIENT`로, 복구 불가하면 `FAILED`로 처리한다.
 - schema mismatch 상태에서는 Binance signed endpoint를 호출하지 않는다.
 
