@@ -27,9 +27,17 @@
 | ErrorResponse | 공통 오류 응답 |
 | AgentRunState | AI 오케스트레이터 내부 상태 객체 |
 | GateDecision | AI의 허용/차단/보류 판단 객체 |
-| VerificationResult | 단계별 검증 결과 객체 |
-| AgentDecisionTrace | Agent 단위 판단 근거와 최종 액션 객체 |
+| AgentDecisionTrace | Policy/Risk/Evaluator/Execution 공통 판단 근거와 최종 액션 객체 |
 | RunDecisionTrace | 전체 run 기준 판단 요약 객체 |
+| HoldDecision | `HOLD` 상태의 세부 원인 객체 |
+| ResumeCommandPayload | 동일 run 재개를 위한 payload |
+| CheckpointRecord | run 저장/복원 단위 객체 |
+| NormalizedOrderIntent | Policy Node 구조화 출력 객체 |
+| ReportPayload | 최종 사용자/저장용 리포트 객체 |
+| VerificationResult | 공통 검증 결과 객체 |
+| PolicyRetrievalPacket | Policy/Planning 단계의 정책 검색 결과 |
+| EvaluationResult | evaluator/reflection 단계 점수와 retry 기록 |
+| ReportCadenceEvent | 단계별 보고 시점 기록 |
 
 ## 2. 주요 데이터 객체
 
@@ -230,6 +238,10 @@
       "reason_codes": ["ALL_CHECKS_PASSED"],
       "final_action": "READY_FOR_BE"
     },
+    "evaluator": {
+      "reason_codes": ["EVIDENCE_SUFFICIENT"],
+      "final_action": "READY_FOR_BE"
+    },
     "execution": {
       "reason_codes": ["ORDER_RESPONSE_VERIFIED"],
       "final_action": "REPORT_READY"
@@ -243,9 +255,103 @@
 }
 ```
 
+### 2.15 HoldDecision
+
+```json
+{
+  "decision": "HOLD",
+  "hold_reason": "HOLD_DATA_INSUFFICIENT",
+  "reason_codes": ["STALE_MARKET_SNAPSHOT"],
+  "resume_required": true
+}
+```
+
+### 2.16 ResumeCommandPayload
+
+```json
+{
+  "run_id": "airun_001",
+  "resume_reason": "USER_APPROVED_ORDER",
+  "patch_fields": {
+    "approval": {
+      "approved": true,
+      "approved_at": "2026-05-06T11:00:00+09:00"
+    }
+  }
+}
+```
+
+### 2.17 CheckpointRecord
+
+```json
+{
+  "run_id": "airun_001",
+  "lifecycle_status": "HOLD",
+  "hold_reason": "HOLD_REVIEW_REQUIRED",
+  "schema_version": "v1",
+  "expires_at": "2026-05-06T12:00:00+09:00",
+  "state": {
+    "request_context": {"request_id": "req_001"},
+    "decision_trace": {"risk": {"final_action": "HOLD"}}
+  }
+}
+```
+
+### 2.18 Structured output 모델 이름
+
+| 모델 이름 | 용도 | 최소 필수 필드 |
+|---|---|---|
+| `NormalizedOrderIntent` | Policy Node 출력 | `symbol`, `side`, `type` |
+| `AgentDecisionTrace` | Policy/Risk/Evaluator/Execution trace | `reason_codes`, `final_action` |
+| `RiskAssessment` | Risk 해석 결과 | `reason_codes`, `verification_checks` |
+| `GateDecision` | gate 결과 | `decision`, `reason_codes` |
+| `HoldDecision` | hold 세부 원인 | `decision`, `hold_reason`, `resume_required` |
+| `VerificationResult` | 실행 결과를 포함한 공통 검증 결과 | `name`, `result`, `evidence_refs` |
+| `ReportPayload` | 사용자/저장 리포트 | `run_id`, `gate_decision`, `final_action`, `decision_trace`, `user_summary` |
+| `RunDecisionTrace` | run 요약 | `run_id`, `final_action`, `be_override` |
+
+### 2.19 PolicyRetrievalPacket
+
+```json
+{
+  "request_id": "req_001",
+  "policy_refs": ["policy.symbol_allowlist", "policy.max_quote_limit"],
+  "retrieved_at": "2026-05-06T10:58:00+09:00",
+  "applied_rules": {
+    "allowed_symbols": ["BTCUSDT", "ETHUSDT"],
+    "max_quote_order_qty": "50"
+  }
+}
+```
+
+### 2.20 EvaluationResult
+
+```json
+{
+  "stage": "risk_evaluator",
+  "target": "gate_decision",
+  "score": 92,
+  "retry_count": 0,
+  "passed": true
+}
+```
+
+### 2.21 ReportCadenceEvent
+
+```json
+{
+  "run_id": "airun_001",
+  "event_type": "BE_REVALIDATION_COMPLETED",
+  "lifecycle_status": "BE_REJECTED",
+  "created_at": "2026-05-06T11:01:00+09:00"
+}
+```
+
 ## 3. REST API 계약
 
 이 문서의 `/api/v1/testnet/*` 응답 예시는 BE가 정규화한 포맷이다. Binance 원본 전체 payload는 내부 로그/저장소에 보관할 수 있지만, FE와 테스트는 아래 응답 구조를 기준으로 구현한다.
+
+또한 AI 관련 응답은 단순 결과 문자열이 아니라, 정책 검색 근거, 평가 기록, 단계별 보고 이벤트를 함께 남길 수 있어야 한다. LLM이 만든 action proposal은 저장 가능하지만, 실행 승인 레코드는 deterministic 검증 결과와 분리해 기록한다.
 
 ### 3.1 잔고 조회
 
@@ -439,19 +545,29 @@
 | `recvWindow` | 선택, 기본 5000ms |
 | `signature` | signed endpoint 필수 |
 
-## 4.1 주문 파라미터 검증 기준
+## 5. 주문 파라미터 검증 기준
 
 - `exchangeInfo` 기준 `PRICE_FILTER`, `LOT_SIZE`, `MIN_NOTIONAL`을 사용한다.
 - 시장가 매수는 `quoteOrderQty`, 시장가 매도는 `quantity`를 기본 예시로 사용한다.
 - 지정가 주문은 `price`, `quantity`, `timeInForce`가 모두 필요하다.
 
-## 5. 상태/열거값 요약
+## 6. 상태/열거값 요약
 
 - `side`: `BUY`, `SELL`
 - `type`: `MARKET`, `LIMIT`
 - `order status`: `NEW`, `PARTIALLY_FILLED`, `FILLED`, `CANCELED`, `REJECTED`, `EXPIRED`
+- `lifecycle_status`: `RECEIVED`, `NORMALIZING`, `NEEDS_INPUT`, `RISK_REVIEW`, `HOLD`, `READY_FOR_BE`, `BE_REJECTED`, `EXECUTING`, `RESULT_VERIFYING`, `REPORT_READY`, `NO_ORDER`, `FAILED`
+- `hold_reason`: `HOLD_REVIEW_REQUIRED`, `HOLD_DATA_INSUFFICIENT`
+- `report cadence`: request accepted, policy retrieval complete, policy complete, risk gate complete, evaluator complete, BE revalidation complete, final report ready
 
-## 6. DB 테이블 초안
+### 6.1 상태 필드 해석 규칙
+
+- `HOLD`는 lifecycle 상태이며, 세부 의미는 `hold_reason`로 해석한다.
+- `BE_REJECTED`는 BE 재검증에서만 생성된다.
+- schema mismatch는 복구 가능 여부에 따라 `HOLD` + `hold_reason=HOLD_DATA_INSUFFICIENT` 또는 `FAILED`로 처리한다.
+- `HOLD_REVIEW_REQUIRED`, `HOLD_DATA_INSUFFICIENT`는 lifecycle 상태가 아니라 `hold_reason` 값이다.
+
+## 7. DB 테이블 초안
 
 | 테이블 | 주요 컬럼 |
 |---|---|
@@ -463,10 +579,19 @@
 | `cancel_logs` | `cancel_id`, `order_id`, `cancel_json`, `created_at` |
 | `stream_events` | `event_id`, `stream_name`, `event_json`, `created_at` |
 | `reports` | `report_id`, `report_json`, `created_at` |
+| `agent_run_checkpoints` | `run_id`, `lifecycle_status`, `hold_reason`, `state_json`, `schema_version`, `expires_at`, `created_at` |
 
 `reports.report_json`에는 사용자용 요약뿐 아니라 `decision_trace.policy`, `decision_trace.risk`, `decision_trace.execution`, `decision_trace.run_summary` 같은 구조화 trace를 함께 저장할 수 있다. 다만 API Key, Secret, signature, production host 문자열은 저장 대상이 아니다.
 
-## 7. Mermaid ERD
+### 7.1 checkpoint 저장 규칙
+
+- checkpoint는 `run_id` 기준 1 run 1 latest snapshot을 유지한다.
+- `request_context`, `policy_context`, 과거 trace는 overwrite하지 않는다.
+- `verification_checks`, `errors`는 append된 누적 상태를 저장한다.
+- `schema_version`을 함께 저장해 FE/BE/AI가 같은 계약 버전을 사용하도록 한다.
+- TTL 만료 후 재개 요청이 오면 `FAILED` 또는 run 재시작 안내로 처리한다.
+
+## 8. Mermaid ERD
 
 ```mermaid
 erDiagram
@@ -519,20 +644,30 @@ erDiagram
       string report_id PK
       json report_json
     }
+    AGENT_RUN_CHECKPOINTS {
+      string run_id PK
+      string lifecycle_status
+      string hold_reason
+      json state_json
+      string schema_version
+    }
 ```
 
-## 8. 실수 방지 주의사항
+## 9. 실수 방지 주의사항
 
 - `api.binance.com` 관련 문자열을 저장하지 않는다.
 - `BINANCE_TESTNET_*`가 아닌 변수명을 사용하지 않는다.
 - WebSocket stream symbol은 소문자여야 한다.
 - 많은 Binance 숫자 응답 값은 문자열이라는 점을 유지한다.
 - AI 내부 trace에는 비밀키, signature, raw auth header를 저장하지 않는다.
+- checkpoint와 resume payload에는 Binance raw auth 정보를 저장하지 않는다.
 
-## 9. 확정 구현 기준
+## 10. 확정 구현 기준
 
 - REST 예시는 모두 Testnet 기준만 사용한다.
 - WebSocket 예시는 stream endpoint 기준만 사용한다.
 - 주문 응답 예시는 Spot 현물 주문 결과만 사용한다.
 - 내부 AI 객체는 공개 REST 계약과 분리되며, 판단 trace와 gate 결과를 표현하는 용도로만 사용한다.
 - `BE_REJECTED`는 BE 재검증 단계에서만 생성되는 상태다.
+- `HOLD`와 `hold_reason`는 분리된 필드로 유지한다.
+- AI node output은 이 문서의 이름 있는 모델 이름을 기준으로 검증한다.
