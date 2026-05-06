@@ -18,6 +18,7 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite:///./coin_agent.db"
     ai_service_http_url: str = "http://localhost:8001"
+    cors_origins: list[str] = ["http://localhost:3000"]
     app_env: str = "local"
     log_level: str = "INFO"
 
