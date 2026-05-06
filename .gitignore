@@ -1,4 +1,5 @@
 .env
+plan.md
 *.db
 *.db-journal
 .venv/
