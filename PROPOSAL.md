@@ -2,6 +2,19 @@
 
 > 이 문서는 Coin Agent의 상위 기획 근거 문서다. 본 프로젝트는 Binance Spot Testnet 전용 가상 자금 현물 주문 테스트를 수행하는 개인용 Agent를 목표로 한다.
 
+## 문서 목적
+
+이 문서는 Coin Agent의 기획 배경, 문제 정의, 사용자 가치, MVP 수준의 실행 방향을 정리한다. 상세 요구사항, 구조, 데이터 계약, 역할별 구현 기준은 각 하위 문서를 참조한다.
+
+## 관련 문서
+
+- 문서 진입점: `README.md`
+- 제품/기능 요구사항: `SPEC.md`
+- 시스템 구조: `ARCHITECTURE.md`
+- 데이터 계약: `DATA.md`
+- 역할별 구현 기준: `FE.md`, `BE.md`, `AI.md`
+- 테스트 / 데모 기준: `TEST_AND_DEMO.md`
+
 ## 목차
 
 - [0. 기본 정보](#0-기본-정보)
@@ -117,10 +130,10 @@ Coin Agent의 핵심 가치는 “실거래 없이도 전체 현물 주문 테�
 | 정보 조회 | 가능 | Binance Spot Testnet 잔고, 현재가, 호가, 캔들, 주문 상태 조회 |
 | 데이터 분석 | 가능 | 단순 위험도, 주문 가능성, 최소 수량/가격 제약 체크 |
 | 결과 요약 | 가능 | 주문 가능 여부, 시세 요약, 체결 상태, 취소 상태를 자연어로 설명 |
-| 주문 실행 | 제한적 가능 | Spot Testnet에서만 가상 자금 현물 주문 테스트 수행 |
-| 최종 결정 | 정책과 리스크 게이트에 따름 | 실거래는 하지 않으며, 잘못된 조건이면 무주문 또는 판단 보류 |
+| 주문 제출 후보 생성 | 가능 | Spot Testnet 주문 테스트를 위한 후보 경로와 요청 초안을 만든다. |
+| 최종 실행 결정 | 불가 | 실제 제출 여부는 항상 BE 재검증과 실행 권한 경계에 따른다. |
 
-주문 실행 행은 사용자가 체감하는 서비스 기능을 설명한 것이다. 실제 권한 모델에서는 LLM이 주문 path 또는 action proposal을 만들 수 있어도, 제출 직전 판단은 rule 기반 리스크 엔진과 BE 재검증이 맡는다. 따라서 Agent의 자율성은 임의 매매 권한이 아니라 **사람 개입 없이도 상태를 이어서 판단하고, 필요 시 `HOLD`로 멈추며, 충분한 근거가 있을 때만 제출 후보를 만드는 능력**으로 정의한다.
+여기서 Agent의 자율성은 임의 매매 권한이 아니라 **사람 개입 없이도 상태를 이어서 판단하고, 필요 시 보류하며, 충분한 근거가 있을 때만 제출 후보를 만드는 능력**을 뜻한다. 상세 상태 전이와 실행 권한 경계는 `ARCHITECTURE.md`, `AI.md`, `DATA.md`를 기준으로 본다.
 
 ### 2.5 FE1 / BE1 / AI3 팀 구성
 
@@ -175,12 +188,12 @@ flowchart TD
 2. Policy/Planning Agent가 정책 문서, 허용 심볼, 허용 시간대, 이전 run 규칙 같은 근거를 검색해 `policy_context`를 구성한다.
 3. 같은 Agent가 구조화된 주문 의도와 후보 action path를 만든다.
 4. Market/Risk Agent가 시장 데이터와 잔고, 거래소 규칙을 함께 평가한다.
-5. evaluator/reflection 단계가 trace 완결성, 근거 충돌, 점수 기준을 확인한다.
+5. 내부 평가 단계가 근거 충돌 여부와 설명 가능성을 다시 확인한다.
 6. 조건을 만족하면 `PASS`를 제안하고, 최종 제출 여부는 BE가 다시 결정한다.
 
 ---
 
-## 4. 기술 구현 설계
+## 4. 구현 방향 요약
 
 ### 4.1 기술 스택
 
@@ -194,16 +207,9 @@ flowchart TD
 | External API | Binance Spot Testnet REST/WebSocket | 가상 자금 기반 현물 주문 테스트 가능 |
 | 기타 도구 | `requests`, `websocket-client`, `pandas`, `plotly` | API 호출, 시세 처리, 시각화 |
 
-### 4.2 전체 시스템 아키텍처
+### 4.2 구현 방향
 
-```mermaid
-flowchart LR
-    FE[React] --> BE[FastAPI]
-    BE --> AI[LangGraph]
-    BE --> DB[(SQLite)]
-    BE --> REST[Binance Spot Testnet REST]
-    BE --> WS[Binance Spot Testnet WebSocket]
-```
+이 프로젝트는 React FE, FastAPI BE, LangGraph 기반 AI 서비스, SQLite, Binance Spot Testnet REST / WebSocket 조합을 기준으로 구현한다. 상세 구조와 책임 경계는 `ARCHITECTURE.md`를 기준 문서로 사용한다.
 
 ### 4.3 핵심 구현 원칙
 
@@ -213,13 +219,12 @@ flowchart LR
 - 실거래 URL, 실거래 키, 실거래 주문은 다루지 않는다.
 - 심볼은 REST에서 `BTCUSDT`, stream에서는 `btcusdt`를 사용한다.
 
-### 4.4 통합 Agent 계약 요약
+### 4.4 문서 참조 원칙
 
-- Agent의 자율성은 임의 실행 권한이 아니라 **구조화 판단 + 상태 기반 오케스트레이션**으로 정의한다.
-- 주문 테스트 run은 `run_id`로 추적하며, 필요 시 같은 run을 resume한다.
-- 판단 보류는 단일 `HOLD`로 뭉뚱그리지 않고 `HOLD_REVIEW_REQUIRED`, `HOLD_DATA_INSUFFICIENT`로 해석 가능해야 한다.
-- AI 산출물은 구조화 schema 계약을 따르며, BE는 이를 재검증한 뒤에만 Testnet 주문을 제출한다.
-- `BE_REJECTED`는 AI 실패가 아니라 BE 재검증 차단이라는 점을 사용자에게 설명 가능해야 한다.
+- 상세 구조와 책임 경계는 `ARCHITECTURE.md`를 기준으로 본다.
+- 상태 전이, Agent 판단, 실행 권한 분리는 `AI.md`를 기준으로 본다.
+- 요청/응답 형식과 용어 정의는 `DATA.md`를 기준으로 본다.
+- 검증 시나리오와 데모 흐름은 `TEST_AND_DEMO.md`를 기준으로 본다.
 
 ---
 
@@ -233,7 +238,7 @@ flowchart LR
 | 안전성 | 실거래 URL/API Key 사용 0건 | 환경 설정 및 grep 검증 |
 | 문서 정확성 | 모든 엔드포인트가 Testnet 기준 | 문서 검수 |
 | 데모 가능 여부 | 로컬 환경에서 주문 테스트 end-to-end 시연 가능 | 발표 전 리허설 |
-| 계약 완성도 | `run_id`, `hold_reason`, `decision_trace`, `BE_REJECTED` 경계가 문서와 데모에서 일관됨 | 문서 교차 검수 + 데모 체크 |
+| 계약 일관성 | 핵심 상태와 책임 경계 설명이 문서와 데모에서 일관됨 | 문서 교차 검수 + 데모 체크 |
 | agentic 설명력 | 왜 prompt chaining이 아니라 agent run인지 설명 가능 | 아키텍처 리뷰 + 데모 질의응답 |
 | QA 재현성 | 정책별 데모 시나리오와 휴먼 QA 체크가 반복 가능 | 다인 QA 리허설 |
 
@@ -251,6 +256,5 @@ flowchart LR
 - Binance Spot Testnet만 지원한다.
 - 실거래 주문은 문서와 시스템 범위에서 제외한다.
 - 시장가 매수/매도, 상태 조회, 취소, 시세 수신을 우선 구현한다.
-- 상태 기반 Agent run과 resume 계약을 문서로 명시한다.
-- 보류, 차단, 실패를 서로 다른 상태와 설명으로 구분한다.
-- 정책 검색, 평가 루프, 최종 실행 권한 분리를 문서와 데모에서 함께 설명한다.
+- 정책 검토, 안전 게이트, 최종 실행 권한 분리가 사용자에게 설명 가능해야 한다.
+- 세부 계약과 상태 정의는 하위 기준 문서와 충돌 없이 유지한다.

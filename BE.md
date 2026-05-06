@@ -141,13 +141,13 @@ Binance Testnet의 signed endpoint 호출 시 다음 요소가 필요하다.
 - 필수 파라미터: `symbol`, `timestamp`, 그리고 `orderId` 또는 `origClientOrderId`
 - 취소 제한이 필요하면 `cancelRestrictions` 사용 가능
 
-## 10.1 AI output schema 검증
+## 11. AI output schema 검증
 
 - BE는 AI 응답을 신뢰하기 전에 `NormalizedOrderIntent`, `GateDecision`, `HoldDecision`, `VerificationResult`, `AgentDecisionTrace`, `ReportPayload` 같은 이름 있는 schema로 검증한다.
 - 필수 필드 누락이 복구 가능하면 `HOLD` + `hold_reason=HOLD_DATA_INSUFFICIENT`로, 복구 불가하면 `FAILED`로 처리한다.
 - schema mismatch 상태에서는 Binance signed endpoint를 호출하지 않는다.
 
-## 11. WebSocket 시세 수신
+## 12. WebSocket 시세 수신
 
 ### Streams Endpoint
 
@@ -161,7 +161,7 @@ Binance Testnet의 signed endpoint 호출 시 다음 요소가 필요하다.
 
 stream 이름의 심볼은 반드시 소문자를 사용한다.
 
-## 11.1 checkpoint / resume 저장 규칙
+### 12.1 checkpoint / resume 저장 규칙
 
 | 항목 | 기준 |
 |---|---|
@@ -171,28 +171,28 @@ stream 이름의 심볼은 반드시 소문자를 사용한다.
 | overwrite 금지 | 원본 request/policy/auth 관련 원문 |
 | TTL 만료 후 | resume 거부 + run 재시작 안내 |
 
-## 11.2 deterministic 재검증 경계
+### 12.2 deterministic 재검증 경계
 
 - BE는 `exchangeInfo`, 계정 잔고, signed request 제약을 deterministic하게 다시 검증한다.
 - AI `PASS`라도 BE 규칙 위반이면 `BE_REJECTED`로 종료한다.
 - `BE_REJECTED` 사유는 FE/리포트에 설명 가능한 코드로 남겨야 한다.
 
-## 11.3 evaluator 결과 반영 원칙
+### 12.3 evaluator 결과 반영 원칙
 
 - AI가 evaluator/reflection 결과를 함께 반환하면, BE는 그 점수를 참고 정보로만 사용한다.
 - score가 높아도 deterministic 규칙이 실패하면 `BE_REJECTED` 또는 `FAILED`가 우선한다.
 - score가 낮아 `HOLD` 또는 `NO_ORDER`로 종료된 run은 BE가 억지로 제출로 승격하지 않는다.
 
-## 11.4 보고 단위와 cadence 저장
+### 12.4 보고 단위와 cadence 저장
 
 - BE는 `run_id` 단위 최종 리포트를 저장한다.
 - 같은 run 안의 policy, risk, evaluator, execution, run_summary trace를 함께 묶는다.
 - canonical cadence는 request accepted, policy retrieval complete, policy complete, risk gate complete, evaluator complete, BE revalidation complete, final report ready 순서를 따른다.
 - FE나 요약 응답은 이 canonical cadence 중 핵심 subset만 노출할 수 있지만, 저장 계층에서는 전체 cadence를 보존하는 것을 기본으로 한다.
 
-## 12. Python 예제 코드
+## 13. Python 예제 코드
 
-### 12.1 HMAC 시그니처 유틸
+### 13.1 HMAC 시그니처 유틸
 
 ```python
 import hmac
@@ -214,7 +214,7 @@ def make_timestamp() -> int:
     return int(time.time() * 1000)
 ```
 
-### 12.2 잔고 조회
+### 13.2 잔고 조회
 
 ```python
 import os
@@ -236,7 +236,7 @@ resp = requests.get(
 print(resp.json())
 ```
 
-### 12.3 현재가 조회
+### 13.3 현재가 조회
 
 ```python
 resp = requests.get(
@@ -247,7 +247,7 @@ resp = requests.get(
 print(resp.json())
 ```
 
-### 12.4 시장가 매수 주문
+### 13.4 시장가 매수 주문
 
 ```python
 params = {
@@ -268,7 +268,7 @@ resp = requests.post(
 print(resp.json())
 ```
 
-### 12.5 주문 상태 조회
+### 13.5 주문 상태 조회
 
 ```python
 params = {
@@ -287,7 +287,7 @@ resp = requests.get(
 print(resp.json())
 ```
 
-### 12.6 주문 취소
+### 13.6 주문 취소
 
 ```python
 params = {
@@ -306,7 +306,7 @@ resp = requests.delete(
 print(resp.json())
 ```
 
-### 12.7 WebSocket ticker 수신
+### 13.7 WebSocket ticker 수신
 
 ```python
 import json
@@ -318,7 +318,7 @@ print(json.loads(message))
 ws.close()
 ```
 
-## 13. 실수 방지 주의사항
+## 14. 실수 방지 주의사항
 
 - `https://api.binance.com` 사용 금지
 - `wss://stream.binance.com` 사용 금지
@@ -326,7 +326,7 @@ ws.close()
 - Testnet 심볼 예시와 stream 소문자 규칙을 혼동하지 않기
 - `quoteOrderQty`와 `quantity` 사용 위치를 혼동하지 않기
 
-## 14. 확정 구현 기준
+## 15. 확정 구현 기준
 
 - 로컬 개인용 Agent에서만 실행한다.
 - 주문 테스트는 Binance Spot Testnet REST 기준으로만 수행한다.
@@ -334,7 +334,7 @@ ws.close()
 - 실거래 기능은 문서와 구현 모두에서 제외한다.
 - `verification_checks`와 evaluator trace, cadence 이벤트는 휴먼 QA와 데모에서 직접 확인 가능한 형태로 남긴다.
 
-## 15. 응답 포맷 기준
+## 16. 응답 포맷 기준
 
 - `/api/v1/testnet/*` 응답은 FE 친화적인 정규화 포맷으로 반환한다.
 - Binance 원본 전체 payload는 로그/SQLite에 보관할 수 있지만, 기본 API 응답은 필요한 필드만 노출한다.

@@ -224,14 +224,14 @@ sequenceDiagram
 - FE는 API Key/Secret 원문을 입력받거나 저장하지 않는다.
 - AI가 사용할 수 있는 도구는 Binance 직접 호출 도구가 아니라 BE 또는 내부 서비스가 제공하는 정규화 도구로 제한한다.
 
-## 9.1 Human QA 기대치
+## 9. Human QA 기대치
 
 - QA는 단일 happy path 확인으로 끝나지 않는다.
 - 최소한 정책 허용, 정책상 승인 필요, 데이터 부족, BE 재검증 차단의 네 흐름을 사람 눈으로 검증해야 한다.
 - QA는 policy retrieval 결과가 `policy_context`에 반영되는지, evaluator/reflection trace가 BE verdict와 구분되어 보이는지 확인해야 한다.
 - QA 참가자는 `run_id`, `hold_reason`, `BE_REJECTED`, `verification_checks`가 문서와 화면에서 같은 의미로 보이는지 교차 확인해야 한다.
 
-## 9. 확정 구현 기준
+## 10. 확정 구현 기준
 
 - REST Base URL은 `https://testnet.binance.vision/api`로 고정한다.
 - WebSocket Streams URL은 `wss://stream.testnet.binance.vision/ws`로 고정한다.
