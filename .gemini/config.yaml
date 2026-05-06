@@ -1,0 +1,21 @@
+# Gemini Code Assist GitHub 설정 — Repository Template 기본값
+
+have_fun: false
+
+memory_config:
+  disabled: false
+
+code_review:
+  disable: false
+  comment_severity_threshold: MEDIUM
+  max_review_comments: 25
+  pull_request_opened:
+    help: false
+    summary: true
+    code_review: true
+    include_drafts: false
+
+ignore_patterns:
+  - ".github/workflows/**"
+  - "CHANGELOG*.md"
+  - "*.pdf"
