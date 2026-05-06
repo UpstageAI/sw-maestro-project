@@ -26,7 +26,7 @@ def save_testnet_config(db: Session, rest_base_url: str, ws_stream_url: str, ws_
 
 
 def get_latest_testnet_config(db: Session) -> TestnetConfig | None:
-    return db.execute(select(TestnetConfig).order_by(TestnetConfig.created_at.desc())).scalars().first()
+    return db.scalars(select(TestnetConfig).order_by(TestnetConfig.created_at.desc())).first()
 
 
 def save_balance_snapshot(db: Session, snapshot_json: dict, config_id: str | None = None) -> BalanceSnapshot:
@@ -69,7 +69,7 @@ def save_spot_order(
 
 
 def update_spot_order_status(db: Session, order_id: str, status: str, response_json: dict | None = None) -> SpotOrder | None:
-    order = db.execute(select(SpotOrder).where(SpotOrder.order_id == order_id)).scalars().first()
+    order = db.get(SpotOrder, order_id)
     if not order:
         return None
     order.status = status
