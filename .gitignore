@@ -1,5 +1,6 @@
 .env
 plan.md
+.idea/
 *.db
 *.db-journal
 .venv/
