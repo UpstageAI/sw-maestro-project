@@ -16,6 +16,8 @@
 
 FE는 사용자가 Binance Spot Testnet 설정, 잔고 조회, 시세 조회, 현물 주문 테스트, 주문 상태 조회, 주문 취소, WebSocket 시세 확인을 쉽게 수행할 수 있도록 돕는다. 모든 외부 API 호출은 반드시 BE를 통해 수행한다.
 
+FE는 Agent가 스스로 판단한 것처럼 보이더라도, 실행 결정권이 AI에 있지 않다는 점을 항상 드러내야 한다. 따라서 화면은 “AI 제안”과 “BE 최종 판정”을 같은 것으로 합쳐 보여주지 않는다.
+
 ## 2. 페이지 목록
 
 | 페이지 | 경로 예시 | 목적 |
@@ -97,6 +99,13 @@ flowchart LR
 | `BE_REJECTED` | AI 통과 후 BE 차단 설명 | 상세 사유 보기 |
 | `FAILED` | 기술 실패 원인, 재시도 가능 여부 | 재시도 또는 run 종료 |
 
+### 6.2 Agent 단계 표시 원칙
+
+- FE는 가능하면 `decision_trace.policy`, `decision_trace.risk`, `decision_trace.execution`, `decision_trace.run_summary`를 단계 카드로 구분한다.
+- Policy/Planning 단계에는 policy retrieval 근거가 요약되어야 한다.
+- Risk 단계에는 `verification_checks`와 `gate_decision`이 보여야 한다.
+- `PASS` 배지는 단독으로 초록 완료 의미를 주지 않고, “BE 재검증 대기” 설명과 함께 표시한다.
+
 ## 7. UI/UX 원칙
 
 - 항상 “Binance Spot Testnet” 문구를 상단에 표시한다.
@@ -121,6 +130,14 @@ flowchart LR
 - `decision_trace`의 핵심 `reason_codes`와 `verification_checks` 요약을 리포트/로그 화면에 표시한다.
 - schema mismatch나 `FAILED` 상태는 일반 주문 차단과 구분된 오류 스타일을 사용한다.
 
+### 9.1 리포트 단위와 cadence 표시
+
+- 리포트 목록의 기본 행 단위는 `run_id`다.
+- 상세 보기에서는 cadence 이벤트를 시간순으로 보여준다.
+- canonical cadence는 request accepted, policy retrieval complete, policy complete, risk gate complete, evaluator complete, BE revalidation complete, final report ready 다.
+- FE 기본 화면은 이 canonical cadence 중 사용자에게 중요한 subset만 간략히 보여줄 수 있다.
+- `HOLD` 이후 resume가 발생하면 같은 `run_id` 안에서 이어 붙여 보여준다.
+
 ## 10. FE에서 호출하는 API 요약
 
 | API | 목적 |
@@ -144,3 +161,4 @@ FE는 동일 `run_id`를 포함한 재개 요청을 보내야 한다.
 - FE는 Binance API Key/Secret 원문을 입력받거나 재표시하지 않는다.
 - FE는 `HOLD_REVIEW_REQUIRED`와 `HOLD_DATA_INSUFFICIENT`를 구분 표시한다.
 - FE는 `run_id`, `hold_reason`, 핵심 `reason_codes`를 결과/로그 영역에서 확인 가능하게 한다.
+- FE는 휴먼 QA가 각 단계의 권한 경계를 확인할 수 있도록 `BE_REJECTED`와 `FAILED`를 별도 의미로 보여준다.

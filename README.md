@@ -52,6 +52,13 @@
 - 사용자의 정책과 리스크 게이트를 통과하지 못하면 기본값은 무주문 또는 판단 보류다.
 - 브라우저는 Binance API를 직접 호출하지 않고, 모든 호출은 BE를 통해 수행한다.
 
+## 왜 이 구조가 agentic 인가
+
+- 이 시스템은 단순히 프롬프트를 순서대로 호출하는 체인이 아니라, 하나의 `run_id` 아래에서 상태를 이어 가는 Agent run이다.
+- 각 Agent는 자기 단계의 입력을 읽고, 허용된 필드만 쓰며, `decision_trace`와 `verification_checks`를 남긴다.
+- LLM은 컨텍스트를 검색하고 후보 action path를 제안할 수 있지만, 실제 실행 여부는 deterministic rule 기반 Risk Engine과 BE 재검증이 결정한다.
+- 따라서 `PASS`는 실행 완료가 아니라 `READY_FOR_BE` 성격의 제안이다.
+
 ## 최신 문서 계약 요약
 
 - `HOLD`는 상위 상태이며, 실제 원인은 `HOLD_REVIEW_REQUIRED` 또는 `HOLD_DATA_INSUFFICIENT`로 구분한다.
@@ -59,6 +66,23 @@
 - AI는 Binance를 직접 호출하지 않고, 정규화 도구와 구조화 schema 계약 위에서만 동작한다.
 - `BE_REJECTED`는 AI `PASS` 이후 BE 재검증에서만 생성된다.
 - 검증 기준과 상태별 기대 결과는 `TEST_AND_DEMO.md`를 기준으로 본다.
+
+## Agent와 실행 권한 분리 요약
+
+| 주체 | 할 수 있는 일 | 할 수 없는 일 |
+|---|---|---|
+| Policy/Planning Agent | 정책 검색, 입력 정규화, 후보 action path 제안 | 주문 제출 확정 |
+| Market/Risk Agent | 정책/시장/잔고 근거 평가, `HOLD` 또는 `PASS` 제안 | Binance 서명, 제출 |
+| Execution/Report Agent | 실행 결과 해석, 보고서 작성 | 조건 변경 후 재주문 |
+| BE + rule engine | deterministic 검증, 서명, 제출, 재검증 | LLM 추론에 실행 권한 위임 |
+
+## 리포트 단위와 cadence 요약
+
+- 기본 보고 단위는 **1 `run_id` = 1 주문 테스트 run** 이다.
+- 중간 보고 단위는 Agent 단계별 `decision_trace.policy`, `decision_trace.risk`, `decision_trace.execution` 이다.
+- canonical 보고 cadence는 request accepted, policy retrieval complete, policy complete, risk gate complete, evaluator complete, BE revalidation complete, final report ready 순서를 따른다.
+- 사용자 화면이나 요약 리포트는 이 canonical cadence의 일부만 간단히 보여줄 수 있다.
+- 휴먼 QA는 각 cadence에서 `hold_reason`, `BE_REJECTED`, `verification_checks`가 설명 가능하게 보이는지 확인한다.
 
 ## API Key 생성 절차
 

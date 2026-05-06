@@ -57,11 +57,14 @@ flowchart LR
     R --> G{Risk Gate}
     G -->|Reject| HOLD2[NO_ORDER]
     G -->|Need Review| HOLD3[HOLD]
-    G -->|Pass| H[BE Execution Handoff]
+    G -->|Pass Proposal| EV[Evaluator / Reflection]
+    EV -->|Retry or Fail| HOLD4[HOLD / NO_ORDER]
+    EV -->|Pass Proposal Confirmed| H[BE Execution Handoff]
     H --> B[Backend Revalidation / Signature / Submit]
     HOLD1 --> E[Execution / Report Agent]
     HOLD2 --> E
     HOLD3 --> E
+    HOLD4 --> E
     B --> E[Execution / Report Agent]
     E --> V2{Result Verified?}
     V2 -->|No| FAIL[FAILED]
@@ -69,7 +72,7 @@ flowchart LR
     FAIL --> OUT
 ```
 
-이 구조에서 Agentic AI의 핵심은 단순히 노드가 여러 개인 것이 아니라, 각 노드가 **자신의 판단 산출물을 다음 노드가 검증 가능한 형태로 넘기고**, 하나의 `run_id` 아래에서 상태를 이어가며, 중간 상태가 `NO_ORDER`, `HOLD`, `READY_FOR_BE`, `BE_REJECTED`, `REPORT_READY` 같은 전이 규칙을 가진다는 점이다. BE는 동일 run을 resume하는 방식으로 결과를 다시 주입하며, 독립된 두 번의 무상태 AI 호출 체인으로 구현하지 않는다.
+이 구조에서 Agentic AI의 핵심은 단순히 노드가 여러 개인 것이 아니라, 각 노드가 **자신의 판단 산출물을 다음 노드가 검증 가능한 형태로 넘기고**, 하나의 `run_id` 아래에서 상태를 이어가며, 중간 상태가 `NO_ORDER`, `HOLD`, `READY_FOR_BE`, `BE_REJECTED`, `REPORT_READY` 같은 전이 규칙을 가진다는 점이다. Policy 단계는 정책 artifact를 조회해 `policy_context`로 고정하고, Risk 단계는 그 컨텍스트를 근거로 `PASS` 또는 `HOLD`를 제안하며, Evaluator 단계는 그 제안이 충분히 근거화되었는지만 다시 본다. 그 뒤에도 최종 실행 여부는 항상 BE가 deterministic 재검증으로 확정한다. BE는 동일 run을 resume하는 방식으로 결과를 다시 주입하며, 독립된 두 번의 무상태 AI 호출 체인으로 구현하지 않는다.
 
 ## 5. Shared State 계약
 
@@ -78,13 +81,14 @@ flowchart LR
 | 필드 | 설명 | 주 작성자 | 주 소비자 | 불변/제약 |
 |---|---|---|---|---|
 | `request_context` | 사용자 원본 요청, request id, 호출 시각 | FE/BE | 전체 | 원본 입력은 보존한다 |
-| `policy_context` | 허용 심볼, 허용 주문 타입, 최대 수량/금액, 시간대 정책 | BE | Policy, Risk | AI가 정책 자체를 완화하지 않는다 |
+| `policy_context` | policy retrieval로 모은 허용 심볼, 허용 주문 타입, 최대 수량/금액, 시간대 정책, 정책 artifact reference | BE | Policy, Risk, Evaluator | AI가 정책 자체를 완화하지 않는다 |
 | `normalized_order_intent` | 구조화된 주문 테스트 의도 | Policy | Risk, Execution | 필수 필드 누락 시 `incomplete=true` |
 | `market_snapshot` | 현재가, 호가, 캔들 요약 | BE | Risk, Report | Binance 원본을 정규화해 전달 |
 | `account_balance` | 잔고 및 거래 가능 상태 | BE | Risk, Report | signed endpoint 결과만 반영 |
 | `exchange_rules` | `exchangeInfo` 기반 제약 | BE | Risk | `PRICE_FILTER`, `LOT_SIZE`, `MIN_NOTIONAL` 포함 |
 | `risk_assessment` | 위험 평가 결과 | Risk | Execution, Report | 정량 검증과 reason code를 함께 가진다 |
 | `gate_decision` | `PASS`, `REJECT`, `HOLD` | Risk | BE, Report | Risk Agent만 작성 가능 |
+| `evaluation_result` | evaluator score, retry 여부, reflection 메모 | Evaluator | BE, Execution, Report | evaluator는 실행 여부를 결정하지 않는다 |
 | `execution_request` | BE로 넘길 최종 요청 초안 | Orchestrator | BE, Execution | AI는 서명 필드를 포함하지 않는다 |
 | `execution_result` | 주문 응답, 상태 조회 결과, 취소 결과 | BE | Execution | Binance 제출 이후에만 생성 |
 | `verification_checks` | 입력/리스크/실행 결과 검증 목록 | 각 Agent | 전체 | 각 단계가 자신의 검증만 추가 |
@@ -105,8 +109,9 @@ flowchart LR
 | `exchange_rules` | latest overwrite | `exchangeInfo` 최신값 우선 |
 | `risk_assessment` | stage overwrite | Risk 단계 최신 산출물 1개 유지 |
 | `gate_decision` | stage overwrite | Risk 또는 BE 결과 최신값 유지 |
+| `evaluation_result` | stage overwrite | evaluator 최신 산출물 1개 유지 |
 | `verification_checks` | append | 단계별 결과 누적 |
-| `decision_trace` | agent-key merge | `policy`, `risk`, `execution`, `run_summary`를 키 단위로 병합 |
+| `decision_trace` | agent-key merge | `policy`, `risk`, `evaluator`, `execution`, `run_summary`를 키 단위로 병합 |
 | `hold_reason` | latest overwrite | `HOLD` 상태일 때만 필수 |
 | `errors` | append | 에러 누적, 삭제 금지 |
 | `lifecycle_status` | state transition only | 허용된 전이만 가능 |
@@ -150,7 +155,9 @@ flowchart LR
 #### 역할
 
 - 사용자 입력을 주문 테스트 의도로 정규화한다.
+- BE가 조회해 전달한 정책 artifact를 묶어 `policy_context`로 해석한다.
 - 주문 타입별 필수 필드를 채우거나 누락 여부를 표기한다.
+- 구조화된 `action proposal`을 만든 뒤 다음 단계로 넘길 근거를 남긴다.
 - 해석 불가능한 요청을 실행 요청으로 승격하지 않는다.
 
 #### 입력
@@ -158,18 +165,25 @@ flowchart LR
 - `request_context`
 - `policy_context`
 
+`policy_context`는 빈 설명 필드가 아니라, BE가 retrieval한 정책 artifact 집합이다. 예를 들면 허용 심볼 목록, 주문 타입 허용 범위, 최대 notion/수량 정책, 시간대 제한, 사람 승인 필요 조건, 관련 정책 문서 reference가 여기에 들어간다. Policy Agent는 정책 원문을 임의로 완화하지 않고, retrieval된 artifact를 근거 source로 사용한다.
+
 #### 출력
 
 - `normalized_order_intent`
+- `action proposal` 성격의 구조화 초안, 단 `PASS` 또는 실행 확정이 아니라 다음 단계 검토용 제안
 - `verification_checks.input_validation`
 - `decision_trace.policy`
 - 필요 시 `errors`
+
+여기서 `action proposal`은 별도 실행 권한 객체가 아니라, `normalized_order_intent`, `decision_trace.policy`, 이후 생성될 `execution_request`의 기반이 되는 제안 묶음이다. 최소한 주문 방향, 주문 타입, 필수 파라미터 충족 여부, 정책 근거 reference, 사람이 다시 봐야 할 포인트를 포함해야 한다.
 
 #### Reasoning 책임
 
 - 요청이 조회인지 주문 테스트인지 분류한다.
 - `MARKET` / `LIMIT` 주문인지 판별한다.
 - `quantity`, `quoteOrderQty`, `price`, `timeInForce` 중 무엇이 필요한지 결정한다.
+- 정책 artifact에서 어떤 제한이 실제로 적용되는지 골라 `policy_context` 근거를 연결한다.
+- 다음 단계가 바로 검증할 수 있게 `evidence_refs`와 `verification_checks`를 남긴다.
 - 누락된 값이 있으면 억지로 추론하지 않고 `NEEDS_INPUT` 또는 `NO_ORDER`로 보낸다.
 
 #### 검증 항목
@@ -187,7 +201,7 @@ flowchart LR
 
 #### 종료 기준
 
-- 구조화 가능한 경우: `normalized_order_intent` 작성 후 `RISK_REVIEW`
+- 구조화 가능한 경우: `normalized_order_intent`와 근거가 포함된 `action proposal` 초안을 남기고 `RISK_REVIEW`
 - 필수 값 누락: 내부 상태로 `NEEDS_INPUT`을 기록한 뒤 `NO_ORDER` 또는 `HOLD`
 - 명백한 금지 요청: `NO_ORDER`
 
@@ -198,6 +212,7 @@ flowchart LR
 | `normalize_order_request` | 구조화 주문 의도 생성 | `NormalizedOrderIntent` |
 | `validate_order_fields` | 주문 타입별 필수 필드 검증 | `VerificationResult[]` |
 | `classify_request_type` | 조회/주문/상태조회/취소 구분 | `request_type` 문자열 |
+| `map_policy_context_evidence` | BE가 주입한 `policy_context` 안에서 실제 적용 정책 근거를 선택하고 연결 | `evidence_refs`, `VerificationResult[]` |
 | `detect_disallowed_live_trading_terms` | 실거래 전환 시도 감지 | `VerificationResult[]` |
 
 ### 7.2 Market / Risk Agent
@@ -235,6 +250,8 @@ flowchart LR
 - `REJECT`: 규칙 위반 또는 명백한 안전 위반
 - `HOLD`: 데이터가 오래되었거나 애매해서 자동 진행이 부적절함
 
+여기서 `PASS`는 실행 결론이 아니라 **BE로 넘겨도 되는 action proposal 후보**라는 뜻이다. 즉 `READY_FOR_BE`는 BE가 deterministic rule verdict를 내리기 전의 AI 측 통과 상태다.
+
 #### 금지 사항
 
 - `PASS`를 실행 완료로 해석하지 않는다.
@@ -243,7 +260,7 @@ flowchart LR
 
 #### 종료 기준
 
-- `PASS`: `READY_FOR_BE`
+- `PASS`: evaluator 입력용 후보 제안 생성
 - `REJECT`: `NO_ORDER`
 - `HOLD`: `HOLD`
 
@@ -256,7 +273,66 @@ flowchart LR
 | `check_policy_limits` | 정책상 최대 수량/금액/시간대 검증 | `VerificationResult[]` |
 | `assess_hold_reason` | 보류가 필요한 경우 subtype 결정 | `HoldDecision` |
 
-### 7.3 Execution / Report Agent
+### 7.3 Evaluator / Reflection Agent
+
+#### 역할
+
+- Policy와 Risk 단계가 남긴 구조화 근거가 충분한지 재검토한다.
+- `PASS` 제안이 근거 부족, 정책 artifact 누락, self-contradiction 없이 전달 가능한지 점수화한다.
+- 점수가 낮으면 재시도, 보류, 차단 전이 중 하나를 선택하게 한다.
+
+#### 입력
+
+- `policy_context`
+- `normalized_order_intent`
+- `risk_assessment`
+- `gate_decision`
+- `verification_checks`
+- `decision_trace.policy`
+- `decision_trace.risk`
+
+#### 출력
+
+- `evaluation_result`
+- `verification_checks.evaluation_validation`
+- `decision_trace.evaluator`
+
+#### 평가 대상
+
+- `policy_context`가 실제 적용 정책을 충분히 포함하는가
+- `normalized_order_intent`와 `risk_assessment` 사이에 모순이 없는가
+- `gate_decision=PASS` 근거가 `reason_codes`, `evidence_refs`, `verification_checks`로 재현 가능한가
+- `HOLD` 또는 `REJECT`로 내려야 할 사유가 누락되지 않았는가
+- 다음 단계인 BE가 deterministic 검증을 수행할 수 있을 만큼 evidence가 구조화되어 있는가
+
+#### score / retry 기준
+
+- score owner는 **Evaluator Agent**다. 이 점수는 품질 점수이며 실행 권한 점수가 아니다.
+- `score >= 0.85`: `PASS` proposal 유지 가능, `READY_FOR_BE` 후보로 전달
+- `0.60 <= score < 0.85`: 1회 reflection retry 허용, 누락 근거를 보강한 뒤 재평가
+- `score < 0.60`: `HOLD` 또는 `NO_ORDER`로 전환 검토
+- retry는 같은 `run_id` 안에서만 수행하며, 정책 완화나 임의 추정으로 score를 올리면 안 된다.
+
+#### 실패 전이 기준
+
+- 정책 artifact reference 누락, evidence mismatch, trace self-contradiction: `HOLD` 또는 `NO_ORDER`
+- `gate_decision=PASS`인데 필수 검증 항목이 비어 있음: `HOLD`
+- 반복 retry 후에도 score 기준 미달: `HOLD` 또는 `NO_ORDER`
+- evaluator schema mismatch: `FAILED` 또는 `HOLD` + `hold_reason=HOLD_DATA_INSUFFICIENT`
+
+#### 금지 사항
+
+- evaluator score를 실행 승인으로 해석하지 않는다.
+- BE 대신 deterministic rule verdict를 내리지 않는다.
+- 정책을 새로 만들거나 기존 정책을 완화하지 않는다.
+
+#### 종료 기준
+
+- score 기준 충족 + 근거 충분: `READY_FOR_BE` 후보 유지
+- score 기준 미달 + 보완 가능: `HOLD`
+- score 기준 미달 + 복구 불가: `NO_ORDER`
+
+### 7.4 Execution / Report Agent
 
 #### 역할
 
@@ -269,6 +345,7 @@ flowchart LR
 - `normalized_order_intent`
 - `gate_decision`
 - `risk_assessment`
+- `evaluation_result`
 - `execution_request` (있는 경우)
 - `execution_result` (주문 제출이 발생한 경우)
 - `errors`
@@ -284,6 +361,7 @@ flowchart LR
 
 - 주문이 차단되거나 보류된 경우 그 이유를 사용자 관점으로 설명한다.
 - BE가 받은 결과가 AI가 전달한 의도와 모순되지 않는지 확인한다.
+- evaluator score와 BE 최종 verdict가 다른 경우 override 이유를 함께 설명한다.
 - `NEW`, `FILLED`, `PARTIALLY_FILLED`, `CANCELED`, `REJECTED`, `EXPIRED` 상태를 사용자 관점으로 해석한다.
 - 주문 실패와 주문 차단을 구분해 설명한다.
 
@@ -306,7 +384,7 @@ flowchart LR
 | `build_report_payload` | 사용자용 리포트 조립 | `ReportPayload` |
 | `summarize_block_or_failure` | 차단/실패 설명 | `AgentDecisionTrace` |
 
-### 7.4 Resume payload와 immutable 규칙
+### 7.5 Resume payload와 immutable 규칙
 
 resume 시점에는 다음 규칙을 따른다.
 
@@ -346,6 +424,7 @@ resume 시점에는 다음 규칙을 따른다.
 
 - `decision_trace.policy`
 - `decision_trace.risk`
+- `decision_trace.evaluator`
 - `decision_trace.execution`
 - `decision_trace.run_summary`
 
@@ -357,6 +436,7 @@ resume 시점에는 다음 규칙을 따른다.
 
 - Policy Node → `NormalizedOrderIntent`, `AgentDecisionTrace`
 - Risk Node → `RiskAssessment`, `GateDecision`, `HoldDecision`
+- Evaluator Node → `EvaluationResult`, `AgentDecisionTrace`
 - Execution Node → `VerificationResult[]`, `AgentDecisionTrace`
 - Report Node → `ReportPayload`, `RunDecisionTrace`
 
@@ -391,6 +471,7 @@ schema mismatch 처리 기준은 다음과 같다.
 ### 9.3 BE 재검증 원칙
 
 - AI의 `PASS`는 제안일 뿐 확정이 아니다.
+- evaluator 고득점 역시 BE에 대한 proposal 강화일 뿐, 실행 결정이 아니다.
 - BE는 주문 제출 직전에 동일 제약을 deterministic하게 다시 검증한다.
 - BE는 필요 시 AI의 `PASS`를 `BE_REJECTED`로 낮출 수 있다.
 - `BE_REJECTED`는 BE 재검증 단계에서만 생성된다.
@@ -452,6 +533,19 @@ AI가 최종적으로 남겨야 하는 보고 산출물은 다음을 포함한�
 - 사용된 주요 근거 필드
 - 주문이 제출된 경우 Binance 응답의 핵심 필드
 - 사용자에게 보여줄 자연어 설명
+
+### 12.1 보고 단위와 cadence
+
+- 기본 보고 단위는 1 `run_id` 다.
+- 단계 보고 단위는 policy, risk, evaluator, execution, run_summary trace 다.
+- 중간 보고 cadence는 request accepted, policy retrieval complete, policy complete, risk gate complete, evaluator complete, BE revalidation complete, final report ready 순서를 따른다.
+- `HOLD`가 발생하면 cadence는 다음 진행 대신 같은 `run_id`의 resume 대기 상태로 멈춘다.
+
+보고 cadence에서 사람 검토 경계는 다음과 같다.
+
+- `HOLD_REVIEW_REQUIRED`가 발생하면 사람 검토가 다음 단계의 필수 입력이 된다.
+- evaluator가 근거 부족으로 낮은 점수를 준 경우 사람은 score 자체를 승인하는 주체가 아니라, 보완 입력 또는 진행 중단을 결정하는 주체다.
+- `READY_FOR_BE`와 evaluator 통과 이후에도 주문 제출 여부는 사람이나 AI가 아니라 BE deterministic rule verdict가 최종 확정한다.
 
 `NEEDS_INPUT`은 내부 상태이지만, 외부 보고에서는 보통 `HOLD` 또는 `NO_ORDER` 설명으로 매핑된다. 다만 audit trace에는 내부 상태 그대로 남길 수 있다.
 

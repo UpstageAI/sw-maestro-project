@@ -16,6 +16,8 @@
 - 실거래 URL과 실거래 API Key는 테스트 환경에 포함하지 않는다.
 - 주문 생성, 상태 조회, 주문 취소는 반드시 가상 자금 환경에서만 검증한다.
 - 실거래 기능은 테스트 대상이 아니다.
+- LLM 제안과 최종 실행 권한을 같은 것으로 취급하지 않는다.
+- 휴먼 QA는 happy path 1회가 아니라 정책별 분기와 실패 전이를 함께 검증한다.
 
 ## 2. 핵심 기능 테스트
 
@@ -35,6 +37,10 @@
 | T-12 | HOLD subtype | `HOLD_REVIEW_REQUIRED`, `HOLD_DATA_INSUFFICIENT` 구분 확인 | FR-14 |
 | T-13 | structured output | AI 노드 출력 schema 검증 | FR-15, FR-16 |
 | T-14 | BE 재검증 분리 | `BE_REJECTED`와 일반 실패 구분 확인 | FR-17 |
+| T-15 | policy retrieval grounding | Policy/Planning 단계가 관련 정책 근거를 trace에 남기는지 확인 | FR-18 |
+| T-16 | evaluator loop | 평가 점수, retry, 실패 전이가 기대대로 기록되는지 확인 | FR-19 |
+| T-17 | report cadence | `run_id` 단위 보고와 단계별 이벤트가 남는지 확인 | FR-20 |
+| T-18 | human QA rehearsal | 다인 QA로 정책별 흐름을 재현 가능한지 확인 | FR-21 |
 
 ## 3. 테스트 체크리스트
 
@@ -79,6 +85,8 @@
 | A-05 | AI PASS 후 BE 규칙 위반 | `PASS` | `BE_REJECTED` | AI와 BE 책임 경계 구분 |
 | A-06 | execution_result schema mismatch | `PASS` | `FAILED` | schema 검증 실패 로그 존재 |
 | A-07 | resume 후 시장 데이터 보완 | `HOLD` | `REPORT_READY`, `BE_REJECTED`, `NO_ORDER`, `FAILED` 중 하나 | 동일 `run_id` 유지 |
+| A-08 | 정책 retrieval 결과 충돌 | `HOLD` 또는 `REJECT` | `HOLD` + `hold_reason=HOLD_DATA_INSUFFICIENT` 또는 `NO_ORDER` | policy refs와 평가 로그 존재 |
+| A-09 | evaluator score 미달 | `HOLD` 또는 `REJECT` | `HOLD`, `NO_ORDER` | retry 1회 이내와 실패 전이 기록 |
 
 ## 5. Python 예제 테스트
 
@@ -147,6 +155,15 @@
 3. 재조회/보완 입력 후 같은 `run_id`로 resume
 4. 최종 상태가 `REPORT_READY`, `BE_REJECTED`, `NO_ORDER`, `FAILED` 중 하나로 설명 가능해야 함
 
+### E2E-07 정책 preset 별 분기 데모
+
+1. 자동 진행 허용 policy preset으로 주문 요청
+2. AI가 action proposal을 만들고 BE 재검증 후 제출되는지 확인
+3. 승인 필요 policy preset으로 같은 종류의 요청 실행
+4. `HOLD` + `hold_reason=HOLD_REVIEW_REQUIRED`로 바뀌는지 확인
+5. 데이터 부족 policy preset 또는 stale snapshot으로 다시 실행
+6. `HOLD` + `hold_reason=HOLD_DATA_INSUFFICIENT`로 바뀌는지 확인
+
 ## 8. 발표 데모 시나리오
 
 ### 데모 1. Spot Testnet 환경 확인
@@ -180,6 +197,13 @@
 - 정책상 검토 필요 주문으로 `HOLD` + `hold_reason=HOLD_REVIEW_REQUIRED` 발생
 - 승인 후 동일 `run_id`로 재개되는 흐름 설명
 
+### 데모 7. 정책별 workflow 비교
+
+- policy A: 자동 진행 허용, AI가 후보 path 제안, BE 재검증 후 제출
+- policy B: 사람 승인 필요, 같은 요청이어도 `HOLD_REVIEW_REQUIRED`
+- policy C: 데이터 근거 부족, `HOLD_DATA_INSUFFICIENT`
+- 각 데모에서 `PASS`가 곧 주문 체결이 아님을 설명
+
 ## 9. 데모용 초기 데이터
 
 - 기본 심볼: `BTCUSDT`, `ETHUSDT`
@@ -193,9 +217,17 @@
 - WebSocket 실패 시 동일 심볼의 REST 조회로 대체
 - 주문 취소 실패 시 상태 조회 결과로 미체결 상태를 설명
 
+## 10.1 휴먼 QA 기대치
+
+- 최소 2인 이상이 함께 문서, 화면, 로그를 교차 확인한다.
+- 한 명은 정책/상태 전이 관점, 다른 한 명은 UI/리포트 관점으로 본다.
+- QA는 `run_id`, `hold_reason`, `decision_trace`, `verification_checks`, `BE_REJECTED` 의미가 서로 어긋나지 않는지 확인해야 한다.
+- 발표 직전 리허설에서도 정책별 workflow 차이를 다시 확인한다.
+
 ## 11. 확정 구현 기준
 
 - 발표 데모는 반드시 Spot Testnet 환경에서만 수행한다.
 - 예제 코드는 모두 Testnet URL만 사용한다.
 - 실거래 기능은 문서와 시연 모두에서 배제한다.
 - `PASS`, `NO_ORDER`, `HOLD` + `hold_reason`, `BE_REJECTED`, `FAILED`를 구분 검증한다.
+- 정책 preset 이 달라지면 workflow 와 최종 상태가 달라질 수 있음을 데모로 보여준다.

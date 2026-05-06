@@ -16,6 +16,8 @@
 
 BE는 Binance Spot Testnet과 직접 통신하는 유일한 계층이다. 잔고 조회, 현재가/호가/캔들 조회, 주문 생성, 주문 상태 조회, 주문 취소, WebSocket 시세 수신을 담당한다.
 
+또한 BE는 deterministic rule 기반 Risk Engine과 실행 권한자의 역할을 함께 가진다. AI가 후보 action path를 제안해도, Binance 제출 여부를 확정하는 주체는 BE뿐이다.
+
 ## 2. REST / WebSocket 기준 엔드포인트
 
 | 구분 | 값 |
@@ -125,6 +127,7 @@ Binance Testnet의 signed endpoint 호출 시 다음 요소가 필요하다.
 - AI 응답이 `READY_FOR_BE`가 아니면 Binance 주문 제출로 진행하지 않는다.
 - `HOLD_REVIEW_REQUIRED`, `HOLD_DATA_INSUFFICIENT`는 checkpoint 저장 후 FE에 반환한다.
 - resume 요청은 반드시 동일 `run_id`를 포함해야 한다.
+- AI가 제출 후보를 반환해도, BE는 rule 기반 재검증이 끝나기 전까지 주문 생성 함수를 호출하지 않는다.
 
 ## 9. 주문 상태 조회
 
@@ -173,6 +176,19 @@ stream 이름의 심볼은 반드시 소문자를 사용한다.
 - BE는 `exchangeInfo`, 계정 잔고, signed request 제약을 deterministic하게 다시 검증한다.
 - AI `PASS`라도 BE 규칙 위반이면 `BE_REJECTED`로 종료한다.
 - `BE_REJECTED` 사유는 FE/리포트에 설명 가능한 코드로 남겨야 한다.
+
+## 11.3 evaluator 결과 반영 원칙
+
+- AI가 evaluator/reflection 결과를 함께 반환하면, BE는 그 점수를 참고 정보로만 사용한다.
+- score가 높아도 deterministic 규칙이 실패하면 `BE_REJECTED` 또는 `FAILED`가 우선한다.
+- score가 낮아 `HOLD` 또는 `NO_ORDER`로 종료된 run은 BE가 억지로 제출로 승격하지 않는다.
+
+## 11.4 보고 단위와 cadence 저장
+
+- BE는 `run_id` 단위 최종 리포트를 저장한다.
+- 같은 run 안의 policy, risk, evaluator, execution, run_summary trace를 함께 묶는다.
+- canonical cadence는 request accepted, policy retrieval complete, policy complete, risk gate complete, evaluator complete, BE revalidation complete, final report ready 순서를 따른다.
+- FE나 요약 응답은 이 canonical cadence 중 핵심 subset만 노출할 수 있지만, 저장 계층에서는 전체 cadence를 보존하는 것을 기본으로 한다.
 
 ## 12. Python 예제 코드
 
@@ -316,6 +332,7 @@ ws.close()
 - 주문 테스트는 Binance Spot Testnet REST 기준으로만 수행한다.
 - 시세 stream 수신은 WebSocket Streams endpoint 기준으로 수행한다.
 - 실거래 기능은 문서와 구현 모두에서 제외한다.
+- `verification_checks`와 evaluator trace, cadence 이벤트는 휴먼 QA와 데모에서 직접 확인 가능한 형태로 남긴다.
 
 ## 15. 응답 포맷 기준
 
@@ -323,3 +340,4 @@ ws.close()
 - Binance 원본 전체 payload는 로그/SQLite에 보관할 수 있지만, 기본 API 응답은 필요한 필드만 노출한다.
 - 주문 상태 값은 Binance 원본 enum을 유지한다.
 - AI 관련 응답에는 필요 시 `run_id`, `gate_decision`, `hold_reason`, `decision_trace` 요약을 포함한다.
+- AI 관련 응답에는 가능하면 `verification_checks` 요약, `decision_trace.evaluator`, cadence 이벤트도 포함한다.

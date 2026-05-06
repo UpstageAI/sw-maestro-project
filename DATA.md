@@ -37,6 +37,9 @@
 | ReportPayload | 최종 사용자/저장용 리포트 객체 |
 | AgentDecisionTrace | Policy/Risk/Execution 공통 trace 객체 |
 | VerificationResult | 공통 검증 결과 객체 |
+| PolicyRetrievalPacket | Policy/Planning 단계의 정책 검색 결과 |
+| EvaluationRecord | evaluator/reflection 단계 점수와 retry 기록 |
+| ReportCadenceEvent | 단계별 보고 시점 기록 |
 
 ## 2. 주요 데이터 객체
 
@@ -305,9 +308,48 @@
 | `ReportPayload` | 사용자/저장 리포트 | `run_id`, `gate_decision`, `final_action`, `decision_trace`, `user_summary` |
 | `RunDecisionTrace` | run 요약 | `run_id`, `final_action`, `be_override` |
 
+### 2.19 PolicyRetrievalPacket
+
+```json
+{
+  "request_id": "req_001",
+  "policy_refs": ["policy.symbol_allowlist", "policy.max_quote_limit"],
+  "retrieved_at": "2026-05-06T10:58:00+09:00",
+  "applied_rules": {
+    "allowed_symbols": ["BTCUSDT", "ETHUSDT"],
+    "max_quote_order_qty": "50"
+  }
+}
+```
+
+### 2.20 EvaluationRecord
+
+```json
+{
+  "stage": "risk_evaluator",
+  "target": "gate_decision",
+  "score": 92,
+  "retry_count": 0,
+  "passed": true
+}
+```
+
+### 2.21 ReportCadenceEvent
+
+```json
+{
+  "run_id": "airun_001",
+  "event_type": "BE_REVALIDATION_COMPLETED",
+  "lifecycle_status": "BE_REJECTED",
+  "created_at": "2026-05-06T11:01:00+09:00"
+}
+```
+
 ## 3. REST API 계약
 
 이 문서의 `/api/v1/testnet/*` 응답 예시는 BE가 정규화한 포맷이다. Binance 원본 전체 payload는 내부 로그/저장소에 보관할 수 있지만, FE와 테스트는 아래 응답 구조를 기준으로 구현한다.
+
+또한 AI 관련 응답은 단순 결과 문자열이 아니라, 정책 검색 근거, 평가 기록, 단계별 보고 이벤트를 함께 남길 수 있어야 한다. LLM이 만든 action proposal은 저장 가능하지만, 실행 승인 레코드는 deterministic 검증 결과와 분리해 기록한다.
 
 ### 3.1 잔고 조회
 
@@ -514,6 +556,7 @@
 - `order status`: `NEW`, `PARTIALLY_FILLED`, `FILLED`, `CANCELED`, `REJECTED`, `EXPIRED`
 - `lifecycle_status`: `RECEIVED`, `NORMALIZING`, `NEEDS_INPUT`, `RISK_REVIEW`, `HOLD`, `READY_FOR_BE`, `BE_REJECTED`, `EXECUTING`, `RESULT_VERIFYING`, `REPORT_READY`, `NO_ORDER`, `FAILED`
 - `hold_reason`: `HOLD_REVIEW_REQUIRED`, `HOLD_DATA_INSUFFICIENT`
+- `report cadence`: request accepted, policy retrieval complete, policy complete, risk gate complete, evaluator complete, be revalidation complete, final report ready
 
 ### 5.1 상태 필드 해석 규칙
 
