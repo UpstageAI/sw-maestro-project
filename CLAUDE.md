@@ -128,8 +128,6 @@ Binance 원본 payload 전체는 SQLite 로그에만 보관.
 
 ## Git 컨벤션
 
-`git_convention.md` 기준.
-
 - 브랜치: `feat/{issue-number}-{description}` / `fix/{issue-number}-{description}`
 - 커밋: `feat: 작업 내용 (#issue-number)`
 - PR 제목: `[#issue-number] 총 작업 내용`
