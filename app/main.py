@@ -54,10 +54,14 @@ def _error_response(error_code: str, message: str, detail: str | None, status_co
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    messages = "; ".join(
+        f"{' → '.join(str(loc) for loc in e['loc'])}: {e['msg']}"
+        for e in exc.errors()
+    )
     return _error_response(
         error_code="VALIDATION_ERROR",
         message="요청 파라미터가 올바르지 않습니다.",
-        detail=str(exc.errors()),
+        detail=messages,
         status_code=422,
     )
 

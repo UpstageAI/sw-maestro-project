@@ -1,3 +1,5 @@
+from typing import Any, Literal
+
 from pydantic import BaseModel
 
 
@@ -46,10 +48,13 @@ class KlinesResponse(BaseModel):
     items: list[KlineItem]
 
 
+_OrderStatus = Literal["NEW", "PARTIALLY_FILLED", "FILLED", "CANCELED", "PENDING_CANCEL", "REJECTED", "EXPIRED"]
+
+
 class OrderResponse(BaseModel):
     order_id: int
     symbol: str
-    status: str
+    status: _OrderStatus
     type: str
     side: str
 
@@ -57,20 +62,20 @@ class OrderResponse(BaseModel):
 class OrderStatusResponse(BaseModel):
     order_id: int
     symbol: str
-    status: str
+    status: _OrderStatus
     executed_qty: str
 
 
 class CancelOrderResponse(BaseModel):
     order_id: int
     symbol: str
-    status: str
+    status: _OrderStatus
 
 
 class StreamStatusResponse(BaseModel):
     connected: bool
     stream_name: str | None = None
-    last_event: dict | None = None
+    last_event: dict[str, Any] | None = None
 
 
 class ErrorResponse(BaseModel):

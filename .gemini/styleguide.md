@@ -143,7 +143,17 @@ tests/               # pytest 테스트
 
 - `/api/v1/testnet/*` 응답은 Binance 원본 payload를 그대로 반환하지 않고, **필요한 필드만 정규화**하여 반환한다.
 - 주문 상태 값(`status`)은 Binance 원본 enum을 유지한다. (`NEW`, `FILLED`, `CANCELED` 등)
-- 에러 응답은 `{"detail": "..."}` 형식을 따른다.
+- 에러 응답은 아래 `ErrorResponse` 스키마를 따른다. (`docs/DATA.md §2.8` 기준)
+
+```json
+{
+  "error_code": "BINANCE_TESTNET_REQUEST_FAILED",
+  "message": "사람이 읽을 수 있는 메시지",
+  "detail": "기술적 상세 내용 (로컬 환경에서만 노출)",
+  "request_id": "req_xxx",
+  "timestamp": "ISO8601"
+}
+```
 
 ---
 
