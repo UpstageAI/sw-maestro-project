@@ -18,8 +18,8 @@ class PriceResponse(BaseModel):
 
 class BookDepth(BaseModel):
     last_update_id: int
-    bids: list[list[str]]
-    asks: list[list[str]]
+    bids: list[tuple[str, str]]
+    asks: list[tuple[str, str]]
 
 
 class BookResponse(BaseModel):

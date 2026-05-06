@@ -10,7 +10,7 @@ class SpotOrderRequest(BaseModel):
     quantity: str | None = None
     quote_order_qty: str | None = None
     price: str | None = None
-    time_in_force: str | None = None
+    time_in_force: Literal["GTC", "IOC", "FOK"] | None = None
 
     @model_validator(mode="after")
     def validate_order_params(self) -> "SpotOrderRequest":
@@ -34,6 +34,6 @@ class CancelOrderRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_identifier(self) -> "CancelOrderRequest":
-        if not self.order_id and not self.orig_client_order_id:
+        if self.order_id is None and not self.orig_client_order_id:
             raise ValueError("order_id 또는 orig_client_order_id 중 하나가 필요합니다.")
         return self

@@ -65,10 +65,11 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     logger.exception("Unhandled exception: %s", exc)
+    detail = str(exc) if settings.app_env == "local" else None
     return _error_response(
         error_code="INTERNAL_SERVER_ERROR",
         message="서버 내부 오류가 발생했습니다.",
-        detail=str(exc),
+        detail=detail,
         status_code=500,
     )
 
