@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any, Dict, Mapping
+from typing import Any, Dict, List, Mapping
 
 from autocoin_ai.constants import LIFECYCLE_FAILED, LIFECYCLE_HOLD
 from autocoin_ai.graph import build_completion_graph, build_order_graph
@@ -59,3 +59,22 @@ class AutocoinAgentApp:
         assert_contract_state(checked)
         self._runs[run_id] = deepcopy(checked)
         return checked
+
+    def order_checkpoint_evidence(self, run_id: str) -> Dict[str, Any]:
+        config = {"configurable": {"thread_id": run_id}}
+        snapshot = self.order_graph.get_state(config)
+        history = list(self.order_graph.get_state_history(config))
+        return _checkpoint_evidence(snapshot.values, history)
+
+    def completion_checkpoint_evidence(self, run_id: str) -> Dict[str, Any]:
+        config = {"configurable": {"thread_id": run_id}}
+        snapshot = self.completion_graph.get_state(config)
+        history = list(self.completion_graph.get_state_history(config))
+        return _checkpoint_evidence(snapshot.values, history)
+
+
+def _checkpoint_evidence(values: Mapping[str, Any], history: List[Any]) -> Dict[str, Any]:
+    return {
+        "final_snapshot_lifecycle_status": values.get("lifecycle_status"),
+        "history_snapshot_count": len(history),
+    }
