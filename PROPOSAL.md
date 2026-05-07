@@ -186,6 +186,7 @@ flowchart TD
 
 1. 사용자가 주문 테스트 요청을 보낸다.
 2. Policy/Planning Agent가 정책 문서, 허용 심볼, 허용 시간대, 이전 run 규칙 같은 근거를 검색해 `policy_context`를 구성한다.
+   이때 `policy_context`는 AI가 임의로 만든 정책 상태가 아니라, BE가 retrieval한 정책 artifact를 immutable grounding 입력으로 주입하고 Policy/Planning Agent는 그 안에서 요청에 맞는 근거를 선택·해석하는 것으로 본다.
 3. 같은 Agent가 구조화된 주문 의도와 후보 action path를 만든다.
 4. Market/Risk Agent가 시장 데이터와 잔고, 거래소 규칙을 함께 평가한다.
 5. 내부 평가 단계가 근거 충돌 여부와 설명 가능성을 다시 확인한다.

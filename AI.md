@@ -136,7 +136,9 @@ flowchart LR
 상태 전이의 기본 규칙은 다음과 같다.
 
 - `PASS`는 `READY_FOR_BE`를 의미할 뿐, 곧바로 주문 제출을 의미하지 않는다.
+- `READY_FOR_BE`는 BE deterministic revalidation 직전의 AI-side handoff 상태일 뿐이며, execution approval이나 execution complete를 뜻하지 않는다.
 - `HOLD`는 애매하지만 위험한 상태를 숨기지 않고 드러내기 위한 안전 상태다.
+- `HOLD`에서 `READY_FOR_BE`로 가는 전이는 같은 `run_id`의 resume 이후 보완 입력 또는 승인 결과를 병합하고 막혀 있던 검증 경로를 다시 통과한 경우에만 허용되며, resume 자체가 직접 승격을 의미하지는 않는다.
 - `BE_REJECTED`는 AI가 통과시켰더라도 BE가 deterministic 검증으로 다시 차단할 수 있음을 의미하며, 이 상태는 BE만 생성할 수 있다.
 - `BE_REJECTED`는 차단 결과를 설명하는 핵심 상태이며, 사용자용 보고 payload 생성 이후 내부 lifecycle은 `REPORT_READY`로 진행할 수 있다.
 

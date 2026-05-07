@@ -255,6 +255,8 @@
 }
 ```
 
+위 예시에서 `decision_trace.policy`, `decision_trace.risk`, `decision_trace.evaluator`의 `final_action=READY_FOR_BE`는 최종 실행 결과가 아니라 **BE deterministic revalidation 직전의 proposal handoff 상태**를 뜻한다.
+
 ### 2.15 HoldDecision
 
 ```json
