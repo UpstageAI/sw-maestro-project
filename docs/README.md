@@ -14,6 +14,7 @@
 - BE boundary 계약: `BE.md`
 - AI 계층 기준: `AI.md`
 - 데이터와 상태 계약: `DATA.md`
+- 환경 변수 설정: `ENV.md`
 - 검증과 데모 기준: `TEST_AND_DEMO.md`
 
 ## 서브프로젝트 한 줄 정의
@@ -73,7 +74,8 @@
 5. `BE.md`
 6. `AI.md`
 7. `DATA.md`
-8. `TEST_AND_DEMO.md`
+8. `ENV.md`
+9. `TEST_AND_DEMO.md`
 
 ## 문서 권한 맵
 
@@ -83,6 +85,7 @@
 - BE 검증/실행 boundary는 `BE.md`가 소유한다.
 - AI 상태 해석과 resume 규칙은 `AI.md`가 소유한다.
 - canonical 필드, 상태, payload shape은 `DATA.md`가 소유한다.
+- AI Agent 단독 테스트의 로컬 환경 변수 기준은 `ENV.md`가 소유한다.
 - acceptance와 rehearsal 기준은 `TEST_AND_DEMO.md`가 소유한다.
 
 ## 이 문서 세트의 초점
