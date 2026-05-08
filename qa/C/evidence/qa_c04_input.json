@@ -1,0 +1,16 @@
+{
+  "run_id": "qa-c-04-failed-001",
+  "request_context": {
+    "request_id": "req_c04_001",
+    "requested_at": "2026-05-08T10:00:00+09:00",
+    "user_input": {
+      "symbol": "BTCUSDT",
+      "side": "BUY",
+      "type": "MARKET",
+      "quoteOrderQty": "50"
+    }
+  },
+  "policy_context": {
+    "policy_refs": ["policy.symbol_allowlist", "policy.spot_testnet_only"]
+  }
+}

@@ -1,0 +1,69 @@
+﻿{
+  "be_rejection_evidence": {},
+  "completion_payload": {},
+  "decision_trace": {
+    "evaluator": {
+      "evidence_refs": [],
+      "final_action": "",
+      "reason_codes": []
+    },
+    "execution": {
+      "evidence_refs": [],
+      "final_action": "",
+      "reason_codes": []
+    },
+    "policy": {
+      "evidence_refs": [
+        "request_context"
+      ],
+      "final_action": "FAILED",
+      "notes": "Missing fields: request_type",
+      "reason_codes": [
+        "INITIAL_REQUEST_CONTRACT_FAILED"
+      ]
+    },
+    "risk": {
+      "evidence_refs": [],
+      "final_action": "",
+      "reason_codes": []
+    },
+    "run_summary": {
+      "evidence_refs": [],
+      "final_action": "",
+      "reason_codes": []
+    }
+  },
+  "execution_result": {},
+  "hold_reason": null,
+  "lifecycle_status": "FAILED",
+  "normalized_order_intent": {},
+  "policy_context": {
+    "policy_refs": [
+      "policy.symbol_allowlist",
+      "policy.spot_testnet_only"
+    ]
+  },
+  "report": {},
+  "request_context": {
+    "request_id": "req_c04_001",
+    "requested_at": "2026-05-08T10:00:00+09:00",
+    "user_input": {
+      "quoteOrderQty": "50",
+      "side": "BUY",
+      "symbol": "BTCUSDT",
+      "type": "MARKET"
+    }
+  },
+  "resume_history": [],
+  "run_id": "qa-c-04-failed-001",
+  "verification_checks": [
+    {
+      "evidence_refs": [
+        "request_context"
+      ],
+      "name": "initial_request_contract",
+      "result": "fail",
+      "stage": "policy"
+    }
+  ]
+}
