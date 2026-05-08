@@ -51,24 +51,26 @@ export function BalanceCard({
     }
 
     return (
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>자산</th>
-            <th className={styles.numeric}>사용 가능</th>
-            <th className={styles.numeric}>잠금</th>
-          </tr>
-        </thead>
-        <tbody>
-          {balances.map((b) => (
-            <tr key={b.asset}>
-              <td className={styles.asset}>{b.asset}</td>
-              <td className={styles.numeric}>{b.free}</td>
-              <td className={styles.numeric}>{b.locked}</td>
+      <div className={styles.tableWrapper}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>자산</th>
+              <th className={styles.numeric}>사용 가능</th>
+              <th className={styles.numeric}>잠금</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {balances.map((b) => (
+              <tr key={b.asset}>
+                <td className={styles.asset}>{b.asset}</td>
+                <td className={styles.numeric}>{b.free}</td>
+                <td className={styles.numeric}>{b.locked}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     );
   };
 
