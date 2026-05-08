@@ -68,6 +68,12 @@ def save_spot_order(
     return order
 
 
+def get_spot_order_by_binance_id(db: Session, binance_order_id: str) -> SpotOrder | None:
+    return db.scalars(
+        select(SpotOrder).where(SpotOrder.binance_order_id == binance_order_id)
+    ).first()
+
+
 def update_spot_order_status(db: Session, order_id: str, status: str, response_json: dict | None = None) -> SpotOrder | None:
     order = db.get(SpotOrder, order_id)
     if not order:

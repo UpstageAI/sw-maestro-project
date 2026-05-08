@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import AsyncGenerator
 
 from fastapi import FastAPI, Request
-from fastapi.exceptions import RequestValidationError
+from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -13,7 +13,7 @@ from app.config import settings
 from app.database import create_tables
 from app.models.health import HealthResponse
 from app.models.responses import ErrorResponse
-from app.routers import account, klines, ticker
+from app.routers import account, klines, orders, ticker
 
 logging.basicConfig(level=settings.log_level)
 logger = logging.getLogger(__name__)
@@ -53,6 +53,16 @@ def _error_response(error_code: str, message: str, detail: str | None, status_co
     return JSONResponse(status_code=status_code, content=body.model_dump())
 
 
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+    return _error_response(
+        error_code="VALIDATION_ERROR" if exc.status_code == 422 else "REQUEST_FAILED",
+        message=str(exc.detail),
+        detail=None,
+        status_code=exc.status_code,
+    )
+
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     messages = "; ".join(
@@ -87,8 +97,8 @@ async def health() -> HealthResponse:
 app.include_router(account.router, prefix="/api/v1/testnet")
 app.include_router(ticker.router, prefix="/api/v1/testnet")
 app.include_router(klines.router, prefix="/api/v1/testnet")
+app.include_router(orders.router, prefix="/api/v1/testnet")
 
 # Routers registered in later phases
-# from app.routers import orders, stream
-# app.include_router(orders.router, prefix="/api/v1/testnet")
+# from app.routers import stream
 # app.include_router(stream.router, prefix="/api/v1/testnet")
