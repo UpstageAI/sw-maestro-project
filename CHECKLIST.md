@@ -82,7 +82,7 @@
   - [x] `orderId` 또는 `origClientOrderId` 입력
   - [x] `status`, `executedQty` 등 상태 표시
   - [x] 주문 상태 배지 (NEW, FILLED, CANCELED, REJECTED)
-- [ ] `GET /api/v1/testnet/orders/status` 연동 (BE 대기)
+- [x] `GET /api/v1/testnet/orders/status` 연동
 
 ### 3.3 주문 취소 — FR-09
 
@@ -168,6 +168,6 @@
 - [x] `GET /api/v1/testnet/ticker/book` — 호가 조회
 - [x] `GET /api/v1/testnet/klines` — 캔들 조회
 - [ ] `POST /api/v1/testnet/orders` — 주문 생성
-- [ ] `GET /api/v1/testnet/orders/status` — 주문 상태 조회
+- [x] `GET /api/v1/testnet/orders/status` — 주문 상태 조회
 - [ ] `DELETE /api/v1/testnet/orders` — 주문 취소
 - [x] `GET /api/v1/testnet/stream/status` — WebSocket 상태 확인

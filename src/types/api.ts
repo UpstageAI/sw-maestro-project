@@ -88,24 +88,14 @@ export interface SpotOrderResponse {
 export interface OrderStatusResponse {
   orderId: number;
   symbol: string;
-  clientOrderId: string;
-  price: string;
-  origQty: string;
-  executedQty: string;
-  cummulativeQuoteQty: string;
   status: OrderStatus;
-  type: OrderType;
-  side: OrderSide;
-  time: number;
-  updateTime: number;
+  executedQty: string;
 }
 
 export interface CancelOrderResponse {
   orderId: number;
   symbol: string;
-  origClientOrderId: string;
-  status: 'CANCELED';
-  clientOrderId: string;
+  status: OrderStatus;
 }
 
 export interface ErrorResponse {

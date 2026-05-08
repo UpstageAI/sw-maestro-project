@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Search } from 'lucide-react';
 import { fetchOrderStatus } from '../../api/testnet';
+import { ApiError } from '../../api/client';
 import { Button, Badge } from '../common';
 import { DEFAULT_SYMBOLS, DEFAULT_SYMBOL, ORDER_STATUS_LABELS } from '../../constants/symbols';
-import type { OrderStatus, OrderStatusResponse, ErrorResponse } from '../../types/api';
+import type { OrderStatus, OrderStatusResponse } from '../../types/api';
 import styles from './OrderStatusPanel.module.css';
 
 const STATUS_VARIANT_MAP: Record<OrderStatus, 'info' | 'success' | 'warning' | 'danger' | 'default'> = {
@@ -34,8 +35,11 @@ export function OrderStatusPanel() {
       setError(null);
     },
     onError: (err: unknown) => {
-      const apiError = err as ErrorResponse;
-      setError(apiError?.message ?? '주문 상태 조회에 실패했습니다.');
+      const message =
+        err instanceof ApiError
+          ? err.errorResponse?.message ?? err.message
+          : '주문 상태 조회에 실패했습니다.';
+      setError(message);
       setResult(null);
     },
   });
@@ -100,19 +104,15 @@ export function OrderStatusPanel() {
             <span className={styles.resultValue}>{result.orderId}</span>
           </div>
           <div className={styles.resultRow}>
+            <span className={styles.resultLabel}>심볼</span>
+            <span className={styles.resultValue}>{result.symbol}</span>
+          </div>
+          <div className={styles.resultRow}>
             <span className={styles.resultLabel}>상태</span>
             <Badge
               label={ORDER_STATUS_LABELS[result.status] ?? result.status}
               variant={STATUS_VARIANT_MAP[result.status] ?? 'default'}
             />
-          </div>
-          <div className={styles.resultRow}>
-            <span className={styles.resultLabel}>유형</span>
-            <span className={styles.resultValue}>{result.type}</span>
-          </div>
-          <div className={styles.resultRow}>
-            <span className={styles.resultLabel}>방향</span>
-            <span className={styles.resultValue}>{result.side}</span>
           </div>
           <div className={styles.resultRow}>
             <span className={styles.resultLabel}>체결 수량</span>
