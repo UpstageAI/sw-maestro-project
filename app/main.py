@@ -87,9 +87,12 @@ from app.routers import account
 
 app.include_router(account.router, prefix="/api/v1/testnet")
 
+from app.routers import klines, ticker
+
+app.include_router(ticker.router, prefix="/api/v1/testnet")
+app.include_router(klines.router, prefix="/api/v1/testnet")
+
 # Routers registered in later phases
-# from app.routers import ticker, klines, orders, stream
-# app.include_router(ticker.router, prefix="/api/v1/testnet")
-# app.include_router(klines.router, prefix="/api/v1/testnet")
+# from app.routers import orders, stream
 # app.include_router(orders.router, prefix="/api/v1/testnet")
 # app.include_router(stream.router, prefix="/api/v1/testnet")
