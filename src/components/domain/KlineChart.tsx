@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { createChart, type IChartApi, ColorType } from 'lightweight-charts';
+import { createChart, type IChartApi, ColorType, CandlestickSeries } from 'lightweight-charts';
 import { CandlestickChart } from 'lucide-react';
 import type { KlineItem } from '../../types/api';
 import { KLINE_INTERVALS, type KlineInterval } from '../../constants/symbols';
@@ -61,7 +61,7 @@ export function KlineChart({
       },
     });
 
-    const candlestickSeries = chart.addCandlestickSeries({
+    const candlestickSeries = chart.addSeries(CandlestickSeries, {
       upColor: '#16a34a',
       downColor: '#dc2626',
       borderDownColor: '#dc2626',
