@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 import httpx
@@ -59,8 +60,7 @@ async def get_book(db: Session, symbol: str, settings: Settings) -> BookResponse
     return result
 
 
-async def _fetch_book_and_depth(client: httpx.AsyncClient, symbol: str, settings: Settings):
-    import asyncio
+async def _fetch_book_and_depth(client: httpx.AsyncClient, symbol: str, settings: Settings) -> tuple[dict, dict]:
     book_task = client.get(
         f"{settings.binance_testnet_rest_base_url}/v3/ticker/bookTicker",
         params={"symbol": symbol},
