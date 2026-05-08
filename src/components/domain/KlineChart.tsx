@@ -70,8 +70,9 @@ export function KlineChart({
       wickUpColor: '#16a34a',
     });
 
+    const localOffsetSec = -(new Date().getTimezoneOffset() * 60);
     const data = items.map((k) => ({
-      time: (k.openTime / 1000) as import('lightweight-charts').UTCTimestamp,
+      time: (k.openTime / 1000 + localOffsetSec) as import('lightweight-charts').UTCTimestamp,
       open: parseFloat(k.open),
       high: parseFloat(k.high),
       low: parseFloat(k.low),
