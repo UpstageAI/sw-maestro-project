@@ -42,4 +42,4 @@ def test_stream_status_camel_case_keys(client: TestClient):
     data = resp.json()
     assert "streamName" in data
     assert "lastEvent" in data
-    assert "snake_name" not in data
+    assert "stream_name" not in data

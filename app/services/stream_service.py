@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-from collections import deque
 from typing import Any
 
 import websockets
@@ -13,7 +12,6 @@ logger = logging.getLogger(__name__)
 _STREAM_NAME = "btcusdt@ticker"
 _connected: bool = False
 _last_event: dict[str, Any] | None = None
-_event_buffer: deque[dict[str, Any]] = deque(maxlen=10)
 _task: asyncio.Task | None = None
 
 
@@ -36,7 +34,7 @@ async def _listen(ws_stream_url: str) -> None:
                 async for raw in ws:
                     event = json.loads(raw)
                     _last_event = event
-                    _event_buffer.append(event)
+            _connected = False
         except Exception:
             logger.exception("WebSocket disconnected, retrying in 5s")
             _connected = False
@@ -45,6 +43,9 @@ async def _listen(ws_stream_url: str) -> None:
 
 def start_stream(ws_stream_url: str) -> None:
     global _task
+    if _task and not _task.done():
+        logger.warning("Stream background task is already running.")
+        return
     _task = asyncio.create_task(_listen(ws_stream_url))
     logger.info("Stream background task started")
 
