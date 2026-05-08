@@ -116,9 +116,19 @@ export interface ErrorResponse {
   timestamp: string;
 }
 
+export interface TickerEvent {
+  e: string;
+  s: string;
+  c: string;
+  o: string;
+  h: string;
+  l: string;
+  v: string;
+  q: string;
+}
+
 export interface StreamStatus {
   connected: boolean;
-  streamName: string;
-  lastEvent?: unknown;
-  lastEventTime?: number;
+  streamName: string | null;
+  lastEvent: TickerEvent | null;
 }

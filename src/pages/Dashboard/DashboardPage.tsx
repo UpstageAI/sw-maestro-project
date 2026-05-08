@@ -6,8 +6,8 @@ import {
   fetchTickerPrice,
   fetchBookTicker,
   fetchKlines,
-  fetchStreamStatus,
 } from '../../api/testnet';
+import { useStreamStatus } from '../../hooks';
 import {
   DEFAULT_SYMBOLS,
   DEFAULT_SYMBOL,
@@ -51,26 +51,22 @@ export function DashboardPage() {
     staleTime: 30_000,
   });
 
-  const streamQuery = useQuery({
-    queryKey: ['streamStatus'],
-    queryFn: fetchStreamStatus,
-    enabled: false,
-  });
+  const stream = useStreamStatus();
 
   const refreshAll = useCallback(() => {
     accountQuery.refetch();
     priceQuery.refetch();
     bookQuery.refetch();
     klineQuery.refetch();
-    streamQuery.refetch();
-  }, [accountQuery, priceQuery, bookQuery, klineQuery, streamQuery]);
+    stream.refetch();
+  }, [accountQuery, priceQuery, bookQuery, klineQuery, stream]);
 
   const isAnyRefetching =
     accountQuery.isRefetching ||
     priceQuery.isRefetching ||
     bookQuery.isRefetching ||
     klineQuery.isRefetching ||
-    streamQuery.isRefetching;
+    stream.isRefetching;
 
   const handleSymbolChange = (newSymbol: Symbol) => {
     setSymbol(newSymbol);
@@ -153,11 +149,11 @@ export function DashboardPage() {
 
         <div>
           <StreamStatusCard
-            streamStatus={streamQuery.data}
-            isLoading={streamQuery.isLoading && streamQuery.isFetching}
-            isError={streamQuery.isError}
-            onRefresh={() => streamQuery.refetch()}
-            isRefetching={streamQuery.isRefetching}
+            streamStatus={stream.streamStatus}
+            isLoading={stream.isLoading}
+            isError={stream.isError}
+            onRefresh={() => stream.refetch()}
+            isRefetching={stream.isRefetching}
           />
         </div>
 

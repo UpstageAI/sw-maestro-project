@@ -1,5 +1,5 @@
 import { Radio } from 'lucide-react';
-import { Card, Badge, Button } from '../common';
+import { Card, Badge, Button, Banner, Skeleton } from '../common';
 import type { StreamStatus } from '../../types/api';
 import styles from './StreamStatusCard.module.css';
 
@@ -49,17 +49,36 @@ export function StreamStatusCard({
   const connectionState = getConnectionState(streamStatus);
 
   const renderContent = () => {
-    if (isLoading || isError || !streamStatus) {
+    if (isLoading) {
+      return (
+        <div className={styles.statusList}>
+          <Skeleton height="20px" />
+          <Skeleton height="20px" />
+          <Skeleton height="20px" />
+        </div>
+      );
+    }
+
+    if (isError) {
+      return (
+        <Banner variant="danger">
+          스트림 상태 조회에 실패했습니다. 네트워크 연결을 확인해 주세요.
+        </Banner>
+      );
+    }
+
+    if (!streamStatus) {
       return (
         <div className={styles.placeholder}>
           <Radio size={20} />
           <span>
-            WebSocket 시세 스트림 기능은 백엔드 준비 후 활성화됩니다. 현재는 REST
-            API를 통한 수동 조회를 사용해 주세요.
+            WebSocket 시세 스트림 상태를 불러오는 중입니다.
           </span>
         </div>
       );
     }
+
+    const lastEvent = streamStatus.lastEvent;
 
     return (
       <div className={styles.statusList}>
@@ -77,18 +96,35 @@ export function StreamStatusCard({
         <div className={styles.statusRow}>
           <span className={styles.label}>스트림</span>
           <span className={styles.streamName}>
-            {streamStatus.streamName || '—'}
+            {streamStatus.streamName ?? '—'}
           </span>
         </div>
 
-        <div className={styles.statusRow}>
-          <span className={styles.label}>최근 이벤트</span>
-          <span className={styles.value}>
-            {streamStatus.lastEventTime
-              ? new Date(streamStatus.lastEventTime).toLocaleTimeString('ko-KR')
-              : '—'}
-          </span>
-        </div>
+        {lastEvent && (
+          <>
+            <div className={styles.statusRow}>
+              <span className={styles.label}>현재가</span>
+              <span className={styles.value}>{lastEvent.c}</span>
+            </div>
+            <div className={styles.statusRow}>
+              <span className={styles.label}>24h 고가 / 저가</span>
+              <span className={styles.value}>
+                {lastEvent.h} / {lastEvent.l}
+              </span>
+            </div>
+            <div className={styles.statusRow}>
+              <span className={styles.label}>24h 거래량</span>
+              <span className={styles.value}>{lastEvent.v}</span>
+            </div>
+          </>
+        )}
+
+        {!lastEvent && streamStatus.connected && (
+          <div className={styles.statusRow}>
+            <span className={styles.label}>최근 이벤트</span>
+            <span className={styles.value}>수신 대기 중…</span>
+          </div>
+        )}
       </div>
     );
   };

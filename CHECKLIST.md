@@ -58,7 +58,7 @@
   - [x] stream name, latest event 표시
   - [x] 연결 상태 (수신 중/연결 중/재연결 중/연결 끊김) 표시
   - [x] WebSocket 연결 실패 시 수동 조회 fallback 안내
-- [ ] WebSocket 연결 관리 hook 구현 (BE 대기)
+- [x] WebSocket 연결 관리 hook 구현 (`useStreamStatus` 폴링 hook)
 
 ## 3. 주문 테스트 페이지 (`/orders`) — FR-06, FR-07, FR-08, FR-09
 
@@ -170,4 +170,4 @@
 - [ ] `POST /api/v1/testnet/orders` — 주문 생성
 - [ ] `GET /api/v1/testnet/orders/status` — 주문 상태 조회
 - [ ] `DELETE /api/v1/testnet/orders` — 주문 취소
-- [ ] `GET /api/v1/testnet/stream/status` — WebSocket 상태 확인
+- [x] `GET /api/v1/testnet/stream/status` — WebSocket 상태 확인
