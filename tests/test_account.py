@@ -15,7 +15,7 @@ def test_get_account_success(client: TestClient):
             {"asset": "ETH", "free": "0.00000000", "locked": "0.00000000"},
         ],
     }
-    with patch("app.routers.account.account_service.get_account", new_callable=AsyncMock) as mock_get:
+    with patch("app.services.account_service.get_account", new_callable=AsyncMock) as mock_get:
         from app.models.responses import BalanceItem, BalanceResponse
         mock_get.return_value = BalanceResponse(
             balances=[
@@ -34,7 +34,7 @@ def test_get_account_success(client: TestClient):
 
 
 def test_get_account_returns_only_nonzero_balances(client: TestClient):
-    with patch("app.routers.account.account_service.get_account", new_callable=AsyncMock) as mock_get:
+    with patch("app.services.account_service.get_account", new_callable=AsyncMock) as mock_get:
         from app.models.responses import BalanceItem, BalanceResponse
         mock_get.return_value = BalanceResponse(
             balances=[
@@ -50,7 +50,7 @@ def test_get_account_returns_only_nonzero_balances(client: TestClient):
 def test_get_account_binance_failure_returns_error():
     from fastapi.testclient import TestClient
     from app.main import app
-    with patch("app.routers.account.account_service.get_account", new_callable=AsyncMock) as mock_get:
+    with patch("app.services.account_service.get_account", new_callable=AsyncMock) as mock_get:
         mock_get.side_effect = Exception("Binance 연결 실패")
         with TestClient(app, raise_server_exceptions=False) as c:
             resp = c.get("/api/v1/testnet/account")
@@ -61,7 +61,7 @@ def test_get_account_binance_failure_returns_error():
 
 
 def test_get_account_response_has_camel_case_keys(client: TestClient):
-    with patch("app.routers.account.account_service.get_account", new_callable=AsyncMock) as mock_get:
+    with patch("app.services.account_service.get_account", new_callable=AsyncMock) as mock_get:
         from app.models.responses import BalanceItem, BalanceResponse
         mock_get.return_value = BalanceResponse(
             balances=[BalanceItem(asset="BTC", free="1.0", locked="0.0")]
