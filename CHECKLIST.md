@@ -36,7 +36,7 @@
 - [x] `PriceCard` 컴포넌트 구현
   - [x] `symbol`, `price` 표시
   - [x] 심볼 선택 (BTCUSDT, ETHUSDT)
-- [ ] `GET /api/v1/testnet/ticker/price` 연동 (BE 대기)
+- [x] `GET /api/v1/testnet/ticker/price` 연동
 
 ### 2.3 호가 조회 — FR-04
 
@@ -164,7 +164,7 @@
 > `VITE_API_BASE_URL` 환경 변수만 설정하면 즉시 API 연동 테스트 가능
 
 - [x] `GET /api/v1/testnet/account` — 잔고 조회
-- [ ] `GET /api/v1/testnet/ticker/price` — 현재가 조회
+- [x] `GET /api/v1/testnet/ticker/price` — 현재가 조회
 - [ ] `GET /api/v1/testnet/ticker/book` — 호가 조회
 - [ ] `GET /api/v1/testnet/klines` — 캔들 조회
 - [ ] `POST /api/v1/testnet/orders` — 주문 생성

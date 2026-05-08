@@ -36,7 +36,7 @@ export function DashboardPage() {
   const priceQuery = useQuery({
     queryKey: ['tickerPrice', symbol],
     queryFn: () => fetchTickerPrice(symbol),
-    enabled: false,
+    staleTime: 10_000,
   });
 
   const bookQuery = useQuery({
