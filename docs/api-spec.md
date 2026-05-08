@@ -8,6 +8,22 @@ Coin Agent BE — Binance Spot Testnet 전용 백엔드 API 명세.
 
 ---
 
+## 구현 상태
+
+| 엔드포인트 | 상태 |
+|---|---|
+| `GET /health` | ✅ 구현 완료 |
+| `GET /api/v1/testnet/account` | ✅ 구현 완료 |
+| `GET /api/v1/testnet/ticker/price` | ✅ 구현 완료 |
+| `GET /api/v1/testnet/ticker/book` | ✅ 구현 완료 |
+| `GET /api/v1/testnet/klines` | ✅ 구현 완료 |
+| `POST /api/v1/testnet/orders` | 🔜 Phase 2 예정 (AI Gateway 연동) |
+| `GET /api/v1/testnet/orders/status` | ✅ 구현 완료 |
+| `DELETE /api/v1/testnet/orders` | ✅ 구현 완료 |
+| `GET /api/v1/testnet/stream/status` | ✅ 구현 완료 |
+
+---
+
 ## 공통 에러 응답
 
 HTTP 4xx / 5xx 시 아래 형식으로 반환됩니다.
@@ -25,8 +41,22 @@ HTTP 4xx / 5xx 시 아래 형식으로 반환됩니다.
 | errorCode | HTTP | 상황 |
 |---|---|---|
 | `VALIDATION_ERROR` | 422 | 요청 파라미터 오류 |
-| `REQUEST_FAILED` | 4xx | 일반 요청 실패 |
+| `REQUEST_FAILED` | 4xx | 일반 요청 실패 (Binance 에러 포함) |
 | `INTERNAL_SERVER_ERROR` | 500 | 서버 내부 오류 |
+
+---
+
+## 허용 값 참조
+
+### 심볼 (`symbol`)
+
+REST 파라미터는 **대문자**로 전달합니다.
+
+권장 심볼: `BTCUSDT`, `ETHUSDT`
+
+### 캔들 주기 (`interval`)
+
+`1m`, `3m`, `5m`, `15m`, `30m`, `1h`, `2h`, `4h`, `6h`, `8h`, `12h`, `1d`, `3d`, `1w`, `1M`
 
 ---
 
@@ -42,6 +72,11 @@ HTTP 4xx / 5xx 시 아래 형식으로 반환됩니다.
   "env": "local"
 }
 ```
+
+| 필드 | 타입 | 값 |
+|---|---|---|
+| `status` | `string` | 항상 `"ok"` |
+| `env` | `string` | `"local"` \| `"demo"` \| `"testnet"` |
 
 ---
 
@@ -75,6 +110,12 @@ Testnet 계정의 현재 잔고를 조회합니다. 잔액이 0인 자산은 제
 | `balances[].free` | `string` | 사용 가능 수량 |
 | `balances[].locked` | `string` | 주문 잠금 수량 |
 
+### 에러 응답
+
+| HTTP | errorCode | 상황 |
+|---|---|---|
+| 500 | `INTERNAL_SERVER_ERROR` | Binance Testnet 연결 실패 |
+
 ---
 
 ## GET /api/v1/testnet/ticker/price
@@ -95,6 +136,13 @@ Testnet 계정의 현재 잔고를 조회합니다. 잔액이 0인 자산은 제
   "price": "80000.00000000"
 }
 ```
+
+### 에러 응답
+
+| HTTP | errorCode | 상황 |
+|---|---|---|
+| 422 | `VALIDATION_ERROR` | `symbol` 파라미터 누락 |
+| 500 | `INTERNAL_SERVER_ERROR` | Binance Testnet 연결 실패 또는 유효하지 않은 심볼 |
 
 ---
 
@@ -142,6 +190,13 @@ Binance `bookTicker`와 `depth` API를 병렬로 호출하여 결합합니다.
 | `depth.bids` | `[price, qty][]` | 매수 호가 목록 (높은 가격 순) |
 | `depth.asks` | `[price, qty][]` | 매도 호가 목록 (낮은 가격 순) |
 
+### 에러 응답
+
+| HTTP | errorCode | 상황 |
+|---|---|---|
+| 422 | `VALIDATION_ERROR` | `symbol` 파라미터 누락 |
+| 500 | `INTERNAL_SERVER_ERROR` | Binance Testnet 연결 실패 또는 유효하지 않은 심볼 |
+
 ---
 
 ## GET /api/v1/testnet/klines
@@ -153,8 +208,8 @@ Binance `bookTicker`와 `depth` API를 병렬로 호출하여 결합합니다.
 | 파라미터 | 타입 | 필수 | 기본값 | 설명 |
 |---|---|---|---|---|
 | `symbol` | `string` | ✅ | - | 심볼 대문자 (`BTCUSDT`) |
-| `interval` | `string` | ✅ | - | 캔들 주기 (`1m`, `5m`, `15m`, `1h`, `4h`, `1d`) |
-| `limit` | `integer` | ❌ | `100` | 반환할 캔들 수 (최대 1000) |
+| `interval` | `string` | ✅ | - | 캔들 주기 (허용 값 참조) |
+| `limit` | `integer` | ❌ | `100` | 반환할 캔들 수 (최대 `1000`) |
 
 ### 응답 `200`
 
@@ -183,6 +238,65 @@ Binance `bookTicker`와 `depth` API를 병렬로 호출하여 결합합니다.
 | `items[].low` | `string` | 저가 |
 | `items[].close` | `string` | 종가 |
 | `items[].volume` | `string` | 거래량 |
+
+### 에러 응답
+
+| HTTP | errorCode | 상황 |
+|---|---|---|
+| 422 | `VALIDATION_ERROR` | `symbol` 또는 `interval` 파라미터 누락 |
+| 500 | `INTERNAL_SERVER_ERROR` | Binance Testnet 연결 실패 또는 유효하지 않은 심볼/주기 |
+
+---
+
+## POST /api/v1/testnet/orders
+
+> **🔜 Phase 2 예정** — AI Gateway 연동 구현 후 제공됩니다. 현재 호출하면 `404`가 반환됩니다.
+
+현물 주문을 생성합니다. AI의 policy/risk 판단을 거친 뒤 BE가 Binance Testnet에 최종 제출합니다.
+
+### 예정 요청 Body
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "side": "BUY",
+  "type": "LIMIT",
+  "quantity": "0.001",
+  "price": "80000.00",
+  "timeInForce": "GTC"
+}
+```
+
+| 필드 | 타입 | 필수 | 설명 |
+|---|---|---|---|
+| `symbol` | `string` | ✅ | 심볼 대문자 |
+| `side` | `"BUY" \| "SELL"` | ✅ | 매수/매도 |
+| `type` | `"MARKET" \| "LIMIT"` | ✅ | 주문 유형 |
+| `quantity` | `string` | 조건부 | 수량 (LIMIT 필수, MARKET은 `quoteOrderQty`와 택1) |
+| `quoteOrderQty` | `string` | 조건부 | USDT 기준 금액 (MARKET 전용) |
+| `price` | `string` | 조건부 | 가격 (LIMIT 필수) |
+| `timeInForce` | `"GTC" \| "IOC" \| "FOK"` | 조건부 | 체결 조건 (LIMIT 필수) |
+
+### 예정 응답 `200`
+
+```json
+{
+  "orderId": 123456789,
+  "symbol": "BTCUSDT",
+  "status": "NEW",
+  "type": "LIMIT",
+  "side": "BUY"
+}
+```
+
+| `status` 값 | 설명 |
+|---|---|
+| `NEW` | 주문 접수 |
+| `PARTIALLY_FILLED` | 부분 체결 |
+| `FILLED` | 전량 체결 |
+| `CANCELED` | 취소됨 |
+| `REJECTED` | 거부됨 |
+| `EXPIRED` | 만료됨 |
 
 ---
 
@@ -215,6 +329,13 @@ Binance `bookTicker`와 `depth` API를 병렬로 호출하여 결합합니다.
 | `symbol` | `string` | 심볼 |
 | `status` | `string` | 현재 주문 상태 |
 | `executedQty` | `string` | 체결된 수량 |
+
+### 에러 응답
+
+| HTTP | errorCode | 상황 |
+|---|---|---|
+| 422 | `VALIDATION_ERROR` | `orderId`와 `origClientOrderId` 모두 누락 |
+| 500 | `INTERNAL_SERVER_ERROR` | Binance Testnet 연결 실패 또는 존재하지 않는 주문 |
 
 ---
 
@@ -256,12 +377,22 @@ Binance `bookTicker`와 `depth` API를 병렬로 호출하여 결합합니다.
 }
 ```
 
+### 에러 응답
+
+| HTTP | errorCode | 상황 |
+|---|---|---|
+| 422 | `VALIDATION_ERROR` | `orderId`와 `origClientOrderId` 모두 누락 |
+| 500 | `INTERNAL_SERVER_ERROR` | Binance Testnet 연결 실패, 이미 체결/취소된 주문, 존재하지 않는 주문 |
+
 ---
 
 ## GET /api/v1/testnet/stream/status
 
 서버의 WebSocket 스트림 연결 상태를 반환합니다.  
 서버 시작 시 `btcusdt@ticker`를 자동 구독하며, 연결이 끊기면 5초 후 재연결을 시도합니다.
+
+> FE는 이 엔드포인트를 폴링하여 실시간 시세 수신 여부를 확인할 수 있습니다.  
+> `lastEvent`의 `c` 필드가 현재가입니다.
 
 ### 응답 `200`
 
@@ -274,7 +405,11 @@ Binance `bookTicker`와 `depth` API를 병렬로 호출하여 결합합니다.
     "e": "24hrTicker",
     "s": "BTCUSDT",
     "c": "80000.00",
-    "v": "1234.56"
+    "o": "79000.00",
+    "h": "81000.00",
+    "l": "78500.00",
+    "v": "1234.56",
+    "q": "98765432.00"
   }
 }
 ```
@@ -291,5 +426,11 @@ Binance `bookTicker`와 `depth` API를 병렬로 호출하여 결합합니다.
 | 필드 | 타입 | 설명 |
 |---|---|---|
 | `connected` | `boolean` | WebSocket 연결 여부 |
-| `streamName` | `string \| null` | 구독 중인 스트림 이름 |
+| `streamName` | `string \| null` | 구독 중인 스트림 이름 (소문자) |
 | `lastEvent` | `object \| null` | 가장 최근 수신한 WebSocket 이벤트 원본 |
+| `lastEvent.c` | `string` | 현재가 (close price) |
+| `lastEvent.o` | `string` | 24시간 시가 |
+| `lastEvent.h` | `string` | 24시간 고가 |
+| `lastEvent.l` | `string` | 24시간 저가 |
+| `lastEvent.v` | `string` | 24시간 거래량 (base asset) |
+| `lastEvent.q` | `string` | 24시간 거래대금 (quote asset) |
