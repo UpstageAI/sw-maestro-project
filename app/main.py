@@ -13,6 +13,7 @@ from app.config import settings
 from app.database import create_tables
 from app.models.health import HealthResponse
 from app.models.responses import ErrorResponse
+from app.routers import account, klines, ticker
 
 logging.basicConfig(level=settings.log_level)
 logger = logging.getLogger(__name__)
@@ -83,13 +84,11 @@ async def health() -> HealthResponse:
     return HealthResponse(status="ok", env=settings.app_env)
 
 
-from app.routers import account
-
 app.include_router(account.router, prefix="/api/v1/testnet")
+app.include_router(ticker.router, prefix="/api/v1/testnet")
+app.include_router(klines.router, prefix="/api/v1/testnet")
 
 # Routers registered in later phases
-# from app.routers import ticker, klines, orders, stream
-# app.include_router(ticker.router, prefix="/api/v1/testnet")
-# app.include_router(klines.router, prefix="/api/v1/testnet")
+# from app.routers import orders, stream
 # app.include_router(orders.router, prefix="/api/v1/testnet")
 # app.include_router(stream.router, prefix="/api/v1/testnet")
