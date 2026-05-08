@@ -77,3 +77,32 @@ def test_resume_endpoint_returns_not_found_for_unknown_run():
 
     assert response.status_code == 404
     assert response.json() == {"detail": "unknown run_id: airun_missing"}
+
+
+def test_resume_endpoint_rejects_non_hold_run():
+    with TestClient(app) as client:
+        start = client.post("/runs/start", json=allowed_request())
+        response = client.post(
+            "/runs/resume",
+            json={
+                "run_id": "airun_test_001",
+                "resume_reason": "MARKET_DATA_SUPPLIED",
+                "patch_fields": {"supplemental_user_input": {"market_snapshot_fresh": True}},
+            },
+        )
+
+    assert start.status_code == 200
+    assert start.json()["lifecycle_status"] == LIFECYCLE_READY_FOR_BE
+    assert response.status_code == 400
+    assert response.json() == {"detail": "only HOLD runs can be resumed"}
+
+
+def test_complete_endpoint_returns_not_found_for_unknown_run():
+    with TestClient(app) as client:
+        response = client.post(
+            "/runs/complete",
+            json={"run_id": "airun_missing", "completion_payload": execution_result()},
+        )
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "unknown run_id: airun_missing"}
