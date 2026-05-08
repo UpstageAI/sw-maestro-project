@@ -42,7 +42,7 @@ export function DashboardPage() {
   const bookQuery = useQuery({
     queryKey: ['bookTicker', symbol],
     queryFn: () => fetchBookTicker(symbol),
-    enabled: false,
+    staleTime: 10_000,
   });
 
   const klineQuery = useQuery({

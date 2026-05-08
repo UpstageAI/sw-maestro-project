@@ -43,7 +43,7 @@
 - [x] `OrderBookCard` 컴포넌트 구현
   - [x] bids / asks depth snapshot 표시
   - [x] lastUpdateId 표시
-- [ ] `GET /api/v1/testnet/ticker/book` 연동 (BE 대기)
+- [x] `GET /api/v1/testnet/ticker/book` 연동
 
 ### 2.4 캔들 조회 — FR-05
 
@@ -165,7 +165,7 @@
 
 - [x] `GET /api/v1/testnet/account` — 잔고 조회
 - [x] `GET /api/v1/testnet/ticker/price` — 현재가 조회
-- [ ] `GET /api/v1/testnet/ticker/book` — 호가 조회
+- [x] `GET /api/v1/testnet/ticker/book` — 호가 조회
 - [ ] `GET /api/v1/testnet/klines` — 캔들 조회
 - [ ] `POST /api/v1/testnet/orders` — 주문 생성
 - [ ] `GET /api/v1/testnet/orders/status` — 주문 상태 조회
