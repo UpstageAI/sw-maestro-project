@@ -13,7 +13,8 @@ from app.config import settings
 from app.database import create_tables
 from app.models.health import HealthResponse
 from app.models.responses import ErrorResponse
-from app.routers import account, klines, orders, ticker
+from app.routers import account, klines, orders, stream, ticker
+from app.services import stream_service
 
 logging.basicConfig(level=settings.log_level)
 logger = logging.getLogger(__name__)
@@ -23,7 +24,9 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     create_tables()
     logger.info("DB tables created. App env: %s", settings.app_env)
+    stream_service.start_stream(settings.binance_testnet_ws_stream_url)
     yield
+    await stream_service.stop_stream()
 
 
 app = FastAPI(
@@ -98,7 +101,4 @@ app.include_router(account.router, prefix="/api/v1/testnet")
 app.include_router(ticker.router, prefix="/api/v1/testnet")
 app.include_router(klines.router, prefix="/api/v1/testnet")
 app.include_router(orders.router, prefix="/api/v1/testnet")
-
-# Routers registered in later phases
-# from app.routers import stream
-# app.include_router(stream.router, prefix="/api/v1/testnet")
+app.include_router(stream.router, prefix="/api/v1/testnet")
