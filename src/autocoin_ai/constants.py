@@ -1,0 +1,18 @@
+"""Canonical constants from docs/."""
+
+LIFECYCLE_HOLD = "HOLD"
+LIFECYCLE_READY_FOR_BE = "READY_FOR_BE"
+LIFECYCLE_NO_ORDER = "NO_ORDER"
+LIFECYCLE_BE_REJECTED = "BE_REJECTED"
+LIFECYCLE_FAILED = "FAILED"
+LIFECYCLE_REPORT_READY = "REPORT_READY"
+
+HOLD_REVIEW_REQUIRED = "HOLD_REVIEW_REQUIRED"
+HOLD_DATA_INSUFFICIENT = "HOLD_DATA_INSUFFICIENT"
+
+TRACE_STAGES = ("policy", "risk", "evaluator", "execution", "run_summary")
+CHECK_STAGES = ("policy", "risk", "evaluator", "execution", "be_revalidation")
+
+PASS_ACTION = "PASS"
+
+BINANCE_MODE_DISABLED = "disabled"
