@@ -48,7 +48,7 @@ export function DashboardPage() {
   const klineQuery = useQuery({
     queryKey: ['klines', symbol, interval],
     queryFn: () => fetchKlines(symbol, interval),
-    enabled: false,
+    staleTime: 30_000,
   });
 
   const streamQuery = useQuery({

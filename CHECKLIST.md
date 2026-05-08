@@ -50,7 +50,7 @@
 - [x] `KlineChart` 컴포넌트 구현
   - [x] OHLCV 캔들스틱 차트 시각화 (lightweight-charts)
   - [x] interval 선택 (1m 기본)
-- [ ] `GET /api/v1/testnet/klines` 연동 (BE 대기)
+- [x] `GET /api/v1/testnet/klines` 연동
 
 ### 2.5 WebSocket 시세 수신 — FR-10
 
@@ -166,7 +166,7 @@
 - [x] `GET /api/v1/testnet/account` — 잔고 조회
 - [x] `GET /api/v1/testnet/ticker/price` — 현재가 조회
 - [x] `GET /api/v1/testnet/ticker/book` — 호가 조회
-- [ ] `GET /api/v1/testnet/klines` — 캔들 조회
+- [x] `GET /api/v1/testnet/klines` — 캔들 조회
 - [ ] `POST /api/v1/testnet/orders` — 주문 생성
 - [ ] `GET /api/v1/testnet/orders/status` — 주문 상태 조회
 - [ ] `DELETE /api/v1/testnet/orders` — 주문 취소
