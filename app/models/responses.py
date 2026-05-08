@@ -1,30 +1,38 @@
 from typing import Any, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
 
 
-class BalanceItem(BaseModel):
+class _CamelModel(BaseModel):
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
+
+
+class BalanceItem(_CamelModel):
     asset: str
     free: str
     locked: str
 
 
-class BalanceResponse(BaseModel):
+class BalanceResponse(_CamelModel):
     balances: list[BalanceItem]
 
 
-class PriceResponse(BaseModel):
+class PriceResponse(_CamelModel):
     symbol: str
     price: str
 
 
-class BookDepth(BaseModel):
+class BookDepth(_CamelModel):
     last_update_id: int
     bids: list[tuple[str, str]]
     asks: list[tuple[str, str]]
 
 
-class BookResponse(BaseModel):
+class BookResponse(_CamelModel):
     symbol: str
     bid_price: str
     bid_qty: str
@@ -33,7 +41,7 @@ class BookResponse(BaseModel):
     depth: BookDepth
 
 
-class KlineItem(BaseModel):
+class KlineItem(_CamelModel):
     open_time: int
     open: str
     high: str
@@ -42,16 +50,16 @@ class KlineItem(BaseModel):
     volume: str
 
 
-class KlinesResponse(BaseModel):
+class KlinesResponse(_CamelModel):
     symbol: str
     interval: str
     items: list[KlineItem]
 
 
-_OrderStatus = Literal["NEW", "PARTIALLY_FILLED", "FILLED", "CANCELED", "PENDING_CANCEL", "REJECTED", "EXPIRED"]
+_OrderStatus = Literal["NEW", "PARTIALLY_FILLED", "FILLED", "CANCELED", "REJECTED", "EXPIRED"]
 
 
-class OrderResponse(BaseModel):
+class OrderResponse(_CamelModel):
     order_id: int
     symbol: str
     status: _OrderStatus
@@ -59,20 +67,20 @@ class OrderResponse(BaseModel):
     side: str
 
 
-class OrderStatusResponse(BaseModel):
+class OrderStatusResponse(_CamelModel):
     order_id: int
     symbol: str
     status: _OrderStatus
     executed_qty: str
 
 
-class CancelOrderResponse(BaseModel):
+class CancelOrderResponse(_CamelModel):
     order_id: int
     symbol: str
     status: _OrderStatus
 
 
-class StreamStatusResponse(BaseModel):
+class StreamStatusResponse(_CamelModel):
     connected: bool
     stream_name: str | None = None
     last_event: dict[str, Any] | None = None
