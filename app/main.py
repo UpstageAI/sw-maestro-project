@@ -1,13 +1,18 @@
 import logging
+import uuid
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from typing import AsyncGenerator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.database import create_tables
 from app.models.health import HealthResponse
+from app.models.responses import ErrorResponse
 
 logging.basicConfig(level=settings.log_level)
 logger = logging.getLogger(__name__)
@@ -34,6 +39,43 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def _error_response(error_code: str, message: str, detail: str | None, status_code: int) -> JSONResponse:
+    body = ErrorResponse(
+        error_code=error_code,
+        message=message,
+        detail=detail,
+        request_id=f"req_{uuid.uuid4().hex[:8]}",
+        timestamp=datetime.now(timezone.utc).isoformat(),
+    )
+    return JSONResponse(status_code=status_code, content=body.model_dump())
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    messages = "; ".join(
+        f"{' → '.join(str(loc) for loc in e['loc'])}: {e['msg']}"
+        for e in exc.errors()
+    )
+    return _error_response(
+        error_code="VALIDATION_ERROR",
+        message="요청 파라미터가 올바르지 않습니다.",
+        detail=messages,
+        status_code=422,
+    )
+
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    logger.exception("Unhandled exception: %s", exc)
+    detail = str(exc) if settings.app_env == "local" else None
+    return _error_response(
+        error_code="INTERNAL_SERVER_ERROR",
+        message="서버 내부 오류가 발생했습니다.",
+        detail=detail,
+        status_code=500,
+    )
 
 
 @app.get("/health", response_model=HealthResponse)
