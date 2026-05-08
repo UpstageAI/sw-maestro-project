@@ -106,3 +106,34 @@ def test_complete_endpoint_returns_not_found_for_unknown_run():
 
     assert response.status_code == 404
     assert response.json() == {"detail": "unknown run_id: airun_missing"}
+
+
+def test_complete_endpoint_rejects_hold_run():
+    with TestClient(app) as client:
+        start = client.post("/runs/start", json=request_with_user_input(market_snapshot_fresh=False))
+        response = client.post(
+            "/runs/complete",
+            json={"run_id": "airun_test_001", "completion_payload": execution_result()},
+        )
+
+    assert start.status_code == 200
+    assert start.json()["lifecycle_status"] == LIFECYCLE_HOLD
+    assert response.status_code == 400
+    assert response.json() == {"detail": "only READY_FOR_BE runs can be completed"}
+
+
+def test_complete_endpoint_rejects_failed_run():
+    payload = allowed_request()
+    del payload["request_context"]["user_input"]["symbol"]
+
+    with TestClient(app) as client:
+        start = client.post("/runs/start", json=payload)
+        response = client.post(
+            "/runs/complete",
+            json={"run_id": "airun_test_001", "completion_payload": execution_result()},
+        )
+
+    assert start.status_code == 200
+    assert start.json()["lifecycle_status"] == "FAILED"
+    assert response.status_code == 400
+    assert response.json() == {"detail": "only READY_FOR_BE runs can be completed"}
