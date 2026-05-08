@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { XCircle } from 'lucide-react';
 import { cancelOrder } from '../../api/testnet';
+import { ApiError } from '../../api/client';
 import { Button, Badge } from '../common';
-import { DEFAULT_SYMBOLS, DEFAULT_SYMBOL } from '../../constants/symbols';
-import type { CancelOrderResponse, ErrorResponse } from '../../types/api';
+import { DEFAULT_SYMBOLS, DEFAULT_SYMBOL, ORDER_STATUS_LABELS } from '../../constants/symbols';
+import type { CancelOrderResponse } from '../../types/api';
 import styles from './CancelOrderPanel.module.css';
 
 export function CancelOrderPanel() {
@@ -27,8 +28,11 @@ export function CancelOrderPanel() {
       setShowConfirm(false);
     },
     onError: (err: unknown) => {
-      const apiError = err as ErrorResponse;
-      setError(apiError?.message ?? '주문 취소에 실패했습니다.');
+      const message =
+        err instanceof ApiError
+          ? err.errorResponse?.message ?? err.message
+          : '주문 취소에 실패했습니다.';
+      setError(message);
       setResult(null);
       setShowConfirm(false);
     },
@@ -106,14 +110,15 @@ export function CancelOrderPanel() {
             <span className={styles.resultValue}>{result.orderId}</span>
           </div>
           <div className={styles.resultRow}>
-            <span className={styles.resultLabel}>상태</span>
-            <Badge label="취소됨" variant="warning" />
+            <span className={styles.resultLabel}>심볼</span>
+            <span className={styles.resultValue}>{result.symbol}</span>
           </div>
           <div className={styles.resultRow}>
-            <span className={styles.resultLabel}>Client Order ID</span>
-            <span className={styles.resultValue}>
-              {result.origClientOrderId}
-            </span>
+            <span className={styles.resultLabel}>상태</span>
+            <Badge
+              label={ORDER_STATUS_LABELS[result.status] ?? result.status}
+              variant="warning"
+            />
           </div>
         </div>
       )}

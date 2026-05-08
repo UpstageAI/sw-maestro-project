@@ -91,7 +91,7 @@
   - [x] 유효한 값일 때만 취소 요청 가능
   - [x] 취소 전 확인 다이얼로그
   - [x] 취소 결과 표시
-- [ ] `DELETE /api/v1/testnet/orders` 연동 (BE 대기)
+- [x] `DELETE /api/v1/testnet/orders` 연동
 
 ## 4. 리포트/로그 페이지 (`/reports`) — FR-13~FR-21
 
@@ -169,5 +169,5 @@
 - [x] `GET /api/v1/testnet/klines` — 캔들 조회
 - [ ] `POST /api/v1/testnet/orders` — 주문 생성
 - [x] `GET /api/v1/testnet/orders/status` — 주문 상태 조회
-- [ ] `DELETE /api/v1/testnet/orders` — 주문 취소
+- [x] `DELETE /api/v1/testnet/orders` — 주문 취소
 - [x] `GET /api/v1/testnet/stream/status` — WebSocket 상태 확인
