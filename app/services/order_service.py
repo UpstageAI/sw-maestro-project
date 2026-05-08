@@ -4,7 +4,13 @@ import httpx
 from sqlalchemy.orm import Session
 
 from app.config import Settings
-from app.db.crud import save_order_status_log, save_cancel_log, save_spot_order
+from app.db.crud import (
+    get_spot_order_by_binance_id,
+    save_cancel_log,
+    save_order_status_log,
+    save_spot_order,
+    update_spot_order_status,
+)
 from app.models.requests import CancelOrderRequest
 from app.models.responses import CancelOrderResponse, OrderStatusResponse
 from app.services.binance_auth_service import build_signed_params
@@ -43,7 +49,12 @@ async def get_order_status(
         logger.exception("Unexpected error during Binance order status call")
         raise
 
-    save_order_status_log(db, order_id=str(data.get("orderId", "")), status_json=data)
+    # 내부 DB에 해당 주문이 있을 때만 status log 저장
+    binance_order_id = str(data.get("orderId", ""))
+    existing = get_spot_order_by_binance_id(db, binance_order_id)
+    if existing:
+        save_order_status_log(db, order_id=existing.order_id, status_json=data)
+
     return OrderStatusResponse(
         order_id=data["orderId"],
         symbol=data["symbol"],
@@ -81,14 +92,22 @@ async def cancel_order(
         logger.exception("Unexpected error during Binance cancel order call")
         raise
 
-    order_row = save_spot_order(
-        db,
-        symbol=req.symbol,
-        request_json=req.model_dump(),
-        binance_order_id=str(data.get("orderId", "")),
-        status="CANCELED",
-    )
-    save_cancel_log(db, order_id=order_row.order_id, cancel_json=data)
+    binance_order_id = str(data.get("orderId", ""))
+    existing = get_spot_order_by_binance_id(db, binance_order_id)
+    if existing:
+        update_spot_order_status(db, order_id=existing.order_id, status="CANCELED", response_json=data)
+        order_pk = existing.order_id
+    else:
+        order_row = save_spot_order(
+            db,
+            symbol=req.symbol,
+            request_json=req.model_dump(),
+            binance_order_id=binance_order_id,
+            status="CANCELED",
+        )
+        order_pk = order_row.order_id
+
+    save_cancel_log(db, order_id=order_pk, cancel_json=data)
     return CancelOrderResponse(
         order_id=data["orderId"],
         symbol=data["symbol"],
