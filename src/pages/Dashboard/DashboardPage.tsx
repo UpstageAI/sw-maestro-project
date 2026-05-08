@@ -113,62 +113,49 @@ export function DashboardPage() {
         </div>
       </div>
 
-      <div className={styles.grid}>
-        <div>
-          <PriceCard
-            ticker={priceQuery.data}
-            isLoading={priceQuery.isLoading && priceQuery.isFetching}
-            isError={priceQuery.isError}
-            errorMessage={getErrorMessage(priceQuery.error)}
-            onRefresh={() => priceQuery.refetch()}
-            isRefetching={priceQuery.isRefetching}
-          />
-        </div>
+      <KlineChart
+        items={klineQuery.data?.items}
+        isLoading={klineQuery.isLoading && klineQuery.isFetching}
+        isError={klineQuery.isError}
+        errorMessage={getErrorMessage(klineQuery.error)}
+        interval={interval}
+        onIntervalChange={setInterval}
+        onRefresh={() => klineQuery.refetch()}
+        isRefetching={klineQuery.isRefetching}
+      />
 
-        <div>
-          <BalanceCard
-            balances={accountQuery.data?.balances}
-            isLoading={accountQuery.isLoading && accountQuery.isFetching}
-            isError={accountQuery.isError}
-            errorMessage={getErrorMessage(accountQuery.error)}
-            onRefresh={() => accountQuery.refetch()}
-            isRefetching={accountQuery.isRefetching}
-          />
-        </div>
-
-        <div>
-          <OrderBookCard
-            bookTicker={bookQuery.data}
-            isLoading={bookQuery.isLoading && bookQuery.isFetching}
-            isError={bookQuery.isError}
-            errorMessage={getErrorMessage(bookQuery.error)}
-            onRefresh={() => bookQuery.refetch()}
-            isRefetching={bookQuery.isRefetching}
-          />
-        </div>
-
-        <div>
-          <StreamStatusCard
-            streamStatus={stream.streamStatus}
-            isLoading={stream.isLoading}
-            isError={stream.isError}
-            onRefresh={() => stream.refetch()}
-            isRefetching={stream.isRefetching}
-          />
-        </div>
-
-        <div className={styles.fullWidth}>
-          <KlineChart
-            items={klineQuery.data?.items}
-            isLoading={klineQuery.isLoading && klineQuery.isFetching}
-            isError={klineQuery.isError}
-            errorMessage={getErrorMessage(klineQuery.error)}
-            interval={interval}
-            onIntervalChange={setInterval}
-            onRefresh={() => klineQuery.refetch()}
-            isRefetching={klineQuery.isRefetching}
-          />
-        </div>
+      <div className={styles.infoGrid}>
+        <PriceCard
+          ticker={priceQuery.data}
+          isLoading={priceQuery.isLoading && priceQuery.isFetching}
+          isError={priceQuery.isError}
+          errorMessage={getErrorMessage(priceQuery.error)}
+          onRefresh={() => priceQuery.refetch()}
+          isRefetching={priceQuery.isRefetching}
+        />
+        <StreamStatusCard
+          streamStatus={stream.streamStatus}
+          isLoading={stream.isLoading}
+          isError={stream.isError}
+          onRefresh={() => stream.refetch()}
+          isRefetching={stream.isRefetching}
+        />
+        <OrderBookCard
+          bookTicker={bookQuery.data}
+          isLoading={bookQuery.isLoading && bookQuery.isFetching}
+          isError={bookQuery.isError}
+          errorMessage={getErrorMessage(bookQuery.error)}
+          onRefresh={() => bookQuery.refetch()}
+          isRefetching={bookQuery.isRefetching}
+        />
+        <BalanceCard
+          balances={accountQuery.data?.balances}
+          isLoading={accountQuery.isLoading && accountQuery.isFetching}
+          isError={accountQuery.isError}
+          errorMessage={getErrorMessage(accountQuery.error)}
+          onRefresh={() => accountQuery.refetch()}
+          isRefetching={accountQuery.isRefetching}
+        />
       </div>
     </div>
   );

@@ -15,7 +15,7 @@
 
 .price {
   font-family: var(--font-mono);
-  font-size: var(--text-3xl);
+  font-size: var(--text-xl);
   font-weight: var(--font-weight-bold);
   color: var(--color-text);
   line-height: var(--line-height-tight);

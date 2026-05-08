@@ -22,8 +22,8 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-md);
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
 }
 
 .headerText {
