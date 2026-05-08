@@ -30,7 +30,7 @@ export function DashboardPage() {
   const accountQuery = useQuery({
     queryKey: ['account'],
     queryFn: fetchAccount,
-    enabled: false,
+    staleTime: 30_000,
   });
 
   const priceQuery = useQuery({

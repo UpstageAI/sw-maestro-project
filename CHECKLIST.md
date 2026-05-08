@@ -29,7 +29,7 @@
 - [x] `BalanceCard` 컴포넌트 구현
   - [x] `asset`, `free`, `locked` 표시
   - [x] 로딩/빈 상태/성공/오류 상태 처리
-- [ ] `GET /api/v1/testnet/account` 연동 (BE 대기)
+- [x] `GET /api/v1/testnet/account` 연동
 
 ### 2.2 현재가 조회 — FR-03
 
@@ -163,7 +163,7 @@
 
 > `VITE_API_BASE_URL` 환경 변수만 설정하면 즉시 API 연동 테스트 가능
 
-- [ ] `GET /api/v1/testnet/account` — 잔고 조회
+- [x] `GET /api/v1/testnet/account` — 잔고 조회
 - [ ] `GET /api/v1/testnet/ticker/price` — 현재가 조회
 - [ ] `GET /api/v1/testnet/ticker/book` — 호가 조회
 - [ ] `GET /api/v1/testnet/klines` — 캔들 조회
