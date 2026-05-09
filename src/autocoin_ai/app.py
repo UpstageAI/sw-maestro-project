@@ -44,8 +44,6 @@ class AutocoinAgentApp:
             }
         )
         result = self.start(previous)
-        result["resume_history"] = previous.get("resume_history", [])
-        result["decision_trace_history"] = previous.get("decision_trace_history", [])
         self._runs[run_id] = deepcopy(result)
         return result
 
