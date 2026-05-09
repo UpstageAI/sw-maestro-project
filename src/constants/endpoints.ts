@@ -7,6 +7,7 @@ export const ENDPOINTS = {
   tickerBook: '/api/v1/testnet/ticker/book',
   klines: '/api/v1/testnet/klines',
   orders: '/api/v1/testnet/orders',
+  ordersResume: '/api/v1/testnet/orders/resume',
   orderStatus: '/api/v1/testnet/orders/status',
   streamStatus: '/api/v1/testnet/stream/status',
 } as const;
