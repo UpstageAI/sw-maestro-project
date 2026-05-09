@@ -8,14 +8,20 @@ from typing import Any, Dict, List, Mapping
 from autocoin_ai.constants import LIFECYCLE_FAILED, LIFECYCLE_HOLD, LIFECYCLE_READY_FOR_BE
 from autocoin_ai.graph import build_completion_graph, build_order_graph
 from autocoin_ai.models import AgentState, ensure_state_shape
+from autocoin_ai.run_store import JsonFileRunStore
 from autocoin_ai.validators import assert_contract_state
 
 
 class AutocoinAgentApp:
-    def __init__(self) -> None:
+    def __init__(self, run_store: JsonFileRunStore | None = None) -> None:
         self.order_graph = build_order_graph()
         self.completion_graph = build_completion_graph()
-        self._runs: Dict[str, AgentState] = {}
+        self._run_store = run_store
+        self._runs: Dict[str, AgentState] = run_store.load_runs() if run_store else {}
+
+    def _persist_runs(self) -> None:
+        if self._run_store is not None:
+            self._run_store.save_runs(self._runs)
 
     def start(self, state: Mapping[str, Any]) -> AgentState:
         run_id = state.get("run_id")
@@ -26,6 +32,7 @@ class AutocoinAgentApp:
         checked = ensure_state_shape(result)
         assert_contract_state(checked)
         self._runs[run_id] = deepcopy(checked)
+        self._persist_runs()
         return checked
 
     def resume(self, run_id: str, patch_fields: Dict[str, object], resume_reason: str) -> AgentState:
@@ -57,6 +64,7 @@ class AutocoinAgentApp:
         checked = ensure_state_shape(result)
         assert_contract_state(checked)
         self._runs[run_id] = deepcopy(checked)
+        self._persist_runs()
         return checked
 
     def order_checkpoint_evidence(self, run_id: str) -> Dict[str, Any]:

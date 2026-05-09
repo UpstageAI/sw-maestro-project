@@ -3,7 +3,8 @@ from __future__ import annotations
 from fastapi.testclient import TestClient
 
 from autocoin_ai.constants import LIFECYCLE_HOLD, LIFECYCLE_READY_FOR_BE, LIFECYCLE_REPORT_READY
-from autocoin_ai.http_api import app
+from autocoin_ai.http_api import app, create_app
+from autocoin_ai.run_store import JsonFileRunStore
 from tests.fixtures import allowed_request, execution_result, request_with_user_input
 
 
@@ -172,3 +173,45 @@ def test_complete_endpoint_rejects_failed_run():
     assert start.json()["lifecycle_status"] == "FAILED"
     assert response.status_code == 400
     assert response.json() == {"detail": "only READY_FOR_BE runs can be completed"}
+
+
+def test_resume_endpoint_survives_http_app_restart_with_file_store(tmp_path):
+    store_path = tmp_path / "runs.json"
+
+    with TestClient(create_app(JsonFileRunStore(store_path))) as first_client:
+        initial = first_client.post("/runs/start", json=request_with_user_input(market_snapshot_fresh=False))
+
+    assert initial.status_code == 200
+    assert initial.json()["lifecycle_status"] == LIFECYCLE_HOLD
+
+    with TestClient(create_app(JsonFileRunStore(store_path))) as second_client:
+        response = second_client.post(
+            "/runs/resume",
+            json={
+                "run_id": "airun_test_001",
+                "resume_reason": "MARKET_DATA_SUPPLIED",
+                "patch_fields": {"supplemental_user_input": {"market_snapshot_fresh": True}},
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.json()["lifecycle_status"] == LIFECYCLE_READY_FOR_BE
+
+
+def test_complete_endpoint_survives_http_app_restart_with_file_store(tmp_path):
+    store_path = tmp_path / "runs.json"
+
+    with TestClient(create_app(JsonFileRunStore(store_path))) as first_client:
+        initial = first_client.post("/runs/start", json=allowed_request())
+
+    assert initial.status_code == 200
+    assert initial.json()["lifecycle_status"] == LIFECYCLE_READY_FOR_BE
+
+    with TestClient(create_app(JsonFileRunStore(store_path))) as second_client:
+        response = second_client.post(
+            "/runs/complete",
+            json={"run_id": "airun_test_001", "completion_payload": execution_result()},
+        )
+
+    assert response.status_code == 200
+    assert response.json()["lifecycle_status"] == LIFECYCLE_REPORT_READY

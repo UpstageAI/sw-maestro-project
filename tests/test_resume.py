@@ -4,6 +4,7 @@ import pytest
 
 from autocoin_ai.app import AutocoinAgentApp
 from autocoin_ai.constants import LIFECYCLE_FAILED, LIFECYCLE_HOLD, LIFECYCLE_READY_FOR_BE
+from autocoin_ai.run_store import JsonFileRunStore
 from tests.fixtures import allowed_request, request_with_user_input
 
 
@@ -75,3 +76,21 @@ def test_multiple_resumes_preserve_prior_patch_fields():
     assert len(final["decision_trace_history"]) == 2
     assert final["decision_trace_history"][0]["decision_trace"]["risk"]["final_action"] == "HOLD"
     assert final["decision_trace_history"][1]["decision_trace"]["risk"]["final_action"] == "HOLD"
+
+
+def test_resume_survives_app_restart_with_file_run_store(tmp_path):
+    store_path = tmp_path / "runs.json"
+    first_app = AutocoinAgentApp(run_store=JsonFileRunStore(store_path))
+    initial = first_app.start(request_with_user_input(market_snapshot_fresh=False))
+
+    assert initial["lifecycle_status"] == LIFECYCLE_HOLD
+
+    restarted_app = AutocoinAgentApp(run_store=JsonFileRunStore(store_path))
+    resumed = restarted_app.resume(
+        "airun_test_001",
+        {"supplemental_user_input": {"market_snapshot_fresh": True}},
+        "MARKET_DATA_SUPPLIED",
+    )
+
+    assert resumed["lifecycle_status"] == LIFECYCLE_READY_FOR_BE
+    assert resumed["resume_history"][0]["resume_reason"] == "MARKET_DATA_SUPPLIED"
