@@ -6,15 +6,15 @@ import { DEFAULT_SYMBOLS, DEFAULT_SYMBOL } from '../../constants/symbols';
 import type {
   OrderSide,
   OrderType,
+  OrderRunResponse,
   SpotOrderRequest,
-  SpotOrderResponse,
   TimeInForce,
   ErrorResponse,
 } from '../../types/api';
 import styles from './OrderForm.module.css';
 
 interface OrderFormProps {
-  onOrderSuccess: (response: SpotOrderResponse) => void;
+  onOrderSuccess: (response: OrderRunResponse) => void;
 }
 
 export function OrderForm({ onOrderSuccess }: OrderFormProps) {

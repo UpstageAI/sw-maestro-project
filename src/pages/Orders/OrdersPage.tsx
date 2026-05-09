@@ -5,13 +5,13 @@ import { OrderStatusPanel } from '../../components/domain/OrderStatusPanel';
 import { CancelOrderPanel } from '../../components/domain/CancelOrderPanel';
 import { OrderLogList } from '../../components/domain/OrderLogList';
 import type { OrderLogEntry } from '../../components/domain/OrderLogList';
-import type { SpotOrderResponse } from '../../types/api';
+import type { OrderRunResponse } from '../../types/api';
 import styles from './OrdersPage.module.css';
 
 export function OrdersPage() {
   const [orderLog, setOrderLog] = useState<OrderLogEntry[]>([]);
 
-  function handleOrderSuccess(response: SpotOrderResponse) {
+  function handleOrderSuccess(response: OrderRunResponse) {
     setOrderLog((prev) => [
       ...prev,
       { timestamp: Date.now(), response },
