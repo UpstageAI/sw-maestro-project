@@ -44,3 +44,34 @@ def test_failed_run_cannot_resume_with_same_run_id():
 
     with pytest.raises(ValueError):
         app.resume("airun_test_001", {"supplemental_user_input": {"symbol": "BTCUSDT"}}, "FIX_SCHEMA")
+
+
+def test_multiple_resumes_preserve_prior_patch_fields():
+    app = AutocoinAgentApp()
+    initial = app.start(request_with_user_input(market_snapshot_fresh=False, requires_review=True))
+
+    assert initial["lifecycle_status"] == LIFECYCLE_HOLD
+
+    review_hold = app.resume(
+        "airun_test_001",
+        {"supplemental_user_input": {"market_snapshot_fresh": True}},
+        "MARKET_DATA_SUPPLIED",
+    )
+
+    assert review_hold["lifecycle_status"] == LIFECYCLE_HOLD
+
+    final = app.resume(
+        "airun_test_001",
+        {"approval": {"approved": True}},
+        "HUMAN_REVIEW_APPROVED",
+    )
+
+    assert final["lifecycle_status"] == LIFECYCLE_READY_FOR_BE
+    assert final["request_context"] == initial["request_context"]
+    assert [entry["resume_reason"] for entry in final["resume_history"]] == [
+        "MARKET_DATA_SUPPLIED",
+        "HUMAN_REVIEW_APPROVED",
+    ]
+    assert len(final["decision_trace_history"]) == 2
+    assert final["decision_trace_history"][0]["decision_trace"]["risk"]["final_action"] == "HOLD"
+    assert final["decision_trace_history"][1]["decision_trace"]["risk"]["final_action"] == "HOLD"
