@@ -39,6 +39,8 @@ class AutocoinAgentApp:
         if run_id not in self._runs:
             raise ValueError("unknown run_id: %s" % run_id)
         previous = deepcopy(self._runs[run_id])
+        if previous.get("trader_id"):
+            raise ValueError("resume not supported for agentic runs in MVP")
         if previous.get("lifecycle_status") == LIFECYCLE_FAILED:
             raise ValueError("FAILED runs cannot be resumed with the same run_id")
         if previous.get("lifecycle_status") != LIFECYCLE_HOLD:
