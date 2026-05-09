@@ -5,8 +5,8 @@ from app.config import settings
 from app.database import get_db
 from app.models.ai import ResumeCommandPayload
 from app.models.requests import CancelOrderRequest, SpotOrderRequest
-from app.models.responses import CancelOrderResponse, OrderRunResponse, OrderStatusResponse
-from app.services import order_service
+from app.models.responses import CancelOrderResponse, OrderRunResponse, OrderStatusResponse, RunReportResponse
+from app.services import order_service, report_service
 
 router = APIRouter()
 
@@ -45,3 +45,11 @@ async def cancel_order(
     db: Session = Depends(get_db),
 ) -> CancelOrderResponse:
     return await order_service.cancel_order(db, req, settings)
+
+
+@router.get("/orders/report", response_model=RunReportResponse, status_code=200)
+async def get_order_report(
+    run_id: str = Query(alias="runId"),
+    db: Session = Depends(get_db),
+) -> RunReportResponse:
+    return report_service.get_run_report(db, run_id)
