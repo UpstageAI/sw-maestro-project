@@ -1,7 +1,10 @@
+from datetime import datetime, timedelta, timezone
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.models import (
+    AgentRunCheckpoint,
     BalanceSnapshot,
     CancelLog,
     OrderStatusLog,
@@ -11,6 +14,10 @@ from app.db.models import (
     StreamEvent,
     TestnetConfig,
 )
+
+
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 def save_testnet_config(db: Session, rest_base_url: str, ws_stream_url: str, ws_api_url: str) -> TestnetConfig:
@@ -116,3 +123,40 @@ def save_report(db: Session, report_json: dict, order_id: str | None = None) -> 
     db.commit()
     db.refresh(report)
     return report
+
+
+def save_or_update_checkpoint(
+    db: Session,
+    run_id: str,
+    lifecycle_status: str,
+    hold_reason: str | None,
+    state_json: dict,
+    schema_version: str = "1.0",
+    ttl_minutes: int = 60,
+) -> AgentRunCheckpoint:
+    expires_at = _now() + timedelta(minutes=ttl_minutes)
+    checkpoint = db.get(AgentRunCheckpoint, run_id)
+    if checkpoint:
+        checkpoint.lifecycle_status = lifecycle_status
+        checkpoint.hold_reason = hold_reason
+        checkpoint.state_json = state_json
+        checkpoint.expires_at = expires_at
+        db.commit()
+        db.refresh(checkpoint)
+        return checkpoint
+    checkpoint = AgentRunCheckpoint(
+        run_id=run_id,
+        lifecycle_status=lifecycle_status,
+        hold_reason=hold_reason,
+        state_json=state_json,
+        schema_version=schema_version,
+        expires_at=expires_at,
+    )
+    db.add(checkpoint)
+    db.commit()
+    db.refresh(checkpoint)
+    return checkpoint
+
+
+def get_checkpoint(db: Session, run_id: str) -> AgentRunCheckpoint | None:
+    return db.get(AgentRunCheckpoint, run_id)

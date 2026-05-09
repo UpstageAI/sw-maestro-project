@@ -45,3 +45,12 @@ def _setup_test_db():
 @pytest.fixture
 def client() -> TestClient:
     return TestClient(app)
+
+
+@pytest.fixture
+def db_session():
+    db = _TestSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

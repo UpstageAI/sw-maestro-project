@@ -80,6 +80,18 @@ class CancelOrderResponse(_CamelModel):
     status: _OrderStatus
 
 
+class OrderRunResponse(_CamelModel):
+    run_id: str
+    lifecycle_status: str
+    hold_reason: str | None = None
+    order_id: int | None = None
+    symbol: str | None = None
+    status: _OrderStatus | None = None
+    type: str | None = None
+    side: str | None = None
+    reason_codes: list[str] = []
+
+
 class StreamStatusResponse(_CamelModel):
     connected: bool
     stream_name: str | None = None
