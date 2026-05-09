@@ -12,3 +12,6 @@ build/
 .sisyphus/*
 .ref/*
 docs/.ref/*
+.DS_Store
+.omc/
+docs/.omc/
