@@ -15,7 +15,6 @@ from app.db.crud import (
     save_cancel_log,
     save_or_update_checkpoint,
     save_order_status_log,
-    save_report,
     save_spot_order,
     update_spot_order_status,
 )
@@ -24,10 +23,12 @@ from app.models.requests import CancelOrderRequest, SpotOrderRequest
 from app.models.responses import CancelOrderResponse, OrderRunResponse, OrderStatusResponse
 from app.services import ai_gateway_service
 from app.services.binance_auth_service import build_signed_params
+from app.services.report_service import save_run_report
 
 logger = logging.getLogger(__name__)
 
 _ALLOWED_SYMBOLS = {"BTCUSDT", "ETHUSDT"}
+_MAX_QUOTE_ORDER_QTY = "50"
 
 
 def _build_request_context(run_id: str, req: SpotOrderRequest) -> dict[str, Any]:
@@ -57,7 +58,7 @@ def _build_policy_context(symbol: str) -> dict[str, Any]:
         "policy_refs": ["policy.symbol_allowlist", "policy.spot_testnet_only"],
         "applied_rules": {
             "allowed_symbols": list(_ALLOWED_SYMBOLS),
-            "max_quote_order_qty": "50",
+            "max_quote_order_qty": _MAX_QUOTE_ORDER_QTY,
         },
     }
 
@@ -97,6 +98,7 @@ async def _revalidate(req: SpotOrderRequest, settings: Settings) -> dict[str, An
     if req.symbol not in _ALLOWED_SYMBOLS:
         return {"reason_codes": ["SYMBOL_NOT_ALLOWED"], "notes": "Symbol not in allowlist"}
 
+    base_asset = req.symbol.replace("USDT", "")
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
@@ -108,6 +110,7 @@ async def _revalidate(req: SpotOrderRequest, settings: Settings) -> dict[str, An
             info = resp.json()
         sym_info = next((s for s in info.get("symbols", []) if s["symbol"] == req.symbol), None)
         if sym_info:
+            base_asset = sym_info.get("baseAsset", base_asset)
             filters = {f["filterType"]: f for f in sym_info.get("filters", [])}
             if req.type == "LIMIT" and req.quantity and req.price:
                 try:
@@ -140,7 +143,6 @@ async def _revalidate(req: SpotOrderRequest, settings: Settings) -> dict[str, An
                 if balances.get("USDT", Decimal("0")) < needed:
                     reason_codes.append("INSUFFICIENT_BALANCE")
         elif req.side == "SELL" and req.quantity:
-            base_asset = req.symbol.replace("USDT", "")
             needed = Decimal(req.quantity)
             if balances.get(base_asset, Decimal("0")) < needed:
                 reason_codes.append("INSUFFICIENT_BALANCE")
@@ -239,7 +241,7 @@ async def _execute_order(
         final_state = ai_state
 
     report_json = final_state.get("report", {})
-    save_report(db, report_json, order_id=order_row.order_id)
+    save_run_report(db, report_json, order_id=order_row.order_id)
     save_or_update_checkpoint(db, run_id, final_state.get("lifecycle_status", "REPORT_READY"), None, final_state)
 
     return OrderRunResponse(
@@ -280,7 +282,7 @@ async def _process_lifecycle(
 
 
 async def create_order(db: Session, req: SpotOrderRequest, settings: Settings) -> OrderRunResponse:
-    run_id = f"run_{uuid.uuid4().hex[:12]}"
+    run_id = f"run_{uuid.uuid4().hex}"
     request_context = _build_request_context(run_id, req)
     policy_context = _build_policy_context(req.symbol)
 
