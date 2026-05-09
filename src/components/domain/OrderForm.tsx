@@ -15,9 +15,10 @@ import styles from './OrderForm.module.css';
 
 interface OrderFormProps {
   onOrderSuccess: (response: OrderRunResponse) => void;
+  onOrderSubmitted?: (order: SpotOrderRequest) => void;
 }
 
-export function OrderForm({ onOrderSuccess }: OrderFormProps) {
+export function OrderForm({ onOrderSuccess, onOrderSubmitted }: OrderFormProps) {
   const [symbol, setSymbol] = useState<string>(DEFAULT_SYMBOL);
   const [side, setSide] = useState<OrderSide>('BUY');
   const [orderType, setOrderType] = useState<OrderType>('MARKET');
@@ -79,6 +80,7 @@ export function OrderForm({ onOrderSuccess }: OrderFormProps) {
     }
 
     setError(null);
+    onOrderSubmitted?.(order);
     mutation.mutate(order);
   }
 

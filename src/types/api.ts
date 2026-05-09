@@ -90,6 +90,12 @@ export interface OrderRunResponse {
   reasonCodes: string[];
 }
 
+export interface ResumeCommandPayload {
+  runId: string;
+  resumeReason: string;
+  patchFields: Record<string, unknown>;
+}
+
 export interface OrderStatusResponse {
   orderId: number;
   symbol: string;

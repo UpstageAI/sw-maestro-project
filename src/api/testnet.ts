@@ -6,6 +6,7 @@ import type {
   KlineResponse,
   OrderRunResponse,
   OrderStatusResponse,
+  ResumeCommandPayload,
   SpotOrderRequest,
   StreamStatus,
   TickerPrice,
@@ -36,6 +37,12 @@ export function placeOrder(
   order: SpotOrderRequest,
 ): Promise<OrderRunResponse> {
   return post<OrderRunResponse>(ENDPOINTS.orders, order);
+}
+
+export function resumeOrder(
+  payload: ResumeCommandPayload,
+): Promise<OrderRunResponse> {
+  return post<OrderRunResponse>(ENDPOINTS.ordersResume, payload);
 }
 
 export function fetchOrderStatus(
