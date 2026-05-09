@@ -72,6 +72,8 @@ uvicorn app.main:app --reload --port 8000
 | GET | `/api/v1/testnet/ticker/price` | 현재가 조회 |
 | GET | `/api/v1/testnet/ticker/book` | 호가/Order Book 조회 |
 | GET | `/api/v1/testnet/klines` | 캔들 데이터 조회 |
+| POST | `/api/v1/testnet/orders` | 주문 생성 (AI Gateway 연동) |
+| POST | `/api/v1/testnet/orders/resume` | HOLD run 재개 |
 | GET | `/api/v1/testnet/orders/status` | 주문 상태 조회 |
 | DELETE | `/api/v1/testnet/orders` | 주문 취소 |
 | GET | `/api/v1/testnet/stream/status` | WebSocket 스트림 상태 |

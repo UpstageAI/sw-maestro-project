@@ -17,7 +17,8 @@ Coin Agent BE — Binance Spot Testnet 전용 백엔드 API 명세.
 | `GET /api/v1/testnet/ticker/price` | ✅ 구현 완료 |
 | `GET /api/v1/testnet/ticker/book` | ✅ 구현 완료 |
 | `GET /api/v1/testnet/klines` | ✅ 구현 완료 |
-| `POST /api/v1/testnet/orders` | 🔜 Phase 2 예정 (AI Gateway 연동) |
+| `POST /api/v1/testnet/orders` | ✅ 구현 완료 (AI Gateway 연동) |
+| `POST /api/v1/testnet/orders/resume` | ✅ 구현 완료 (HOLD run resume) |
 | `GET /api/v1/testnet/orders/status` | ✅ 구현 완료 |
 | `DELETE /api/v1/testnet/orders` | ✅ 구현 완료 |
 | `GET /api/v1/testnet/stream/status` | ✅ 구현 완료 |
@@ -250,11 +251,16 @@ Binance `bookTicker`와 `depth` API를 병렬로 호출하여 결합합니다.
 
 ## POST /api/v1/testnet/orders
 
-> **🔜 Phase 2 예정** — AI Gateway 연동 구현 후 제공됩니다. 현재 호출하면 `404`가 반환됩니다.
-
 현물 주문을 생성합니다. AI의 policy/risk 판단을 거친 뒤 BE가 Binance Testnet에 최종 제출합니다.
 
-### 예정 요청 Body
+**내부 흐름:**
+1. BE가 `run_id`를 생성하고 AI에 run을 시작
+2. AI가 policy → risk → evaluator 단계를 거쳐 결과 반환
+3. `READY_FOR_BE`: BE가 exchangeInfo/잔고 재검증 후 Binance에 주문 제출
+4. `HOLD`: FE에 보류 상태 반환 → `POST /orders/resume`로 재개
+5. `NO_ORDER` / `BE_REJECTED`: 차단 사유와 함께 반환
+
+### 요청 Body
 
 ```json
 {
@@ -269,7 +275,7 @@ Binance `bookTicker`와 `depth` API를 병렬로 호출하여 결합합니다.
 
 | 필드 | 타입 | 필수 | 설명 |
 |---|---|---|---|
-| `symbol` | `string` | ✅ | 심볼 대문자 |
+| `symbol` | `string` | ✅ | 심볼 대문자 (`BTCUSDT`, `ETHUSDT`) |
 | `side` | `"BUY" \| "SELL"` | ✅ | 매수/매도 |
 | `type` | `"MARKET" \| "LIMIT"` | ✅ | 주문 유형 |
 | `quantity` | `string` | 조건부 | 수량 (LIMIT 필수, MARKET은 `quoteOrderQty`와 택1) |
@@ -277,26 +283,126 @@ Binance `bookTicker`와 `depth` API를 병렬로 호출하여 결합합니다.
 | `price` | `string` | 조건부 | 가격 (LIMIT 필수) |
 | `timeInForce` | `"GTC" \| "IOC" \| "FOK"` | 조건부 | 체결 조건 (LIMIT 필수) |
 
-### 예정 응답 `200`
+**유효성 규칙:**
+- LIMIT: `quantity`, `price`, `timeInForce` 모두 필수
+- MARKET: `quantity` 또는 `quoteOrderQty` 중 하나 필수
 
+### 응답 `200`
+
+`lifecycleStatus`에 따라 포함 필드가 다릅니다.
+
+**주문 제출 성공 (`REPORT_READY`):**
 ```json
 {
+  "runId": "run_abc123",
+  "lifecycleStatus": "REPORT_READY",
   "orderId": 123456789,
   "symbol": "BTCUSDT",
   "status": "NEW",
   "type": "LIMIT",
-  "side": "BUY"
+  "side": "BUY",
+  "holdReason": null,
+  "reasonCodes": []
 }
 ```
 
-| `status` 값 | 설명 |
-|---|---|
-| `NEW` | 주문 접수 |
-| `PARTIALLY_FILLED` | 부분 체결 |
-| `FILLED` | 전량 체결 |
-| `CANCELED` | 취소됨 |
-| `REJECTED` | 거부됨 |
-| `EXPIRED` | 만료됨 |
+**AI 보류 (`HOLD`):**
+```json
+{
+  "runId": "run_abc123",
+  "lifecycleStatus": "HOLD",
+  "holdReason": "HOLD_REVIEW_REQUIRED",
+  "orderId": null,
+  "reasonCodes": []
+}
+```
+
+**주문 차단 (`NO_ORDER` 또는 `BE_REJECTED`):**
+```json
+{
+  "runId": "run_abc123",
+  "lifecycleStatus": "NO_ORDER",
+  "reasonCodes": ["RISK_THRESHOLD_EXCEEDED"],
+  "orderId": null
+}
+```
+
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `runId` | `string` | AI run 식별자. `HOLD` 시 resume에 사용 |
+| `lifecycleStatus` | `string` | `REPORT_READY` \| `HOLD` \| `NO_ORDER` \| `BE_REJECTED` |
+| `holdReason` | `string \| null` | `HOLD_REVIEW_REQUIRED` \| `HOLD_DATA_INSUFFICIENT` |
+| `orderId` | `number \| null` | Binance 주문 ID (`REPORT_READY` 시에만 존재) |
+| `symbol` | `string \| null` | 심볼 |
+| `status` | `string \| null` | Binance 주문 상태 |
+| `type` | `string \| null` | 주문 유형 |
+| `side` | `string \| null` | 매수/매도 |
+| `reasonCodes` | `string[]` | 차단/보류 사유 코드 |
+
+| `lifecycleStatus` | 의미 | FE 처리 |
+|---|---|---|
+| `REPORT_READY` | 주문 제출 완료 | `orderId`로 상태 조회 가능 |
+| `HOLD` | AI 보류 — 사람 검토 또는 데이터 보완 필요 | `runId` 보관 후 `POST /orders/resume` 호출 |
+| `NO_ORDER` | AI가 주문 불가 판단 | `reasonCodes` 표시 후 종료 |
+| `BE_REJECTED` | AI 통과 후 BE 재검증에서 차단 | `reasonCodes` 표시 후 종료 |
+
+### 에러 응답
+
+| HTTP | errorCode | 상황 |
+|---|---|---|
+| 422 | `VALIDATION_ERROR` | 요청 파라미터 오류 (LIMIT에 `price` 누락 등) |
+| 500 | `INTERNAL_SERVER_ERROR` | AI 서비스 연결 실패 |
+| 502 | `REQUEST_FAILED` | Binance Testnet 제출 실패 |
+
+---
+
+## POST /api/v1/testnet/orders/resume
+
+`HOLD` 상태의 주문 run을 재개합니다.
+FE가 사용자 승인 또는 보완 데이터를 받은 후 호출합니다.
+
+### 요청 Body
+
+**사용자 승인 (`HOLD_REVIEW_REQUIRED` 해소):**
+```json
+{
+  "runId": "run_abc123",
+  "resumeReason": "USER_APPROVED_ORDER",
+  "patchFields": {
+    "approval": { "approved": true }
+  }
+}
+```
+
+**데이터 보완 (`HOLD_DATA_INSUFFICIENT` 해소):**
+```json
+{
+  "runId": "run_abc123",
+  "resumeReason": "USER_PROVIDED_DATA",
+  "patchFields": {
+    "supplementalUserInput": { "additionalInfo": "..." }
+  }
+}
+```
+
+| 필드 | 타입 | 필수 | 설명 |
+|---|---|---|---|
+| `runId` | `string` | ✅ | `POST /orders` 응답에서 받은 run 식별자 |
+| `resumeReason` | `string` | ✅ | 재개 사유 (`USER_APPROVED_ORDER`, `USER_PROVIDED_DATA` 등) |
+| `patchFields` | `object` | ✅ | AI에 전달할 보완 데이터 |
+
+### 응답 `200`
+
+`POST /orders`와 동일한 응답 형식.
+
+### 에러 응답
+
+| HTTP | errorCode | 상황 |
+|---|---|---|
+| 404 | `REQUEST_FAILED` | `runId`를 찾을 수 없음 |
+| 400 | `REQUEST_FAILED` | HOLD 상태가 아닌 run에 resume 시도 |
+| 410 | `REQUEST_FAILED` | Checkpoint 만료 (기본 60분) |
+| 500 | `INTERNAL_SERVER_ERROR` | AI 서비스 연결 실패 |
 
 ---
 
