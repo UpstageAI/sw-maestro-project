@@ -1,3 +1,5 @@
+import type { HoldReason } from './agent';
+
 export interface Balance {
   asset: string;
   free: string;
@@ -60,6 +62,12 @@ export type OrderStatus =
   | 'REJECTED'
   | 'EXPIRED';
 
+export type OrderRunLifecycleStatus =
+  | 'HOLD'
+  | 'NO_ORDER'
+  | 'BE_REJECTED'
+  | 'REPORT_READY';
+
 export interface SpotOrderRequest {
   symbol: string;
   side: OrderSide;
@@ -70,19 +78,16 @@ export interface SpotOrderRequest {
   timeInForce?: TimeInForce;
 }
 
-export interface SpotOrderResponse {
-  orderId: number;
-  symbol: string;
-  clientOrderId: string;
-  transactTime: number;
-  price: string;
-  origQty: string;
-  executedQty: string;
-  cummulativeQuoteQty: string;
-  status: OrderStatus;
-  timeInForce: TimeInForce;
-  type: OrderType;
-  side: OrderSide;
+export interface OrderRunResponse {
+  runId: string;
+  lifecycleStatus: OrderRunLifecycleStatus;
+  holdReason?: HoldReason | null;
+  orderId?: number | null;
+  symbol?: string | null;
+  status?: OrderStatus | null;
+  type?: OrderType | null;
+  side?: OrderSide | null;
+  reasonCodes: string[];
 }
 
 export interface OrderStatusResponse {

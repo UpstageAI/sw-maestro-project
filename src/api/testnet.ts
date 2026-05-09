@@ -4,9 +4,9 @@ import type {
   BookTicker,
   CancelOrderResponse,
   KlineResponse,
+  OrderRunResponse,
   OrderStatusResponse,
   SpotOrderRequest,
-  SpotOrderResponse,
   StreamStatus,
   TickerPrice,
 } from '../types/api';
@@ -34,8 +34,8 @@ export function fetchKlines(
 
 export function placeOrder(
   order: SpotOrderRequest,
-): Promise<SpotOrderResponse> {
-  return post<SpotOrderResponse>(ENDPOINTS.orders, order);
+): Promise<OrderRunResponse> {
+  return post<OrderRunResponse>(ENDPOINTS.orders, order);
 }
 
 export function fetchOrderStatus(
