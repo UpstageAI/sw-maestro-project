@@ -9,10 +9,23 @@ LIFECYCLE_REPORT_READY = "REPORT_READY"
 
 HOLD_REVIEW_REQUIRED = "HOLD_REVIEW_REQUIRED"
 HOLD_DATA_INSUFFICIENT = "HOLD_DATA_INSUFFICIENT"
+HOLD_INPUT_AMBIGUOUS = "HOLD_INPUT_AMBIGUOUS"
+HOLD_LOW_CONVICTION = "HOLD_LOW_CONVICTION"
+HOLD_RISK_AGENT_FLAGGED = "HOLD_RISK_AGENT_FLAGGED"
 
-TRACE_STAGES = ("policy", "risk", "evaluator", "execution", "run_summary")
-CHECK_STAGES = ("policy", "risk", "evaluator", "execution", "be_revalidation")
+TRACE_STAGES = ("intake", "policy", "strategy", "risk", "evaluator", "execution", "run_summary")
+CHECK_STAGES = ("intake", "policy", "strategy", "risk", "evaluator", "execution", "be_revalidation")
 
 PASS_ACTION = "PASS"
 
 BINANCE_MODE_DISABLED = "disabled"
+
+PERSONA_CONSERVATIVE = "CONSERVATIVE"
+PERSONA_MODERATE = "MODERATE"
+PERSONA_AGGRESSIVE = "AGGRESSIVE"
+
+DEFAULT_TRADER = "wonyotti"
+
+VOLATILITY_HIGH_THRESHOLD = 0.08
+MAX_CONCENTRATION = 0.20
+MAX_TOOL_CALLS = 4

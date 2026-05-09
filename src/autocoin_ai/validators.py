@@ -38,7 +38,8 @@ def validate_policy_context(policy_context: JsonDict) -> List[str]:
 
 
 def assert_trace_container(trace: Dict[str, Any], prefix: str = "decision_trace") -> None:
-    for stage in TRACE_STAGES:
+    REQUIRED_STAGES = ("policy", "risk", "evaluator", "execution", "run_summary")
+    for stage in REQUIRED_STAGES:
         if stage not in trace:
             raise AssertionError("missing %s stage: %s" % (prefix, stage))
         entry = trace[stage]
