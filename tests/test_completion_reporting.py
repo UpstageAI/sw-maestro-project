@@ -4,6 +4,7 @@ import pytest
 
 from autocoin_ai.app import AutocoinAgentApp
 from autocoin_ai.constants import LIFECYCLE_BE_REJECTED, LIFECYCLE_FAILED, LIFECYCLE_HOLD, LIFECYCLE_REPORT_READY
+from autocoin_ai.run_store import JsonFileRunStore
 from tests.fixtures import allowed_request, be_rejection_evidence, execution_result, request_with_user_input
 
 
@@ -59,3 +60,17 @@ def test_failed_run_cannot_complete():
 
     with pytest.raises(ValueError, match="only READY_FOR_BE runs can be completed"):
         app.complete("airun_test_001", execution_result())
+
+
+def test_complete_survives_app_restart_with_file_run_store(tmp_path):
+    store_path = tmp_path / "runs.json"
+    first_app = AutocoinAgentApp(run_store=JsonFileRunStore(store_path))
+    ready = first_app.start(allowed_request())
+
+    assert ready["lifecycle_status"] == "READY_FOR_BE"
+
+    restarted_app = AutocoinAgentApp(run_store=JsonFileRunStore(store_path))
+    completed = restarted_app.complete("airun_test_001", execution_result())
+
+    assert completed["lifecycle_status"] == LIFECYCLE_REPORT_READY
+    assert completed["decision_trace"]["run_summary"]["final_action"] == LIFECYCLE_REPORT_READY
