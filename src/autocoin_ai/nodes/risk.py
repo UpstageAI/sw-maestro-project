@@ -24,13 +24,26 @@ def _amount(intent):
         return Decimal("0")
 
 
+def _effective_user_input(state: AgentState) -> dict[str, object]:
+    user_input = dict(state.get("request_context", {}).get("user_input", {}))
+    resume_patch = state.get("_resume_patch", {})
+    if isinstance(resume_patch, dict):
+        supplemental = resume_patch.get("supplemental_user_input")
+        if isinstance(supplemental, dict):
+            user_input.update(supplemental)
+        approval = resume_patch.get("approval")
+        if isinstance(approval, dict) and approval.get("approved") is True:
+            user_input["requires_review"] = False
+    return user_input
+
+
 def risk_node(state: AgentState) -> AgentState:
     next_state = ensure_state_shape(state)
     if next_state.get("lifecycle_status") == LIFECYCLE_FAILED:
         return next_state
 
     intent = next_state.get("normalized_order_intent", {})
-    user_input = next_state.get("request_context", {}).get("user_input", {})
+    user_input = _effective_user_input(next_state)
     policy_refs = next_state.get("policy_context", {}).get("policy_refs", [])
 
     if user_input.get("market_snapshot_fresh") is False:

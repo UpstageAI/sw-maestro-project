@@ -47,6 +47,7 @@ class AgentState(TypedDict):
     report: JsonDict
     resume_history: List[JsonDict]
     decision_trace_history: List[DecisionTraceHistoryEntry]
+    _resume_patch: NotRequired[JsonDict]
 
 
 def empty_trace_entry() -> TraceEntry:

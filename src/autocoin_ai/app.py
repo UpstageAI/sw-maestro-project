@@ -43,14 +43,9 @@ class AutocoinAgentApp:
                 "verification_checks_count": len(previous.get("verification_checks", [])),
             }
         )
-        user_input = previous.setdefault("request_context", {}).setdefault("user_input", {})
-        supplemental = patch_fields.get("supplemental_user_input") if isinstance(patch_fields, dict) else None
-        if isinstance(supplemental, dict):
-            user_input.update(supplemental)
-        approval = patch_fields.get("approval") if isinstance(patch_fields, dict) else None
-        if isinstance(approval, dict) and approval.get("approved") is True:
-            user_input["requires_review"] = False
+        previous["_resume_patch"] = deepcopy(patch_fields) if isinstance(patch_fields, dict) else {}
         result = self.start(previous)
+        result.pop("_resume_patch", None)
         result.setdefault("resume_history", previous.get("resume_history", []))
         result.setdefault("decision_trace_history", previous.get("decision_trace_history", []))
         self._runs[run_id] = deepcopy(result)
