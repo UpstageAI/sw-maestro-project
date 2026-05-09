@@ -1,7 +1,7 @@
 import { ClipboardList } from 'lucide-react';
 import { Badge, EmptyState } from '../common';
 import { ORDER_STATUS_LABELS } from '../../constants/symbols';
-import type { OrderStatus, SpotOrderResponse } from '../../types/api';
+import type { OrderRunLifecycleStatus, OrderRunResponse, OrderStatus } from '../../types/api';
 import styles from './OrderLogList.module.css';
 
 const STATUS_VARIANT_MAP: Record<OrderStatus, 'info' | 'success' | 'warning' | 'danger' | 'default'> = {
@@ -13,9 +13,19 @@ const STATUS_VARIANT_MAP: Record<OrderStatus, 'info' | 'success' | 'warning' | '
   EXPIRED: 'warning',
 };
 
+const LIFECYCLE_VARIANT_MAP: Record<
+  OrderRunLifecycleStatus,
+  'info' | 'success' | 'warning' | 'danger' | 'default'
+> = {
+  HOLD: 'warning',
+  NO_ORDER: 'default',
+  BE_REJECTED: 'danger',
+  REPORT_READY: 'success',
+};
+
 interface OrderLogEntry {
   timestamp: number;
-  response: SpotOrderResponse;
+  response: OrderRunResponse;
 }
 
 interface OrderLogListProps {
@@ -53,19 +63,37 @@ export function OrderLogList({ entries }: OrderLogListProps) {
       <div className={styles.list}>
         {sorted.map((entry) => {
           const { response } = entry;
+          const statusLabel = response.status
+            ? ORDER_STATUS_LABELS[response.status] ?? response.status
+            : null;
+
           return (
-            <div key={`${response.orderId}-${entry.timestamp}`} className={styles.entry}>
+            <div key={`${response.runId}-${entry.timestamp}`} className={styles.entry}>
               <span className={styles.timestamp}>{formatTime(entry.timestamp)}</span>
-              <span className={styles.symbol}>{response.symbol}</span>
-              <span className={response.side === 'BUY' ? styles.sideBuy : styles.sideSell}>
-                {response.side}
+              <span className={styles.symbol}>{response.symbol ?? response.runId}</span>
+              <span
+                className={
+                  response.side === 'BUY'
+                    ? styles.sideBuy
+                    : response.side === 'SELL'
+                      ? styles.sideSell
+                      : styles.type
+                }
+              >
+                {response.side ?? 'RUN'}
               </span>
-              <span className={styles.type}>{response.type}</span>
               <Badge
-                label={ORDER_STATUS_LABELS[response.status] ?? response.status}
-                variant={STATUS_VARIANT_MAP[response.status] ?? 'default'}
+                label={response.lifecycleStatus}
+                variant={LIFECYCLE_VARIANT_MAP[response.lifecycleStatus]}
               />
-              <span className={styles.orderId}>#{response.orderId}</span>
+              <span className={styles.type}>{response.type ?? response.holdReason ?? '-'}</span>
+              {statusLabel && response.status ? (
+                <Badge
+                  label={statusLabel}
+                  variant={STATUS_VARIANT_MAP[response.status] ?? 'default'}
+                />
+              ) : null}
+              <span className={styles.orderId}>#{response.orderId ?? response.runId}</span>
             </div>
           );
         })}
