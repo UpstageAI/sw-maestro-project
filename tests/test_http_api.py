@@ -36,6 +36,7 @@ def test_resume_endpoint_resumes_hold_run():
     assert response.status_code == 200
     payload = response.json()
     assert payload["lifecycle_status"] == LIFECYCLE_READY_FOR_BE
+    assert payload["request_context"] == initial_payload["request_context"]
     assert payload["resume_history"][0]["resume_reason"] == "MARKET_DATA_SUPPLIED"
     assert payload["decision_trace_history"][0]["decision_trace"]["risk"] == initial_payload["decision_trace"]["risk"]
 
