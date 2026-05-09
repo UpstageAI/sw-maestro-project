@@ -44,7 +44,6 @@ class AutocoinAgentApp:
             }
         )
         result = self.start(previous)
-        self._runs[run_id] = deepcopy(result)
         return result
 
     def complete(self, run_id: str, completion_payload: Dict[str, Any]) -> AgentState:
