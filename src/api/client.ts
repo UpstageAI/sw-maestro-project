@@ -2,12 +2,17 @@ import { API_BASE_URL } from '../constants/endpoints';
 import type { ErrorResponse } from '../types/api';
 
 export class ApiError extends Error {
+  status: number;
+  errorResponse?: ErrorResponse;
+
   constructor(
-    public status: number,
-    public errorResponse?: ErrorResponse,
+    status: number,
+    errorResponse?: ErrorResponse,
   ) {
     super(errorResponse?.message ?? `API 요청 실패 (${status})`);
     this.name = 'ApiError';
+    this.status = status;
+    this.errorResponse = errorResponse;
   }
 }
 
