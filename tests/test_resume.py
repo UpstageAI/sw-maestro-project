@@ -1,7 +1,5 @@
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, patch
-
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -76,6 +74,13 @@ def _create_hold_checkpoint(db: Session, run_id: str = "run_hold_001", expired: 
 
 def test_resume_hold_to_ready_for_be(client: TestClient, db_session: Session):
     _create_hold_checkpoint(db_session)
+    body = {
+        **_RESUME_BODY,
+        "patchFields": {
+            "approval": {"approved": True},
+            "supplemental_user_input": {"price": "79000.00"},
+        },
+    }
 
     with patch("app.services.order_service.ai_gateway_service.resume_run", new_callable=AsyncMock) as mock_resume, \
          patch("app.services.order_service._revalidate", new_callable=AsyncMock) as mock_rv, \
@@ -87,12 +92,16 @@ def test_resume_hold_to_ready_for_be(client: TestClient, db_session: Session):
         mock_submit.return_value = _BINANCE_RESP
         mock_complete.return_value = {**_AI_READY, "lifecycle_status": "REPORT_READY", "report": {}}
 
-        resp = client.post("/api/v1/testnet/orders/resume", json=_RESUME_BODY)
+        resp = client.post("/api/v1/testnet/orders/resume", json=body)
 
     assert resp.status_code == 200
     data = resp.json()
     assert data["lifecycleStatus"] == "REPORT_READY"
     assert data["orderId"] == 999
+    revalidated_request = mock_rv.await_args_list[0].args[0]
+    submitted_request = mock_submit.await_args_list[0].args[0]
+    assert revalidated_request.price == "79000.00"
+    assert submitted_request.price == "79000.00"
 
 
 def test_resume_hold_stays_hold(client: TestClient, db_session: Session):

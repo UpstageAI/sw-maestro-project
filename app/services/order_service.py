@@ -79,6 +79,23 @@ def _user_input_to_request(user_input: dict[str, Any]) -> SpotOrderRequest:
     )
 
 
+def _apply_resume_patch_fields(
+    user_input: dict[str, Any],
+    patch_fields: dict[str, Any],
+) -> dict[str, Any]:
+    merged = dict(user_input)
+
+    supplemental = patch_fields.get("supplemental_user_input")
+    if isinstance(supplemental, dict):
+        merged.update(supplemental)
+
+    approval = patch_fields.get("approval")
+    if isinstance(approval, dict) and approval.get("approved") is True:
+        merged["requires_review"] = False
+
+    return merged
+
+
 async def _fetch_account(settings: Settings) -> dict[str, Any]:
     signed = build_signed_params(settings.binance_testnet_secret_key, {})
     async with httpx.AsyncClient() as client:
@@ -319,7 +336,8 @@ async def resume_order(db: Session, payload: ResumeCommandPayload, settings: Set
     save_or_update_checkpoint(db, payload.run_id, lifecycle, ai_state.get("hold_reason"), ai_state)
 
     user_input = checkpoint.state_json.get("request_context", {}).get("user_input", {})
-    req = _user_input_to_request(user_input)
+    merged_user_input = _apply_resume_patch_fields(user_input, payload.patch_fields)
+    req = _user_input_to_request(merged_user_input)
     return await _process_lifecycle(db, payload.run_id, req, ai_state, lifecycle, settings)
 
 
