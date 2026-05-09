@@ -5,10 +5,11 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import APIRouter, FastAPI, HTTPException, Request
 from pydantic import BaseModel, ConfigDict
 
 from autocoin_ai.app import AutocoinAgentApp
+from autocoin_ai.run_store import JsonFileRunStore
 
 
 class ResumeRunRequest(BaseModel):
@@ -26,15 +27,18 @@ class AgentStateResponse(BaseModel):
     model_config = ConfigDict(extra="allow")
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    app.state.agent_app = AutocoinAgentApp()
-    yield
+router = APIRouter()
 
 
-app = FastAPI(title="autocoin-ai", lifespan=lifespan)
+def create_app(run_store: JsonFileRunStore | None = None) -> FastAPI:
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        app.state.agent_app = AutocoinAgentApp(run_store=run_store or JsonFileRunStore.from_env())
+        yield
 
-
+    created_app = FastAPI(title="autocoin-ai", lifespan=lifespan)
+    created_app.include_router(router)
+    return created_app
 def get_agent_app(request: Request) -> AutocoinAgentApp:
     return request.app.state.agent_app
 
@@ -46,7 +50,7 @@ def map_value_error(exc: ValueError) -> HTTPException:
     return HTTPException(status_code=400, detail=message)
 
 
-@app.post("/runs/start", response_model=AgentStateResponse)
+@router.post("/runs/start", response_model=AgentStateResponse)
 def start_run(state: dict[str, Any], request: Request) -> dict[str, Any]:
     agent_app = get_agent_app(request)
     try:
@@ -55,7 +59,7 @@ def start_run(state: dict[str, Any], request: Request) -> dict[str, Any]:
         raise map_value_error(exc) from exc
 
 
-@app.post("/runs/resume", response_model=AgentStateResponse)
+@router.post("/runs/resume", response_model=AgentStateResponse)
 def resume_run(payload: ResumeRunRequest, request: Request) -> dict[str, Any]:
     agent_app = get_agent_app(request)
     try:
@@ -64,10 +68,13 @@ def resume_run(payload: ResumeRunRequest, request: Request) -> dict[str, Any]:
         raise map_value_error(exc) from exc
 
 
-@app.post("/runs/complete", response_model=AgentStateResponse)
+@router.post("/runs/complete", response_model=AgentStateResponse)
 def complete_run(payload: CompleteRunRequest, request: Request) -> dict[str, Any]:
     agent_app = get_agent_app(request)
     try:
         return dict(agent_app.complete(payload.run_id, payload.completion_payload))
     except ValueError as exc:
         raise map_value_error(exc) from exc
+
+
+app = create_app()
