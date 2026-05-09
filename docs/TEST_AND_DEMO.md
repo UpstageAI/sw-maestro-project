@@ -43,6 +43,15 @@
 | AIT-08A | completion payload contract | BE가 `execution_result` 또는 `be_rejection_evidence`를 되돌려 줄 수 있다. |
 | AIT-09 | boundary check | FE는 Binance 직접 호출을 하지 않고, BE만 최종 제출 권한을 가진다. |
 | AIT-10 | human QA rehearsal | 정책별 workflow 차이와 비정상 상태가 반복 검증 가능하다. |
+| AIT-11 | 자연어 intake 파싱 | `user_input.raw_text`가 `normalized_order_intent`, `trader_id`, `inferred_persona`로 변환된다. |
+| AIT-12 | ambiguity HOLD | 모호한 입력은 `HOLD` + `hold_reason=HOLD_INPUT_AMBIGUOUS`로 조기 종료된다. |
+| AIT-13 | persona override | "공격적으로" 발화가 `inferred_persona=AGGRESSIVE` + `persona_override_reason` 기록으로 이어진다. |
+| AIT-14 | trader_id 결정 | 디폴트 `wonyotti`, 발화 또는 명시 시 `livermore`로 전환된다. |
+| AIT-15 | RAG retrieval | `policy` 노드가 `trader_principles`를 retrieval하고 적어도 1개 이상 반환한다. |
+| AIT-16 | strategy proposal | `llm_proposal`이 `action`, `conviction`, `matched_principle_titles`를 포함한다. |
+| AIT-17 | risk_gate 결정론 | 7단계 검증 결과가 `risk_assessment.verdict`와 `risk_tool_calls`로 추적 가능하다. |
+| AIT-18 | evaluator user_message | `evaluator_review.user_message`가 항상 생성되고 FE에 표시 가능하다. |
+| AIT-19 | dict 모드 회귀 | `raw_text` 없는 기존 입력에서 기존 24개 테스트가 통과한다. |
 
 ## 3. 최소 시나리오
 
@@ -86,7 +95,28 @@
 2. 같은 `run_id`로 patchable 필드만 보완해 resume 한다.
 3. 이전 `decision_trace`와 `verification_checks`가 보존되고, 보완된 stage entry만 추가되는지 확인한다.
 
-### 시나리오 7. `NO_ORDER` reporting
+### 시나리오 8. 자연어 매수 → 정상 통과 (Agentic MVP)
+
+1. `user_input.raw_text = "공격적으로 비트코인 5만원어치 사줘"` 입력을 사용한다.
+2. intake가 `BTCUSDT BUY`, `inferred_persona=AGGRESSIVE`, `persona_override_reason` 기록, `ambiguity_score ≤ 0.5`로 파싱한다.
+3. policy가 `livermore` 또는 `wonyotti` 원칙을 retrieval한다.
+4. strategy가 `action=BUY`, `conviction ≥ 0.5`, `matched_principle_titles` 1개 이상을 포함한 `llm_proposal`을 생성한다.
+5. risk_gate가 7단계를 통과해 `lifecycle_status=READY_FOR_BE`가 된다.
+6. evaluator가 `evaluator_review.user_message`를 생성한다.
+
+### 시나리오 9. 모호한 입력 → `HOLD_INPUT_AMBIGUOUS`
+
+1. `user_input.raw_text = "비트코인 좀 사봐"` 처럼 모호한 입력을 사용한다.
+2. intake의 `ambiguity_score > 0.5`로 판단된다.
+3. `lifecycle_status=HOLD`, `hold_reason=HOLD_INPUT_AMBIGUOUS`로 종료된다.
+4. evaluator가 `user_message`를 생성해 추가 정보 요청 안내를 한다.
+
+### 시나리오 10. conviction 미달 → `HOLD_LOW_CONVICTION`
+
+1. 심볼, 방향, 금액은 명확하나 `llm_proposal.conviction < persona_bounds.min_conviction`인 상황을 사용한다.
+2. risk_gate가 `lifecycle_status=HOLD`, `hold_reason=HOLD_LOW_CONVICTION`으로 판정한다.
+
+### 시나리오 11. `NO_ORDER` reporting
 
 1. 명백한 금지 요청 또는 필수 입력 누락 요청을 준비한다.
 2. lifecycle은 `NO_ORDER`로 종료되어야 한다.
@@ -105,10 +135,15 @@
 - `policy_context`와 `decision_trace`가 결과 설명에 반영되는지 확인
 - `decision_trace`가 `policy`, `risk`, `evaluator`, `execution`, `run_summary` key를 유지하는지 확인
 - `READY_FOR_BE`가 lifecycle handoff로만 쓰이는지 확인
-- `hold_reason`이 두 subtype로 구분되는지 확인
+- `hold_reason`이 5가지 subtype(`HOLD_INPUT_AMBIGUOUS`, `HOLD_LOW_CONVICTION`, `HOLD_RISK_AGENT_FLAGGED`, `HOLD_DATA_INSUFFICIENT`, `HOLD_REVIEW_REQUIRED`)으로 구분되는지 확인
 - `FAILED`가 `BE_REJECTED`나 `HOLD`와 다른 축으로 설명되는지 확인
 - FE가 실행 주체처럼 보이지 않는지 확인
 - BE가 최종 제출 권한자임이 드러나는지 확인
+- `user_input.raw_text` 자연어 입력이 `normalized_order_intent`로 파싱되는지 확인
+- `trader_id`와 `inferred_persona`가 intake 이후 변경되지 않는지 확인
+- `trader_principles`가 1개 이상 retrieval되는지 확인
+- `evaluator_review.user_message`가 FE 표시용으로 생성되는지 확인
+- dict 모드 입력(기존 24개 테스트)이 회귀 없이 통과하는지 확인
 
 ## 6. 완료 판단
 
@@ -120,6 +155,8 @@
 - `request_context`, `execution_result`, `be_rejection_evidence`의 최소 shape가 유지된다.
 - `decision_trace`가 stage-keyed canonical container로 유지된다.
 - `PASS`와 `READY_FOR_BE`가 서로 다른 의미로 유지된다.
-- `HOLD_REVIEW_REQUIRED`, `HOLD_DATA_INSUFFICIENT`, `BE_REJECTED`, `FAILED`, `REPORT_READY`, `NO_ORDER`가 빠지지 않는다.
+- `HOLD_INPUT_AMBIGUOUS`, `HOLD_LOW_CONVICTION`, `HOLD_RISK_AGENT_FLAGGED`, `HOLD_REVIEW_REQUIRED`, `HOLD_DATA_INSUFFICIENT`, `BE_REJECTED`, `FAILED`, `REPORT_READY`, `NO_ORDER`가 빠지지 않는다.
+- `trader_id`, `inferred_persona`, `trader_principles`, `llm_proposal`, `evaluator_review`가 같은 의미로 유지된다.
+- `user_input.raw_text` 모드와 dict 모드가 회귀 호환을 유지하며 공존한다.
 - Testnet-only 범위와 FE->BE->AI 경계가 데모 설명에도 유지된다.
 - human QA rehearsal이 정책별 분기와 비정상 흐름까지 반복 가능하다.

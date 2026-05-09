@@ -31,6 +31,12 @@ cp .env.example .env
 | `GEMINI_API_KEY` | empty | 로컬 Gemini API key. 실제 값은 `.env`에만 저장 |
 | `GEMINI_MODEL` | `gemini-2.5-flash` | Gemini 테스트 기본 모델 |
 | `BINANCE_MODE` | `disabled` | AI Agent 단독 테스트에서 Binance 실행 비활성화 |
+| `LANGSMITH_API_KEY` | empty | LangSmith 트레이싱 API key (선택) |
+| `LANGSMITH_TRACING` | `true` | LangSmith 트레이싱 활성화 여부 |
+| `LANGSMITH_PROJECT` | `autocoin-ai` | LangSmith 프로젝트 이름 |
+| `LANGSMITH_ENDPOINT` | `https://api.smith.langchain.com` | LangSmith 엔드포인트 |
+
+LangSmith 변수는 모두 선택 사항이다. 설정하지 않으면 트레이싱 없이 실행된다.
 
 ## 금지 사항
 
