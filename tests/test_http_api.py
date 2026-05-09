@@ -21,6 +21,7 @@ def test_start_endpoint_returns_canonical_agent_state():
 def test_resume_endpoint_resumes_hold_run():
     with TestClient(app) as client:
         initial = client.post("/runs/start", json=request_with_user_input(market_snapshot_fresh=False))
+        initial_payload = initial.json()
         response = client.post(
             "/runs/resume",
             json={
@@ -36,6 +37,7 @@ def test_resume_endpoint_resumes_hold_run():
     payload = response.json()
     assert payload["lifecycle_status"] == LIFECYCLE_READY_FOR_BE
     assert payload["resume_history"][0]["resume_reason"] == "MARKET_DATA_SUPPLIED"
+    assert payload["decision_trace_history"][0]["decision_trace"]["risk"] == initial_payload["decision_trace"]["risk"]
 
 
 def test_complete_endpoint_accepts_execution_result():

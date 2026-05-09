@@ -27,6 +27,11 @@ class VerificationCheck(TypedDict):
     evidence_refs: List[str]
 
 
+class DecisionTraceHistoryEntry(TypedDict):
+    decision_trace: Dict[str, TraceEntry]
+    verification_checks_count: int
+
+
 class AgentState(TypedDict):
     run_id: str
     request_context: JsonDict
@@ -41,6 +46,7 @@ class AgentState(TypedDict):
     be_rejection_evidence: JsonDict
     report: JsonDict
     resume_history: List[JsonDict]
+    decision_trace_history: List[DecisionTraceHistoryEntry]
 
 
 def empty_trace_entry() -> TraceEntry:
@@ -66,6 +72,7 @@ def ensure_state_shape(state: Mapping[str, Any]) -> AgentState:
     next_state.setdefault("be_rejection_evidence", {})
     next_state.setdefault("report", {})
     next_state.setdefault("resume_history", [])
+    next_state.setdefault("decision_trace_history", [])
     return cast(AgentState, cast(object, next_state))
 
 
