@@ -11,7 +11,9 @@ def test_same_run_resume_preserves_immutable_context_and_adds_history():
     app = AutocoinAgentApp()
     initial = app.start(request_with_user_input(market_snapshot_fresh=False))
     original_request = initial["request_context"]["request_id"]
+    original_request_context = initial["request_context"]
     original_risk_trace = initial["decision_trace"]["risk"]
+    original_checks = list(initial["verification_checks"])
     original_check_count = len(initial["verification_checks"])
     assert initial["lifecycle_status"] == LIFECYCLE_HOLD
 
@@ -23,12 +25,14 @@ def test_same_run_resume_preserves_immutable_context_and_adds_history():
 
     assert result["run_id"] == "airun_test_001"
     assert result["request_context"]["request_id"] == original_request
+    assert result["request_context"] == original_request_context
     assert result["lifecycle_status"] == LIFECYCLE_READY_FOR_BE
     assert result["resume_history"][0]["resume_reason"] == "MARKET_DATA_SUPPLIED"
     assert result["decision_trace_history"][0]["decision_trace"]["risk"] == original_risk_trace
     assert result["decision_trace_history"][0]["verification_checks_count"] == original_check_count
     assert result["decision_trace"]["risk"]["final_action"] == "PASS"
     assert len(result["verification_checks"]) > original_check_count
+    assert result["verification_checks"][:original_check_count] == original_checks
 
 
 def test_failed_run_cannot_resume_with_same_run_id():
