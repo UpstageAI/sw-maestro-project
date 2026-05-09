@@ -92,6 +92,11 @@ class OrderRunResponse(_CamelModel):
     reason_codes: list[str] = []
 
 
+class RunReportResponse(_CamelModel):
+    run_id: str
+    report: dict[str, Any]
+
+
 class StreamStatusResponse(_CamelModel):
     connected: bool
     stream_name: str | None = None

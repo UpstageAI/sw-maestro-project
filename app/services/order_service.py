@@ -189,14 +189,28 @@ async def _execute_order(
 ) -> OrderRunResponse:
     rejection = await _revalidate(req, settings)
     if rejection:
+        final_state = ai_state
         try:
-            await ai_gateway_service.send_completion(run_id, {"be_rejection_evidence": rejection}, settings)
+            final_state = await ai_gateway_service.send_completion(
+                run_id, {"be_rejection_evidence": rejection}, settings
+            )
         except Exception:
             logger.exception("send_completion(BE_REJECTED) failed for run_id=%s", run_id)
-        save_or_update_checkpoint(db, run_id, "BE_REJECTED", None, ai_state)
+
+        report_json = final_state.get("report", {})
+        if report_json:
+            save_run_report(db, report_json, order_id=None)
+
+        save_or_update_checkpoint(
+            db,
+            run_id,
+            final_state.get("lifecycle_status", "BE_REJECTED"),
+            final_state.get("hold_reason"),
+            final_state,
+        )
         return OrderRunResponse(
             run_id=run_id,
-            lifecycle_status="BE_REJECTED",
+            lifecycle_status=final_state.get("lifecycle_status", "BE_REJECTED"),
             reason_codes=rejection["reason_codes"],
         )
 
@@ -330,7 +344,7 @@ async def get_order_status(
     orig_client_order_id: str | None,
     settings: Settings,
 ) -> OrderStatusResponse:
-    params: dict = {"symbol": symbol}
+    params: dict[str, Any] = {"symbol": symbol}
     if order_id is not None:
         params["orderId"] = order_id
     else:
@@ -373,7 +387,7 @@ async def cancel_order(
     req: CancelOrderRequest,
     settings: Settings,
 ) -> CancelOrderResponse:
-    params: dict = {"symbol": req.symbol}
+    params: dict[str, Any] = {"symbol": req.symbol}
     if req.order_id is not None:
         params["orderId"] = req.order_id
     else:
