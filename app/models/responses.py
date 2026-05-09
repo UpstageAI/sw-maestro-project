@@ -98,6 +98,12 @@ class StreamStatusResponse(_CamelModel):
     last_event: dict[str, Any] | None = None
 
 
+class TestnetConfigResponse(_CamelModel):
+    rest_base_url: str
+    ws_stream_url: str
+    ws_api_url: str
+
+
 class ErrorResponse(BaseModel):
     error_code: str
     message: str
