@@ -64,8 +64,29 @@ def test_start_endpoint_rejects_missing_run_id():
     with TestClient(app) as client:
         response = client.post("/runs/start", json=payload)
 
-    assert response.status_code == 400
-    assert response.json() == {"detail": "run_id is required"}
+    assert response.status_code == 422
+
+
+def test_start_endpoint_rejects_missing_policy_context_with_422():
+    payload = allowed_request()
+    del payload["policy_context"]
+
+    with TestClient(app) as client:
+        response = client.post("/runs/start", json=payload)
+
+    assert response.status_code == 422
+
+
+def test_start_endpoint_rejects_empty_policy_refs():
+    payload = allowed_request()
+    payload["policy_context"] = {"policy_refs": []}
+
+    with TestClient(app) as client:
+        response = client.post("/runs/start", json=payload)
+
+    assert response.status_code == 200
+    assert response.json()["lifecycle_status"] == "FAILED"
+    assert response.json()["decision_trace"]["policy"]["reason_codes"] == ["POLICY_CONTEXT_MISSING"]
 
 
 def test_resume_endpoint_returns_not_found_for_unknown_run():
