@@ -1,365 +1,200 @@
-# Coin Agent 데이터 / API 계약 통합 문서
+# Coin Agent 데이터 및 API 계약
 
 ## 문서 목적
 
-이 문서는 Binance Spot Testnet 전용 API 계약, 데이터 객체, 응답 예시, SQLite 저장 구조, ERD를 통합 관리한다.
+이 문서는 루트 문서 세트의 canonical 계약 문서다. FE, BE, AI가 공유하는 공개 요청과 응답, 상태값, 명명 규칙을 정의한다.
 
-## 관련 문서
+## 1. 명명 규칙
 
-- 요구사항: `SPEC.md`
-- 시스템 구조: `ARCHITECTURE.md`
-- 구현 기준: `FE.md`, `BE.md`, `AI.md`
+- 공개 성공 응답은 camelCase를 사용한다.
+- 현재 공개 오류 응답은 snake_case를 사용한다.
+- 내부 AI 서비스 payload는 현재 snake_case를 사용한다.
 
-## 1. 도메인 용어
+## 2. 핵심 용어
 
-| 용어 | 설명 |
+| 용어 | 의미 |
 |---|---|
-| Testnet Account | Binance Spot Testnet 계정 |
-| Symbol | `BTCUSDT`, `ETHUSDT`처럼 REST에서 사용하는 심볼 |
-| Stream Name | `btcusdt@ticker`처럼 WebSocket에서 사용하는 소문자 stream 이름 |
-| Depth Snapshot | `bids`, `asks` 배열 기반 orderbook 스냅샷 |
-| BalanceSnapshot | 특정 시점의 계정 잔고 정보 |
-| PriceSnapshot | 현재가/호가/캔들 요약 |
-| SpotOrderRequest | Spot Testnet 현물 주문 요청 객체 |
-| SpotOrderResponse | Spot Testnet 주문 응답 객체 |
-| OrderStatusResponse | 주문 상태 조회 응답 |
-| CancelOrderResponse | 주문 취소 응답 |
-| ErrorResponse | 공통 오류 응답 |
-| AgentRunState | AI 오케스트레이터 내부 상태 객체 |
-| GateDecision | AI의 허용/차단/보류 판단 객체 |
-| AgentDecisionTrace | Policy/Risk/Evaluator/Execution 공통 판단 근거와 최종 액션 객체 |
-| RunDecisionTrace | 전체 run 기준 판단 요약 객체 |
-| HoldDecision | `HOLD` 상태의 세부 원인 객체 |
-| ResumeCommandPayload | 동일 run 재개를 위한 payload |
-| CheckpointRecord | run 저장/복원 단위 객체 |
-| NormalizedOrderIntent | Policy Node 구조화 출력 객체 |
-| ReportPayload | 최종 사용자/저장용 리포트 객체 |
-| VerificationResult | 공통 검증 결과 객체 |
-| PolicyRetrievalPacket | Policy/Planning 단계의 정책 검색 결과 |
-| EvaluationResult | evaluator/reflection 단계 점수와 retry 기록 |
-| ReportCadenceEvent | 단계별 보고 시점 기록 |
+| `runId` | 공개 BE API에서 사용하는 run 식별자 |
+| `run_id` | AI 내부 및 AI HTTP API에서 사용하는 run 식별자 |
+| `lifecycleStatus` | 현재 run 상태 |
+| `holdReason` | `HOLD` 의 세부 원인 |
+| `reasonCodes` | 판단 또는 차단 근거 코드 목록 |
+| `policyContext` | BE가 조합해 AI에 주입하는 정책 근거 |
+| `executionResult` | BE가 Binance 실행 결과를 정규화해 AI에 다시 주입한 객체 |
 
-## 2. 주요 데이터 객체
+## 3. 공개 BE API 목록
 
-### 2.1 TestnetConfig
-
-```json
-{
-  "rest_base_url": "https://testnet.binance.vision/api",
-  "ws_stream_url": "wss://stream.testnet.binance.vision/ws",
-  "ws_api_url": "wss://ws-api.testnet.binance.vision/ws-api/v3",
-  "default_symbol": "BTCUSDT"
-}
-```
-
-### 2.2 BalanceSnapshot
-
-```json
-{
-  "canTrade": true,
-  "balances": [
-    {
-      "asset": "USDT",
-      "free": "10000.00000000",
-      "locked": "0.00000000"
-    }
-  ],
-  "updateTime": 1715000000000
-}
-```
-
-### 2.3 PriceSnapshot
-
-```json
-{
-  "symbol": "BTCUSDT",
-  "price": "65000.12",
-  "bestBidPrice": "64999.99",
-  "bestBidQty": "0.12000000",
-  "bestAskPrice": "65000.13",
-  "bestAskQty": "0.45000000",
-  "depth": {
-    "lastUpdateId": 123456,
-    "bids": [["64999.99", "0.12000000"]],
-    "asks": [["65000.13", "0.45000000"]]
-  },
-  "latestKline": {
-    "openTime": 1715000000000,
-    "open": "64950.00",
-    "high": "65100.00",
-    "low": "64880.00",
-    "close": "65000.12",
-    "volume": "12.34000000"
-  }
-}
-```
-
-### 2.4 SpotOrderRequest
-
-```json
-{
-  "symbol": "BTCUSDT",
-  "side": "BUY",
-  "type": "MARKET",
-  "quoteOrderQty": "50"
-}
-```
-
-### 2.5 SpotOrderResponse
-
-```json
-{
-  "symbol": "BTCUSDT",
-  "orderId": 123456789,
-  "orderListId": -1,
-  "clientOrderId": "demo-order-001",
-  "transactTime": 1715000100000,
-  "price": "0.00000000",
-  "origQty": "0.00000000",
-  "executedQty": "0.00076900",
-  "cummulativeQuoteQty": "50.00000000",
-  "status": "FILLED",
-  "timeInForce": "GTC",
-  "type": "MARKET",
-  "side": "BUY"
-}
-```
-
-### 2.6 OrderStatusResponse
-
-```json
-{
-  "symbol": "BTCUSDT",
-  "orderId": 123456789,
-  "clientOrderId": "demo-order-001",
-  "price": "0.00000000",
-  "origQty": "0.00000000",
-  "executedQty": "0.00076900",
-  "cummulativeQuoteQty": "50.00000000",
-  "status": "FILLED",
-  "type": "MARKET",
-  "side": "BUY",
-  "time": 1715000100000,
-  "updateTime": 1715000101000
-}
-```
-
-### 2.7 CancelOrderResponse
-
-```json
-{
-  "symbol": "BTCUSDT",
-  "origClientOrderId": "demo-order-002",
-  "orderId": 123456790,
-  "status": "CANCELED",
-  "clientOrderId": "cancel-order-002"
-}
-```
-
-### 2.8 ErrorResponse
-
-```json
-{
-  "error_code": "BINANCE_TESTNET_REQUEST_FAILED",
-  "message": "Binance Spot Testnet 요청이 실패했습니다.",
-  "detail": "timestamp 또는 signature를 확인하세요.",
-  "request_id": "req_001",
-  "timestamp": "2026-05-04T09:02:00+09:00"
-}
-```
-
-### 2.9 AgentRunState
-
-```json
-{
-  "run_id": "airun_001",
-  "lifecycle_status": "RISK_REVIEW",
-  "request_type": "PLACE_ORDER",
-  "final_action": "HOLD"
-}
-```
-
-### 2.10 GateDecision
-
-```json
-{
-  "decision": "REJECT",
-  "reason_codes": ["INSUFFICIENT_BALANCE"],
-  "stage": "risk_gate"
-}
-```
-
-### 2.11 VerificationResult
-
-```json
-{
-  "name": "min_notional_check",
-  "result": "pass",
-  "evidence_refs": ["exchange_rules.MIN_NOTIONAL", "normalized_order_intent.quoteOrderQty"]
-}
-```
-
-### 2.12 AgentDecisionTrace
-
-```json
-{
-  "reason_codes": ["LIMIT_PRICE_REQUIRED"],
-  "evidence_refs": ["normalized_order_intent.type"],
-  "final_action": "NO_ORDER",
-  "notes": "지정가 주문 필수 필드 누락"
-}
-```
-
-### 2.13 RunDecisionTrace
-
-```json
-{
-  "run_id": "airun_001",
-  "final_action": "BE_REJECTED",
-  "be_override": true,
-  "gate_decision": "PASS",
-  "notes": "AI gate 통과 후 BE 재검증에서 차단"
-}
-```
-
-### 2.14 Internal AI Report Payload
-
-```json
-{
-  "run_id": "airun_001",
-  "gate_decision": "PASS",
-  "final_action": "REPORT_READY",
-  "decision_trace": {
-    "policy": {
-      "reason_codes": ["ORDER_INTENT_NORMALIZED"],
-      "final_action": "READY_FOR_BE"
-    },
-    "risk": {
-      "reason_codes": ["ALL_CHECKS_PASSED"],
-      "final_action": "READY_FOR_BE"
-    },
-    "evaluator": {
-      "reason_codes": ["EVIDENCE_SUFFICIENT"],
-      "final_action": "READY_FOR_BE"
-    },
-    "execution": {
-      "reason_codes": ["ORDER_RESPONSE_VERIFIED"],
-      "final_action": "REPORT_READY"
-    },
-    "run_summary": {
-      "final_action": "REPORT_READY",
-      "be_override": false
-    }
-  },
-  "user_summary": "주문 테스트 요청이 정책과 거래소 규칙을 충족해 Backend 검증 후 제출되었습니다."
-}
-```
-
-위 예시에서 `decision_trace.policy`, `decision_trace.risk`, `decision_trace.evaluator`의 `final_action=READY_FOR_BE`는 최종 실행 결과가 아니라 **BE deterministic revalidation 직전의 proposal handoff 상태**를 뜻한다.
-
-### 2.15 HoldDecision
-
-```json
-{
-  "decision": "HOLD",
-  "hold_reason": "HOLD_DATA_INSUFFICIENT",
-  "reason_codes": ["STALE_MARKET_SNAPSHOT"],
-  "resume_required": true
-}
-```
-
-### 2.16 ResumeCommandPayload
-
-```json
-{
-  "run_id": "airun_001",
-  "resume_reason": "USER_APPROVED_ORDER",
-  "patch_fields": {
-    "approval": {
-      "approved": true,
-      "approved_at": "2026-05-06T11:00:00+09:00"
-    }
-  }
-}
-```
-
-### 2.17 CheckpointRecord
-
-```json
-{
-  "run_id": "airun_001",
-  "lifecycle_status": "HOLD",
-  "hold_reason": "HOLD_REVIEW_REQUIRED",
-  "schema_version": "v1",
-  "expires_at": "2026-05-06T12:00:00+09:00",
-  "state": {
-    "request_context": {"request_id": "req_001"},
-    "decision_trace": {"risk": {"final_action": "HOLD"}}
-  }
-}
-```
-
-### 2.18 Structured output 모델 이름
-
-| 모델 이름 | 용도 | 최소 필수 필드 |
+| 메서드 | 경로 | 응답 계약 |
 |---|---|---|
-| `NormalizedOrderIntent` | Policy Node 출력 | `symbol`, `side`, `type` |
-| `AgentDecisionTrace` | Policy/Risk/Evaluator/Execution trace | `reason_codes`, `final_action` |
-| `RiskAssessment` | Risk 해석 결과 | `reason_codes`, `verification_checks` |
-| `GateDecision` | gate 결과 | `decision`, `reason_codes` |
-| `HoldDecision` | hold 세부 원인 | `decision`, `hold_reason`, `resume_required` |
-| `VerificationResult` | 실행 결과를 포함한 공통 검증 결과 | `name`, `result`, `evidence_refs` |
-| `ReportPayload` | 사용자/저장 리포트 | `run_id`, `gate_decision`, `final_action`, `decision_trace`, `user_summary` |
-| `RunDecisionTrace` | run 요약 | `run_id`, `final_action`, `be_override` |
+| GET | `/health` | `HealthResponse` |
+| GET | `/api/v1/testnet/account` | `BalanceResponse` |
+| GET | `/api/v1/testnet/ticker/price` | `PriceResponse` |
+| GET | `/api/v1/testnet/ticker/book` | `BookResponse` |
+| GET | `/api/v1/testnet/klines` | `KlinesResponse` |
+| POST | `/api/v1/testnet/orders` | `OrderRunResponse` |
+| POST | `/api/v1/testnet/orders/resume` | `OrderRunResponse` |
+| GET | `/api/v1/testnet/orders/status` | `OrderStatusResponse` |
+| DELETE | `/api/v1/testnet/orders` | `CancelOrderResponse` |
+| GET | `/api/v1/testnet/stream/status` | `StreamStatusResponse` |
 
-### 2.19 PolicyRetrievalPacket
+## 4. 주문 요청 계약
+
+### 4.1 SpotOrderRequest
 
 ```json
 {
-  "request_id": "req_001",
-  "policy_refs": ["policy.symbol_allowlist", "policy.max_quote_limit"],
-  "retrieved_at": "2026-05-06T10:58:00+09:00",
-  "applied_rules": {
-    "allowed_symbols": ["BTCUSDT", "ETHUSDT"],
-    "max_quote_order_qty": "50"
+  "symbol": "BTCUSDT",
+  "side": "BUY",
+  "type": "MARKET",
+  "quoteOrderQty": "10"
+}
+```
+
+제약 요약:
+
+- `MARKET` 매수는 보통 `quoteOrderQty` 를 사용한다.
+- `MARKET` 매도는 보통 `quantity` 를 사용한다.
+- `LIMIT` 는 `price`, `quantity`, `timeInForce` 가 필요하다.
+
+## 5. 주문 생성 응답의 canonical 계약
+
+### 5.1 OrderRunResponse
+
+```json
+{
+  "runId": "run_0f3b6f",
+  "lifecycleStatus": "REPORT_READY",
+  "holdReason": null,
+  "orderId": 123456789,
+  "symbol": "BTCUSDT",
+  "status": "NEW",
+  "type": "LIMIT",
+  "side": "BUY",
+  "reasonCodes": []
+}
+```
+
+필드 설명:
+
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `runId` | string | run 식별자 |
+| `lifecycleStatus` | string | 현재 또는 최종 run 상태 |
+| `holdReason` | string \| null | `HOLD` 인 경우 세부 원인 |
+| `orderId` | number \| null | Binance 제출이 실제로 일어난 경우의 주문 ID |
+| `symbol` | string \| null | 제출된 심볼 |
+| `status` | string \| null | 주문 상태 |
+| `type` | string \| null | 주문 타입 |
+| `side` | string \| null | 주문 방향 |
+| `reasonCodes` | string[] | 보류, 무주문, 재검증 차단 등 이유 코드 |
+
+### 5.2 중요한 canonical 규칙
+
+- `POST /api/v1/testnet/orders` 의 public contract는 `OrderRunResponse` 다.
+- `POST /api/v1/testnet/orders/resume` 의 public contract도 `OrderRunResponse` 다.
+- 이 두 엔드포인트는 Binance 원본 주문 응답 전체를 직접 public response로 약속하지 않는다.
+- Binance 원본 응답은 BE 내부 실행 결과, 로그, 보고 생성의 입력으로만 다룬다.
+
+### 5.3 상태별 예시
+
+#### HOLD
+
+```json
+{
+  "runId": "run_hold_001",
+  "lifecycleStatus": "HOLD",
+  "holdReason": "HOLD_REVIEW_REQUIRED",
+  "orderId": null,
+  "symbol": null,
+  "status": null,
+  "type": null,
+  "side": null,
+  "reasonCodes": []
+}
+```
+
+#### NO_ORDER
+
+```json
+{
+  "runId": "run_no_order_001",
+  "lifecycleStatus": "NO_ORDER",
+  "holdReason": null,
+  "orderId": null,
+  "symbol": null,
+  "status": null,
+  "type": null,
+  "side": null,
+  "reasonCodes": ["RISK_THRESHOLD_EXCEEDED"]
+}
+```
+
+#### BE_REJECTED
+
+```json
+{
+  "runId": "run_reject_001",
+  "lifecycleStatus": "BE_REJECTED",
+  "holdReason": null,
+  "orderId": null,
+  "symbol": null,
+  "status": null,
+  "type": null,
+  "side": null,
+  "reasonCodes": ["MIN_NOTIONAL_NOT_MET"]
+}
+```
+
+## 6. resume 요청 계약
+
+### 6.1 ResumeCommandPayload
+
+```json
+{
+  "runId": "run_hold_001",
+  "resumeReason": "USER_APPROVED_ORDER",
+  "patchFields": {
+    "approval": {
+      "approved": true
+    }
   }
 }
 ```
 
-### 2.20 EvaluationResult
+### 6.2 canonical 의미
+
+- `runId` 는 기존 hold run 을 가리킨다.
+- `resumeReason` 은 왜 재개하는지 설명한다.
+- `patchFields` 는 승인 정보, 보완 입력, 재조회 데이터 같은 추가 정보를 담는다.
+
+## 7. 주문 상태 및 취소 계약
+
+### 7.1 OrderStatusResponse
 
 ```json
 {
-  "stage": "risk_evaluator",
-  "target": "gate_decision",
-  "score": 92,
-  "retry_count": 0,
-  "passed": true
+  "orderId": 123456789,
+  "symbol": "BTCUSDT",
+  "status": "FILLED",
+  "executedQty": "0.001"
 }
 ```
 
-### 2.21 ReportCadenceEvent
+### 7.2 CancelOrderResponse
 
 ```json
 {
-  "run_id": "airun_001",
-  "event_type": "BE_REVALIDATION_COMPLETED",
-  "lifecycle_status": "BE_REJECTED",
-  "created_at": "2026-05-06T11:01:00+09:00"
+  "orderId": 123456789,
+  "symbol": "BTCUSDT",
+  "status": "CANCELED"
 }
 ```
 
-## 3. REST API 계약
+상태 조회와 취소는 run 중심 생성 API와 구분되는 별도 public contract다.
 
-이 문서의 `/api/v1/testnet/*` 응답 예시는 BE가 정규화한 포맷이다. Binance 원본 전체 payload는 내부 로그/저장소에 보관할 수 있지만, FE와 테스트는 아래 응답 구조를 기준으로 구현한다.
+## 8. market 조회 계약
 
-또한 AI 관련 응답은 단순 결과 문자열이 아니라, 정책 검색 근거, 평가 기록, 단계별 보고 이벤트를 함께 남길 수 있어야 한다. LLM이 만든 action proposal은 저장 가능하지만, 실행 승인 레코드는 deterministic 검증 결과와 분리해 기록한다.
-
-### 3.1 잔고 조회
-
-`GET /api/v1/testnet/account`
-
-응답 예시:
+### 8.1 BalanceResponse
 
 ```json
 {
@@ -373,11 +208,7 @@
 }
 ```
 
-### 3.2 현재가 조회
-
-`GET /api/v1/testnet/ticker/price?symbol=BTCUSDT`
-
-응답 예시:
+### 8.2 PriceResponse
 
 ```json
 {
@@ -386,32 +217,24 @@
 }
 ```
 
-### 3.3 호가 / orderbook 조회
-
-`GET /api/v1/testnet/ticker/book?symbol=BTCUSDT`
-
-응답 예시:
+### 8.3 BookResponse
 
 ```json
 {
   "symbol": "BTCUSDT",
   "bidPrice": "64999.99",
-  "bidQty": "0.12000000",
+  "bidQty": "0.12",
   "askPrice": "65000.13",
-  "askQty": "0.45000000",
+  "askQty": "0.45",
   "depth": {
     "lastUpdateId": 123456,
-    "bids": [["64999.99", "0.12000000"]],
-    "asks": [["65000.13", "0.45000000"]]
+    "bids": [["64999.99", "0.12"]],
+    "asks": [["65000.13", "0.45"]]
   }
 }
 ```
 
-### 3.4 캔들 조회
-
-`GET /api/v1/testnet/klines?symbol=BTCUSDT&interval=1m&limit=5`
-
-응답 예시:
+### 8.4 KlinesResponse
 
 ```json
 {
@@ -424,252 +247,97 @@
       "high": "65100.00",
       "low": "64880.00",
       "close": "65000.12",
-      "volume": "12.34000000"
+      "volume": "12.34"
     }
   ]
 }
 ```
 
-### 3.5 Spot 매수/매도 주문
-
-`POST /api/v1/testnet/orders`
-
-요청 예시 1: 시장가 매수
+## 9. stream 상태 계약
 
 ```json
 {
-  "symbol": "BTCUSDT",
-  "side": "BUY",
-  "type": "MARKET",
-  "quoteOrderQty": "50"
+  "connected": true,
+  "streamName": "btcusdt@ticker",
+  "lastEvent": {
+    "e": "24hrTicker",
+    "s": "BTCUSDT",
+    "c": "65000.12"
+  }
 }
 ```
 
-요청 예시 2: 시장가 매도
+## 10. 오류 응답 계약
 
 ```json
 {
-  "symbol": "BTCUSDT",
-  "side": "SELL",
-  "type": "MARKET",
-  "quantity": "0.001"
+  "error_code": "REQUEST_FAILED",
+  "message": "runId not found: run_missing_001",
+  "detail": null,
+  "request_id": "req_0abc1234",
+  "timestamp": "2026-05-09T10:00:00+00:00"
 }
 ```
 
-요청 예시 3: 지정가 주문
+오류 payload는 현재 snake_case를 사용한다.
 
-```json
-{
-  "symbol": "BTCUSDT",
-  "side": "BUY",
-  "type": "LIMIT",
-  "timeInForce": "GTC",
-  "price": "64000",
-  "quantity": "0.001"
-}
-```
+## 11. AI HTTP 계약
 
-응답 예시:
-
-```json
-{
-  "orderId": 123456789,
-  "symbol": "BTCUSDT",
-  "status": "NEW",
-  "type": "LIMIT",
-  "side": "BUY"
-}
-```
-
-### 3.6 주문 상태 조회
-
-`GET /api/v1/testnet/orders/status?symbol=BTCUSDT&orderId=123456789`
-
-또는
-
-`GET /api/v1/testnet/orders/status?symbol=BTCUSDT&origClientOrderId=demo-order-001`
-
-응답 예시:
-
-```json
-{
-  "orderId": 123456789,
-  "symbol": "BTCUSDT",
-  "status": "PARTIALLY_FILLED",
-  "executedQty": "0.00050000"
-}
-```
-
-### 3.7 주문 취소
-
-`DELETE /api/v1/testnet/orders`
+### 11.1 `/runs/start`
 
 요청 예시:
 
 ```json
 {
-  "symbol": "BTCUSDT",
-  "orderId": 123456789
+  "run_id": "run_0f3b6f",
+  "request_context": {
+    "request_id": "run_0f3b6f",
+    "request_type": "PLACE_ORDER_TEST",
+    "user_input": {
+      "symbol": "BTCUSDT",
+      "side": "BUY",
+      "type": "MARKET",
+      "quoteOrderQty": "10"
+    }
+  },
+  "policy_context": {
+    "policy_refs": ["policy.symbol_allowlist", "policy.spot_testnet_only"]
+  }
 }
 ```
 
-또는
+### 11.2 `/runs/resume`
 
 ```json
 {
-  "symbol": "BTCUSDT",
-  "origClientOrderId": "demo-order-001"
+  "run_id": "run_hold_001",
+  "resume_reason": "USER_APPROVED_ORDER",
+  "patch_fields": {
+    "approval": {
+      "approved": true
+    }
+  }
 }
 ```
 
-응답 예시:
+### 11.3 `/runs/complete`
 
 ```json
 {
-  "orderId": 123456789,
-  "symbol": "BTCUSDT",
-  "status": "CANCELED"
+  "run_id": "run_0f3b6f",
+  "completion_payload": {
+    "execution_result": {
+      "status": "NEW",
+      "orderId": 123456789,
+      "clientOrderId": "test-order"
+    }
+  }
 }
 ```
 
-## 4. Binance Spot Testnet 주문 파라미터 요약
+## 12. 현재 구현 메모
 
-| 파라미터 | 설명 |
-|---|---|
-| `symbol` | 예: `BTCUSDT` |
-| `side` | `BUY`, `SELL` |
-| `type` | `MARKET`, `LIMIT` |
-| `quantity` | 수량 기준 주문 시 사용 |
-| `quoteOrderQty` | quote 자산 금액 기준 시장가 매수 시 사용 |
-| `price` | 지정가 주문 가격 |
-| `timeInForce` | 예: `GTC` |
-| `timestamp` | ms 단위 현재 시각 |
-| `recvWindow` | 선택, 기본 5000ms |
-| `signature` | signed endpoint 필수 |
-
-## 5. 주문 파라미터 검증 기준
-
-- `exchangeInfo` 기준 `PRICE_FILTER`, `LOT_SIZE`, `MIN_NOTIONAL`을 사용한다.
-- 시장가 매수는 `quoteOrderQty`, 시장가 매도는 `quantity`를 기본 예시로 사용한다.
-- 지정가 주문은 `price`, `quantity`, `timeInForce`가 모두 필요하다.
-
-## 6. 상태/열거값 요약
-
-- `side`: `BUY`, `SELL`
-- `type`: `MARKET`, `LIMIT`
-- `order status`: `NEW`, `PARTIALLY_FILLED`, `FILLED`, `CANCELED`, `REJECTED`, `EXPIRED`
-- `lifecycle_status`: `RECEIVED`, `NORMALIZING`, `NEEDS_INPUT`, `RISK_REVIEW`, `HOLD`, `READY_FOR_BE`, `BE_REJECTED`, `EXECUTING`, `RESULT_VERIFYING`, `REPORT_READY`, `NO_ORDER`, `FAILED`
-- `hold_reason`: `HOLD_REVIEW_REQUIRED`, `HOLD_DATA_INSUFFICIENT`
-- `report cadence`: request accepted, policy retrieval complete, policy complete, risk gate complete, evaluator complete, BE revalidation complete, final report ready
-
-### 6.1 상태 필드 해석 규칙
-
-- `HOLD`는 lifecycle 상태이며, 세부 의미는 `hold_reason`로 해석한다.
-- `BE_REJECTED`는 BE 재검증에서만 생성된다.
-- schema mismatch는 복구 가능 여부에 따라 `HOLD` + `hold_reason=HOLD_DATA_INSUFFICIENT` 또는 `FAILED`로 처리한다.
-- `HOLD_REVIEW_REQUIRED`, `HOLD_DATA_INSUFFICIENT`는 lifecycle 상태가 아니라 `hold_reason` 값이다.
-
-## 7. DB 테이블 초안
-
-| 테이블 | 주요 컬럼 |
-|---|---|
-| `testnet_configs` | `config_id`, `rest_base_url`, `ws_stream_url`, `ws_api_url`, `created_at` |
-| `balance_snapshots` | `snapshot_id`, `snapshot_json`, `created_at` |
-| `price_snapshots` | `snapshot_id`, `symbol`, `snapshot_json`, `created_at` |
-| `spot_orders` | `order_id`, `symbol`, `request_json`, `response_json`, `status`, `created_at` |
-| `order_status_logs` | `log_id`, `order_id`, `status_json`, `created_at` |
-| `cancel_logs` | `cancel_id`, `order_id`, `cancel_json`, `created_at` |
-| `stream_events` | `event_id`, `stream_name`, `event_json`, `created_at` |
-| `reports` | `report_id`, `report_json`, `created_at` |
-| `agent_run_checkpoints` | `run_id`, `lifecycle_status`, `hold_reason`, `state_json`, `schema_version`, `expires_at`, `created_at` |
-
-`reports.report_json`에는 사용자용 요약뿐 아니라 `decision_trace.policy`, `decision_trace.risk`, `decision_trace.execution`, `decision_trace.run_summary` 같은 구조화 trace를 함께 저장할 수 있다. 다만 API Key, Secret, signature, production host 문자열은 저장 대상이 아니다.
-
-### 7.1 checkpoint 저장 규칙
-
-- checkpoint는 `run_id` 기준 1 run 1 latest snapshot을 유지한다.
-- `request_context`, `policy_context`, 과거 trace는 overwrite하지 않는다.
-- `verification_checks`, `errors`는 append된 누적 상태를 저장한다.
-- `schema_version`을 함께 저장해 FE/BE/AI가 같은 계약 버전을 사용하도록 한다.
-- TTL 만료 후 재개 요청이 오면 `FAILED` 또는 run 재시작 안내로 처리한다.
-
-## 8. Mermaid ERD
-
-```mermaid
-erDiagram
-    TESTNET_CONFIGS ||--o{ SPOT_ORDERS : configures
-    SPOT_ORDERS ||--o{ ORDER_STATUS_LOGS : has
-    SPOT_ORDERS ||--o{ CANCEL_LOGS : has
-    TESTNET_CONFIGS ||--o{ BALANCE_SNAPSHOTS : produces
-    TESTNET_CONFIGS ||--o{ PRICE_SNAPSHOTS : produces
-    TESTNET_CONFIGS ||--o{ STREAM_EVENTS : receives
-    SPOT_ORDERS ||--o{ REPORTS : summarized_in
-
-    TESTNET_CONFIGS {
-      string config_id PK
-      string rest_base_url
-      string ws_stream_url
-      string ws_api_url
-    }
-    SPOT_ORDERS {
-      string order_id PK
-      string symbol
-      json request_json
-      json response_json
-      string status
-    }
-    ORDER_STATUS_LOGS {
-      string log_id PK
-      string order_id FK
-      json status_json
-    }
-    CANCEL_LOGS {
-      string cancel_id PK
-      string order_id FK
-      json cancel_json
-    }
-    BALANCE_SNAPSHOTS {
-      string snapshot_id PK
-      json snapshot_json
-    }
-    PRICE_SNAPSHOTS {
-      string snapshot_id PK
-      string symbol
-      json snapshot_json
-    }
-    STREAM_EVENTS {
-      string event_id PK
-      string stream_name
-      json event_json
-    }
-    REPORTS {
-      string report_id PK
-      json report_json
-    }
-    AGENT_RUN_CHECKPOINTS {
-      string run_id PK
-      string lifecycle_status
-      string hold_reason
-      json state_json
-      string schema_version
-    }
-```
-
-## 9. 실수 방지 주의사항
-
-- `api.binance.com` 관련 문자열을 저장하지 않는다.
-- `BINANCE_TESTNET_*`가 아닌 변수명을 사용하지 않는다.
-- WebSocket stream symbol은 소문자여야 한다.
-- 많은 Binance 숫자 응답 값은 문자열이라는 점을 유지한다.
-- AI 내부 trace에는 비밀키, signature, raw auth header를 저장하지 않는다.
-- checkpoint와 resume payload에는 Binance raw auth 정보를 저장하지 않는다.
-
-## 10. 확정 구현 기준
-
-- REST 예시는 모두 Testnet 기준만 사용한다.
-- WebSocket 예시는 stream endpoint 기준만 사용한다.
-- 주문 응답 예시는 Spot 현물 주문 결과만 사용한다.
-- 내부 AI 객체는 공개 REST 계약과 분리되며, 판단 trace와 gate 결과를 표현하는 용도로만 사용한다.
-- `BE_REJECTED`는 BE 재검증 단계에서만 생성되는 상태다.
-- `HOLD`와 `hold_reason`는 분리된 필드로 유지한다.
-- AI node output은 이 문서의 이름 있는 모델 이름을 기준으로 검증한다.
+- FE 타입 일부는 아직 raw order response 성격의 이름을 유지하고 있다.
+- 그러나 canonical public contract는 `OrderRunResponse` 다.
+- Reports 페이지는 현재 mock 기반이므로 live report API 계약을 완료된 화면처럼 가정하지 않는다.
+- Settings config 조회용 public endpoint는 아직 없다.
