@@ -111,6 +111,7 @@ def _review_hold() -> Evidence:
 def _data_hold_and_resume() -> Evidence:
     app = AutocoinAgentApp()
     initial = app.start(request_with_user_input("airun_verify_data_hold", market_snapshot_fresh=False))
+    initial_risk_trace = initial["decision_trace"]["risk"]
     resumed = app.resume(
         "airun_verify_data_hold",
         {"supplemental_user_input": {"market_snapshot_fresh": True}},
@@ -122,6 +123,8 @@ def _data_hold_and_resume() -> Evidence:
         "initial_data_hold": initial["lifecycle_status"] == LIFECYCLE_HOLD and initial.get("hold_reason") == HOLD_DATA_INSUFFICIENT,
         "same_run_id": resumed["run_id"] == initial["run_id"],
         "resume_history_recorded": resumed["resume_history"][0]["resume_reason"] == "MARKET_DATA_SUPPLIED",
+        "previous_risk_trace_preserved": resumed["decision_trace_history"][0]["decision_trace"]["risk"] == initial_risk_trace,
+        "resumed_risk_trace_updated": resumed["decision_trace"]["risk"]["final_action"] == PASS_ACTION,
     }
     evidence["passed"] = evidence["passed"] and all(evidence["assertions"].values())
     _attach_order_checkpoint(evidence, app, "airun_verify_data_hold")

@@ -37,16 +37,13 @@ class AutocoinAgentApp:
         if previous.get("lifecycle_status") != LIFECYCLE_HOLD:
             raise ValueError("only HOLD runs can be resumed")
         previous.setdefault("resume_history", []).append({"resume_reason": resume_reason, "patch_fields": deepcopy(patch_fields)})
-        user_input = previous.setdefault("request_context", {}).setdefault("user_input", {})
-        supplemental = patch_fields.get("supplemental_user_input") if isinstance(patch_fields, dict) else None
-        if isinstance(supplemental, dict):
-            user_input.update(supplemental)
-        approval = patch_fields.get("approval") if isinstance(patch_fields, dict) else None
-        if isinstance(approval, dict) and approval.get("approved") is True:
-            user_input["requires_review"] = False
+        previous.setdefault("decision_trace_history", []).append(
+            {
+                "decision_trace": deepcopy(previous.get("decision_trace", {})),
+                "verification_checks_count": len(previous.get("verification_checks", [])),
+            }
+        )
         result = self.start(previous)
-        result.setdefault("resume_history", previous.get("resume_history", []))
-        self._runs[run_id] = deepcopy(result)
         return result
 
     def complete(self, run_id: str, completion_payload: Dict[str, Any]) -> AgentState:

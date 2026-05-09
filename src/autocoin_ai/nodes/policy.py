@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from autocoin_ai.constants import LIFECYCLE_FAILED, PASS_ACTION
-from autocoin_ai.models import AgentState, append_check, ensure_state_shape, set_trace
+from autocoin_ai.models import AgentState, append_check, effective_user_input, ensure_state_shape, set_trace
 from autocoin_ai.validators import validate_request_context
 
 
@@ -24,7 +24,7 @@ def policy_node(state: AgentState) -> AgentState:
         next_state["lifecycle_status"] = LIFECYCLE_FAILED
         return next_state
 
-    user_input = request_context["user_input"]
+    user_input = effective_user_input(next_state)
     normalized = {
         "symbol": str(user_input["symbol"]).upper(),
         "side": str(user_input["side"]).upper(),

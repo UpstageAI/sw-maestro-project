@@ -27,6 +27,11 @@ class VerificationCheck(TypedDict):
     evidence_refs: List[str]
 
 
+class DecisionTraceHistoryEntry(TypedDict):
+    decision_trace: Dict[str, TraceEntry]
+    verification_checks_count: int
+
+
 class AgentState(TypedDict):
     run_id: str
     request_context: JsonDict
@@ -41,6 +46,7 @@ class AgentState(TypedDict):
     be_rejection_evidence: JsonDict
     report: JsonDict
     resume_history: List[JsonDict]
+    decision_trace_history: List[DecisionTraceHistoryEntry]
 
 
 def empty_trace_entry() -> TraceEntry:
@@ -66,6 +72,7 @@ def ensure_state_shape(state: Mapping[str, Any]) -> AgentState:
     next_state.setdefault("be_rejection_evidence", {})
     next_state.setdefault("report", {})
     next_state.setdefault("resume_history", [])
+    next_state.setdefault("decision_trace_history", [])
     return cast(AgentState, cast(object, next_state))
 
 
@@ -75,6 +82,21 @@ def append_check(state: AgentState, name: str, stage: str, result: str, evidence
     state.setdefault("verification_checks", []).append(
         {"name": name, "stage": stage, "result": result, "evidence_refs": evidence_refs}
     )
+
+
+def effective_user_input(state: AgentState) -> JsonDict:
+    user_input = dict(state.get("request_context", {}).get("user_input", {}))
+    for entry in state.get("resume_history", []):
+        patch = entry.get("patch_fields", {})
+        if not isinstance(patch, dict):
+            continue
+        supplemental = patch.get("supplemental_user_input")
+        if isinstance(supplemental, dict):
+            user_input.update(supplemental)
+        approval = patch.get("approval")
+        if isinstance(approval, dict) and approval.get("approved") is True:
+            user_input["requires_review"] = False
+    return user_input
 
 
 def set_trace(

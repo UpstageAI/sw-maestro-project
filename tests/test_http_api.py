@@ -21,6 +21,7 @@ def test_start_endpoint_returns_canonical_agent_state():
 def test_resume_endpoint_resumes_hold_run():
     with TestClient(app) as client:
         initial = client.post("/runs/start", json=request_with_user_input(market_snapshot_fresh=False))
+        initial_payload = initial.json()
         response = client.post(
             "/runs/resume",
             json={
@@ -35,7 +36,9 @@ def test_resume_endpoint_resumes_hold_run():
     assert response.status_code == 200
     payload = response.json()
     assert payload["lifecycle_status"] == LIFECYCLE_READY_FOR_BE
+    assert payload["request_context"] == initial_payload["request_context"]
     assert payload["resume_history"][0]["resume_reason"] == "MARKET_DATA_SUPPLIED"
+    assert payload["decision_trace_history"][0]["decision_trace"]["risk"] == initial_payload["decision_trace"]["risk"]
 
 
 def test_complete_endpoint_accepts_execution_result():
@@ -95,6 +98,38 @@ def test_resume_endpoint_rejects_non_hold_run():
     assert start.json()["lifecycle_status"] == LIFECYCLE_READY_FOR_BE
     assert response.status_code == 400
     assert response.json() == {"detail": "only HOLD runs can be resumed"}
+
+
+def test_resume_endpoint_accumulates_prior_resume_patches():
+    with TestClient(app) as client:
+        start = client.post("/runs/start", json=request_with_user_input(market_snapshot_fresh=False, requires_review=True))
+        first_resume = client.post(
+            "/runs/resume",
+            json={
+                "run_id": "airun_test_001",
+                "resume_reason": "MARKET_DATA_SUPPLIED",
+                "patch_fields": {"supplemental_user_input": {"market_snapshot_fresh": True}},
+            },
+        )
+        second_resume = client.post(
+            "/runs/resume",
+            json={
+                "run_id": "airun_test_001",
+                "resume_reason": "HUMAN_REVIEW_APPROVED",
+                "patch_fields": {"approval": {"approved": True}},
+            },
+        )
+
+    assert start.status_code == 200
+    assert first_resume.status_code == 200
+    assert first_resume.json()["lifecycle_status"] == LIFECYCLE_HOLD
+    assert second_resume.status_code == 200
+    payload = second_resume.json()
+    assert payload["lifecycle_status"] == LIFECYCLE_READY_FOR_BE
+    assert [entry["resume_reason"] for entry in payload["resume_history"]] == [
+        "MARKET_DATA_SUPPLIED",
+        "HUMAN_REVIEW_APPROVED",
+    ]
 
 
 def test_complete_endpoint_returns_not_found_for_unknown_run():

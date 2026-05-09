@@ -29,16 +29,24 @@ def validate_request_context(request_context: JsonDict) -> List[str]:
     return missing
 
 
+def assert_trace_container(trace: Dict[str, Any], prefix: str = "decision_trace") -> None:
+    for stage in TRACE_STAGES:
+        if stage not in trace:
+            raise AssertionError("missing %s stage: %s" % (prefix, stage))
+        entry = trace[stage]
+        for field in ("reason_codes", "evidence_refs", "final_action"):
+            if field not in entry:
+                raise AssertionError("missing %s.%s.%s" % (prefix, stage, field))
+
+
 def assert_contract_state(state: AgentState) -> None:
     if state.get("lifecycle_status") == PASS_ACTION:
         raise AssertionError("PASS must not be used as lifecycle_status")
     if state.get("lifecycle_status") == LIFECYCLE_FAILED:
         return
-    trace = state.get("decision_trace", {})
-    for stage in TRACE_STAGES:
-        if stage not in trace:
-            raise AssertionError("missing trace stage: %s" % stage)
-        entry = trace[stage]
-        for field in ("reason_codes", "evidence_refs", "final_action"):
-            if field not in entry:
-                raise AssertionError("missing trace.%s.%s" % (stage, field))
+    assert_trace_container(state.get("decision_trace", {}), "decision_trace")
+    for index, entry in enumerate(state.get("decision_trace_history", [])):
+        assert_trace_container(entry.get("decision_trace", {}), "decision_trace_history[%s].decision_trace" % index)
+        verification_checks_count = entry.get("verification_checks_count")
+        if not isinstance(verification_checks_count, int):
+            raise AssertionError("decision_trace_history[%s].verification_checks_count must be int" % index)

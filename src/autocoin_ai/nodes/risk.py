@@ -13,7 +13,7 @@ from autocoin_ai.constants import (
     LIFECYCLE_READY_FOR_BE,
     PASS_ACTION,
 )
-from autocoin_ai.models import AgentState, append_check, ensure_state_shape, set_trace
+from autocoin_ai.models import AgentState, append_check, effective_user_input, ensure_state_shape, set_trace
 
 
 def _amount(intent):
@@ -30,7 +30,7 @@ def risk_node(state: AgentState) -> AgentState:
         return next_state
 
     intent = next_state.get("normalized_order_intent", {})
-    user_input = next_state.get("request_context", {}).get("user_input", {})
+    user_input = effective_user_input(next_state)
     policy_refs = next_state.get("policy_context", {}).get("policy_refs", [])
 
     if user_input.get("market_snapshot_fresh") is False:
