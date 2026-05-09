@@ -29,6 +29,14 @@ def validate_request_context(request_context: JsonDict) -> List[str]:
     return missing
 
 
+def validate_policy_context(policy_context: JsonDict) -> List[str]:
+    missing: List[str] = []
+    policy_refs = policy_context.get("policy_refs")
+    if not isinstance(policy_refs, list) or len(policy_refs) == 0:
+        missing.append("policy_context.policy_refs")
+    return missing
+
+
 def assert_trace_container(trace: Dict[str, Any], prefix: str = "decision_trace") -> None:
     for stage in TRACE_STAGES:
         if stage not in trace:
