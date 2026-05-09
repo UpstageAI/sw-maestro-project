@@ -45,3 +45,11 @@ def build_completion_graph() -> Any:
     graph.set_entry_point("execution")
     graph.add_edge("execution", END)
     return graph.compile(checkpointer=MemorySaver())
+
+
+def draw_order_graph_mermaid() -> str:
+    return build_order_graph().get_graph().draw_mermaid()
+
+
+def draw_completion_graph_mermaid() -> str:
+    return build_completion_graph().get_graph().draw_mermaid()
