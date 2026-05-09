@@ -10,6 +10,7 @@ from typing import Any, Mapping
 from dotenv import load_dotenv
 
 from autocoin_ai.app import AutocoinAgentApp
+from autocoin_ai.graph import draw_completion_graph_mermaid, draw_order_graph_mermaid
 from autocoin_ai.llm import load_llm_settings
 from autocoin_ai.verification import build_verification_report
 
@@ -53,6 +54,9 @@ def build_parser() -> argparse.ArgumentParser:
     verify_parser = subparsers.add_parser("verify")
     verify_parser.add_argument("--summary", action="store_true")
     verify_parser.add_argument("--output")
+    visualize_parser = subparsers.add_parser("visualize")
+    visualize_parser.add_argument("graph", choices=("order", "completion"))
+    visualize_parser.add_argument("--output")
     return parser
 
 
@@ -70,6 +74,13 @@ def main() -> None:
             print_summary(report)
         else:
             print_json(report)
+        return
+    if args.command == "visualize":
+        mermaid = draw_order_graph_mermaid() if args.graph == "order" else draw_completion_graph_mermaid()
+        if args.output:
+            Path(args.output).write_text(mermaid, encoding="utf-8")
+        else:
+            print(mermaid)
         return
     app = AutocoinAgentApp()
     state = app.start(load_json(args.payload))
