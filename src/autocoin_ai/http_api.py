@@ -23,6 +23,12 @@ class CompleteRunRequest(BaseModel):
     completion_payload: dict[str, Any]
 
 
+class StartRunRequest(BaseModel):
+    run_id: str
+    request_context: dict[str, Any]
+    policy_context: dict[str, Any]
+
+
 class AgentStateResponse(BaseModel):
     model_config = ConfigDict(extra="allow")
 
@@ -51,10 +57,10 @@ def map_value_error(exc: ValueError) -> HTTPException:
 
 
 @router.post("/runs/start", response_model=AgentStateResponse)
-def start_run(state: dict[str, Any], request: Request) -> dict[str, Any]:
+def start_run(state: StartRunRequest, request: Request) -> dict[str, Any]:
     agent_app = get_agent_app(request)
     try:
-        return dict(agent_app.start(state))
+        return dict(agent_app.start(state.model_dump()))
     except ValueError as exc:
         raise map_value_error(exc) from exc
 
