@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
 from autocoin_ai.app import AutocoinAgentApp
-from autocoin_ai.constants import LIFECYCLE_BE_REJECTED, LIFECYCLE_FAILED, LIFECYCLE_REPORT_READY
-from tests.fixtures import allowed_request, be_rejection_evidence, execution_result
+from autocoin_ai.constants import LIFECYCLE_BE_REJECTED, LIFECYCLE_FAILED, LIFECYCLE_HOLD, LIFECYCLE_REPORT_READY
+from tests.fixtures import allowed_request, be_rejection_evidence, execution_result, request_with_user_input
 
 
 def test_execution_result_completes_report_ready():
@@ -35,3 +37,25 @@ def test_invalid_completion_payload_fails_contract():
 
     assert result["lifecycle_status"] == LIFECYCLE_FAILED
     assert result["decision_trace"]["execution"]["reason_codes"] == ["COMPLETION_PAYLOAD_INVALID"]
+
+
+def test_hold_run_cannot_complete():
+    app = AutocoinAgentApp()
+    state = app.start(request_with_user_input(market_snapshot_fresh=False))
+
+    assert state["lifecycle_status"] == LIFECYCLE_HOLD
+
+    with pytest.raises(ValueError, match="only READY_FOR_BE runs can be completed"):
+        app.complete("airun_test_001", execution_result())
+
+
+def test_failed_run_cannot_complete():
+    app = AutocoinAgentApp()
+    payload = allowed_request()
+    del payload["request_context"]["user_input"]["symbol"]
+    state = app.start(payload)
+
+    assert state["lifecycle_status"] == LIFECYCLE_FAILED
+
+    with pytest.raises(ValueError, match="only READY_FOR_BE runs can be completed"):
+        app.complete("airun_test_001", execution_result())

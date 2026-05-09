@@ -5,7 +5,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any, Dict, List, Mapping
 
-from autocoin_ai.constants import LIFECYCLE_FAILED, LIFECYCLE_HOLD
+from autocoin_ai.constants import LIFECYCLE_FAILED, LIFECYCLE_HOLD, LIFECYCLE_READY_FOR_BE
 from autocoin_ai.graph import build_completion_graph, build_order_graph
 from autocoin_ai.models import AgentState, ensure_state_shape
 from autocoin_ai.validators import assert_contract_state
@@ -53,6 +53,8 @@ class AutocoinAgentApp:
         if run_id not in self._runs:
             raise ValueError("unknown run_id: %s" % run_id)
         previous = deepcopy(self._runs[run_id])
+        if previous.get("lifecycle_status") != LIFECYCLE_READY_FOR_BE:
+            raise ValueError("only READY_FOR_BE runs can be completed")
         previous["completion_payload"] = deepcopy(completion_payload)
         result = self.completion_graph.invoke(previous, config={"configurable": {"thread_id": run_id}})
         checked = ensure_state_shape(result)
