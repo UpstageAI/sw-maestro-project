@@ -9,12 +9,13 @@ import { CancelOrderPanel } from '../../components/domain/CancelOrderPanel';
 import { OrderLogList } from '../../components/domain/OrderLogList';
 import type { OrderLogEntry } from '../../components/domain/OrderLogList';
 import type { AgentRunState } from '../../types/agent';
-import type { ErrorResponse, OrderRunResponse } from '../../types/api';
+import type { ErrorResponse, OrderRunResponse, SpotOrderRequest } from '../../types/api';
 import styles from './OrdersPage.module.css';
 
 export function OrdersPage() {
   const [orderLog, setOrderLog] = useState<OrderLogEntry[]>([]);
   const [latestRun, setLatestRun] = useState<OrderRunResponse | null>(null);
+  const [latestOrderRequest, setLatestOrderRequest] = useState<SpotOrderRequest | null>(null);
   const [resumeError, setResumeError] = useState<string | null>(null);
 
   const resumeMutation = useMutation({
@@ -69,7 +70,12 @@ export function OrdersPage() {
     resumeMutation.mutate({
       runId: latestRun.runId,
       resumeReason: 'USER_REQUESTED_RETRY',
-      patchFields: {},
+      patchFields: {
+        supplemental_user_input: {
+          ...(latestOrderRequest ?? {}),
+          market_snapshot_fresh: true,
+        },
+      },
     });
   }
 
@@ -83,7 +89,10 @@ export function OrdersPage() {
 
       <div className={styles.grid}>
         <Card title="주문 생성" subtitle="Spot 현물 주문 테스트">
-          <OrderForm onOrderSuccess={handleOrderSuccess} />
+          <OrderForm
+            onOrderSuccess={handleOrderSuccess}
+            onOrderSubmitted={setLatestOrderRequest}
+          />
           {latestRun?.lifecycleStatus === 'HOLD' && (
             <div className={styles.logSection}>
               <AgentStatusDisplay
