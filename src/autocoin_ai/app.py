@@ -43,9 +43,7 @@ class AutocoinAgentApp:
                 "verification_checks_count": len(previous.get("verification_checks", [])),
             }
         )
-        previous["_resume_patch"] = deepcopy(patch_fields) if isinstance(patch_fields, dict) else {}
         result = self.start(previous)
-        result.pop("_resume_patch", None)
         result["resume_history"] = previous.get("resume_history", [])
         result["decision_trace_history"] = previous.get("decision_trace_history", [])
         self._runs[run_id] = deepcopy(result)

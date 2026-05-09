@@ -47,7 +47,6 @@ class AgentState(TypedDict):
     report: JsonDict
     resume_history: List[JsonDict]
     decision_trace_history: List[DecisionTraceHistoryEntry]
-    _resume_patch: NotRequired[JsonDict]
 
 
 def empty_trace_entry() -> TraceEntry:
@@ -87,12 +86,14 @@ def append_check(state: AgentState, name: str, stage: str, result: str, evidence
 
 def effective_user_input(state: AgentState) -> JsonDict:
     user_input = dict(state.get("request_context", {}).get("user_input", {}))
-    resume_patch = state.get("_resume_patch", {})
-    if isinstance(resume_patch, dict):
-        supplemental = resume_patch.get("supplemental_user_input")
+    for entry in state.get("resume_history", []):
+        patch = entry.get("patch_fields", {})
+        if not isinstance(patch, dict):
+            continue
+        supplemental = patch.get("supplemental_user_input")
         if isinstance(supplemental, dict):
             user_input.update(supplemental)
-        approval = resume_patch.get("approval")
+        approval = patch.get("approval")
         if isinstance(approval, dict) and approval.get("approved") is True:
             user_input["requires_review"] = False
     return user_input
