@@ -12,8 +12,10 @@ import autocoin_ai.tools.policy_tools
 
 from autocoin_ai.constants import HOLD_INPUT_AMBIGUOUS, LIFECYCLE_HOLD, LIFECYCLE_READY_FOR_BE
 from autocoin_ai.graph import build_agentic_order_graph
+from autocoin_ai.llm import StepResult
 from autocoin_ai.models import ensure_state_shape
-from autocoin_ai.prompts.intake_prompt import INTAKE_SCHEMA
+
+_NOOP_STEP = StepResult(is_final=True, function_calls=[], text="", candidate_content=None)
 
 EXAMPLES = Path(__file__).parent.parent / "examples"
 
@@ -48,6 +50,7 @@ def test_e2e_livermore_buy():
     }
     graph = build_agentic_order_graph()
     with patch("autocoin_ai.nodes.strategy.gemini_generate", return_value=strategy_resp), \
+         patch("autocoin_ai.nodes.risk_agent.gemini_step_with_tools", return_value=_NOOP_STEP), \
          patch("autocoin_ai.nodes.evaluator.gemini_generate", return_value=EVAL_RESP):
         result = graph.invoke(state, config={"configurable": {"thread_id": state["run_id"]}})
 
