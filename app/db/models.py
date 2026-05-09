@@ -114,3 +114,15 @@ class Report(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
     order: Mapped["SpotOrder | None"] = relationship(back_populates="reports")
+
+
+class AgentRunCheckpoint(Base):
+    __tablename__ = "agent_run_checkpoints"
+
+    run_id: Mapped[str] = mapped_column(String, primary_key=True)
+    lifecycle_status: Mapped[str] = mapped_column(String, nullable=False)
+    hold_reason: Mapped[str | None] = mapped_column(String, nullable=True)
+    state_json: Mapped[dict] = mapped_column(JSON, nullable=False)
+    schema_version: Mapped[str] = mapped_column(String, nullable=False, default="1.0")
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
