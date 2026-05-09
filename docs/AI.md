@@ -32,9 +32,11 @@ AI 계층은 주문 테스트 요청을 구조화하고, 정책과 시장 근거
 
 | Agent | 책임 | 주요 산출물 |
 |---|---|---|
-| Policy / Planning | 요청 정규화, 정책 근거 선택 | `policy_context`, normalized intent, policy trace |
-| Market / Risk | 시장 데이터와 규칙 검토, gate 판단 | risk assessment, gate decision |
-| Evaluator / Reflection | 근거 충분성 재평가 | evaluation result, evaluator trace |
+| Intake | 자연어 `raw_text` → 구조화 주문 의도, trader_id / persona 결정 | `normalized_order_intent`, `trader_id`, `inferred_persona` |
+| Policy / Planning | RAG retrieval, persona_bounds 설정, 정책 근거 선택 | `policy_context`, `trader_principles`, policy trace |
+| Strategy | trader_principles + persona 기반 LLM proposal 생성 | `llm_proposal`, strategy trace |
+| Market / Risk Gate | 결정론 7단계 검증, 도구 호출 | `risk_assessment`, `risk_tool_calls`, gate decision |
+| Evaluator / Reflection | 사용자 리포트 + schema sanity check | `evaluator_review`, evaluator trace |
 | Execution / Report | BE 결과 해석, 사용자 설명 정리 | execution trace, final report |
 
 ## 4. 최소 상태 계약
@@ -43,12 +45,21 @@ AI 계층은 주문 테스트 요청을 구조화하고, 정책과 시장 근거
 |---|---|
 | `run_id` | 하나의 AI run 식별자 |
 | `request_context` | 최초 요청의 immutable envelope |
-| `policy_context` | BE가 retrieval한 정책 artifact 기반 grounding 컨텍스트 |
+| `policy_context` | 정책 artifact 기반 grounding 컨텍스트 |
+| `trader_id` | 트레이더 스타일 식별자 (예: `wonyotti`, `livermore`) |
+| `inferred_persona` | intake 결정 페르소나 (`CONSERVATIVE` / `MODERATE` / `AGGRESSIVE`) |
+| `persona_override_reason` | 발화 명시 단어로 persona가 override된 사유 (선택) |
+| `trader_principles` | RAG retrieval된 트레이더 원칙 목록 |
+| `normalized_order_intent` | intake가 정규화한 주문 의도 |
+| `llm_proposal` | strategy 노드의 LLM 제안 |
+| `risk_assessment` | risk_gate 판정 결과 |
+| `risk_tool_calls` | risk_gate가 호출한 도구 기록 (append-only) |
+| `evaluator_review` | evaluator 최종 사용자 리포트 |
 | `decision_trace` | 단계별 reason, evidence, final action 기록 |
 | `verification_checks` | 단계별 검증 결과를 누적하는 공통 체크 목록 |
 | `hold_reason` | `HOLD`의 세부 원인 |
 
-`request_context`의 최소 필드는 `request_id`, `request_type`, `requested_at`, `user_input`다. FE는 이 입력을 만들고, BE는 정규화해 AI run 시작 payload에 넣는다.
+`request_context`의 최소 필드는 `request_id`, `request_type`, `requested_at`, `user_input`다. Agentic MVP에서는 `user_input.raw_text`로 자연어를 전달한다. 기존 dict 형식은 회귀 호환으로 유지한다.
 
 최소 종료 또는 핵심 상태는 다음 값을 유지한다.
 
@@ -59,6 +70,9 @@ AI 계층은 주문 테스트 요청을 구조화하고, 정책과 시장 근거
 - `REPORT_READY`
 - `HOLD_REVIEW_REQUIRED`
 - `HOLD_DATA_INSUFFICIENT`
+- `HOLD_INPUT_AMBIGUOUS`
+- `HOLD_LOW_CONVICTION`
+- `HOLD_RISK_AGENT_FLAGGED`
 
 ### 4.1 lifecycle 해석
 
@@ -71,7 +85,25 @@ AI 계층은 주문 테스트 요청을 구조화하고, 정책과 시장 근거
 | `FAILED` | schema mismatch 또는 복구 불가 기술 실패 | AI 또는 BE |
 | `REPORT_READY` | 사용자용 최종 설명 준비 완료 | AI |
 
+### 4.2 hold_reason 전체 집합
+
+| 값 | 발생 조건 |
+|---|---|
+| `HOLD_INPUT_AMBIGUOUS` | `ambiguity_score > 0.5` (intake) |
+| `HOLD_LOW_CONVICTION` | LLM proposal의 conviction < persona_bounds.min_conviction |
+| `HOLD_RISK_AGENT_FLAGGED` | 변동성 또는 집중 리스크 임계 초과 |
+| `HOLD_DATA_INSUFFICIENT` | 잔고 부족 또는 필수 데이터 누락 |
+| `HOLD_REVIEW_REQUIRED` | 수동 운영 검토 필요 (BE or 정책) |
+
 ## 5. 판단 규칙
+
+### 5.0 Intake
+
+- `user_input.raw_text`가 있으면 Gemini structured output으로 LLM 파싱 모드를 실행한다.
+- `raw_text`가 없으면 기존 dict 모드로 처리한다 (회귀 호환).
+- `ambiguity_score > 0.5`이면 `HOLD` + `hold_reason=HOLD_INPUT_AMBIGUOUS`로 조기 종료한다.
+- `trader_id`와 `inferred_persona`는 intake 종료 후 immutable이며, 이후 어떤 노드도 수정하지 않는다.
+- `persona_override_reason`은 발화에서 명시 단어가 감지될 때만 기록하고 없으면 빈 문자열이다.
 
 ### 5.1 Policy / Planning
 
@@ -80,24 +112,33 @@ AI 계층은 주문 테스트 요청을 구조화하고, 정책과 시장 근거
 - 누락 필드를 억지로 추정하지 않는다.
 - 최초 `request_context`는 수정하지 않고, `normalized_order_intent`와 `decision_trace.policy`만 추가한다.
 
-### 5.2 Market / Risk
+### 5.1-B Strategy
 
-- 잔고, 시장 데이터, 거래소 규칙, 정책 제한을 함께 본다.
-- 안전하게 진행할 수 없으면 `NO_ORDER` 또는 `HOLD`로 보낸다.
-- 추가 데이터가 필요하면 `hold_reason=HOLD_DATA_INSUFFICIENT`를 사용한다.
-- 사람 승인 경계가 필요하면 `hold_reason=HOLD_REVIEW_REQUIRED`를 사용한다.
+- `trader_principles`와 `persona_bounds`를 참고해 `action`, `size_usd`, `conviction`, `rationale`, `matched_principle_titles`를 포함한 `llm_proposal`을 생성한다.
+- `matched_principle_titles`는 실제 `trader_principles`에 존재하는 title만 사용한다 (환각 차단은 evaluator가 검증).
+- LLM 호출 실패 또는 schema 깨짐은 `FAILED` + reason `"STRATEGY_LLM_ERROR"`로 처리한다.
+
+### 5.2 Market / Risk Gate
+
+- `llm_proposal`을 받아 결정론 7단계 검증을 위→아래 단락 방식으로 수행한다.
+- 잔고, 시장 변동성, 집중 리스크, persona_bounds를 순서대로 확인한다.
+- 각 도구 호출 결과는 `risk_tool_calls`에 append한다.
+- 검증 실패 시: `HOLD` + 해당 hold_reason, 또는 `NO_ORDER` + trace reason code.
+- 모두 통과 시: `lifecycle_status = READY_FOR_BE`.
+- LLM 호출을 하지 않는다 (결정론).
 
 ### 5.3 Evaluator / Reflection
 
-- `decision_trace`와 `verification_checks`가 충분한지 재평가한다.
-- 근거가 약하면 proposal 승격을 막는다.
-- evaluator 통과도 실행 권한을 뜻하지 않는다.
+- `FAILED`를 제외한 모든 lifecycle에서 항상 실행해 `evaluator_review.user_message`를 생성한다.
+- `schema_warnings`에 4개 sanity check 결과를 기록한다: stage 완전성, strategy pass 여부, risk_tool_calls 일치, matched_principle_titles 환각 차단.
+- `lifecycle_status`와 `hold_reason`을 echo만 하고 수정하지 않는다.
+- LLM 호출 실패 시 결정론 폴백으로 `user_message`를 생성하며, `lifecycle_status`를 FAILED로 만들지 않는다.
 
-`verification_checks`는 각 단계가 append 하는 최소 검증 목록으로 본다. 예를 들면 Policy 단계의 입력 검증, Risk 단계의 규칙 검증, Evaluator 단계의 근거 충분성 검증이 같은 run 안에서 누적되어야 한다.
+`verification_checks`는 각 단계가 append 하는 최소 검증 목록으로 본다. Intake 파싱 검증, Policy grounding 검증, Strategy proposal 검증, Risk gate 판정 검증, Evaluator 완료 검증이 같은 run 안에서 누적되어야 한다.
 
-최소 entry shape는 `name`, `stage`, `result`, `evidence_refs`를 가진다. stage는 `policy`, `risk`, `evaluator`, `execution`, `be_revalidation` 중 하나로 제한한다.
+최소 entry shape는 `name`, `stage`, `result`, `evidence_refs`를 가진다. stage는 `intake`, `policy`, `strategy`, `risk`, `evaluator`, `execution`, `be_revalidation` 중 하나로 제한한다.
 
-`decision_trace`는 flat object가 아니라 stage-keyed container를 사용한다. 최소 키는 `policy`, `risk`, `evaluator`, `execution`, `run_summary`다. 각 stage key의 값은 `reason_codes`, `evidence_refs`, `final_action`, 선택적 `notes`를 가진다.
+`decision_trace`는 flat object가 아니라 stage-keyed container를 사용한다. 최소 키는 `policy`, `risk`, `evaluator`, `execution`, `run_summary`다. `intake`와 `strategy`는 선택적 키로 추가된다. 각 stage key의 값은 `reason_codes`, `evidence_refs`, `final_action`, 선택적 `notes`를 가진다.
 
 ### 5.4 Execution / Report
 
