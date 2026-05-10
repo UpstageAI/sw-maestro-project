@@ -23,8 +23,11 @@ export default function LoginPage() {
     });
   }, [router]);
 
+  // BE는 register에서 password min_length=8을 요구. login은 길이 무관(가입 시점에
+  // 길이 검증된 비밀번호이므로 로그인에서 길이 다시 막을 필요 없음).
+  const minPwLen = mode === "register" ? 8 : 1;
   const canSubmit =
-    email.trim().length > 0 && password.length >= 6 && !loading;
+    email.trim().length > 0 && password.length >= minPwLen && !loading;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,7 +110,7 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="6자 이상"
+              placeholder={mode === "register" ? "8자 이상" : "비밀번호"}
               autoComplete={
                 mode === "login" ? "current-password" : "new-password"
               }
