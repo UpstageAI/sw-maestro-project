@@ -1,51 +1,26 @@
-# Subtree All-at-Once
+# Team 53 - ai53
 
-A simple automation tool for managing multiple git subtrees from a single configuration.
+이 디렉토리는 SW Maestro 최종 제출용 루트입니다.
 
-## Quick Start
+프로젝트의 세부 문서, 설계 문서, 운영 문서는 아래 경로에서 확인하실 수 있습니다.
 
-1. Configure your project in `global.config`:
-```ini
-ENTIRE_GIT_GROUP=https://github.com/username
-ENTIRE_GIT_NAME=your-repo-name
-DEFAULT_BRANCH=main
-AUTO_PUSH=true
+- 문서 폴더: [`./.autocoin-docs`](./.autocoin-docs)
+
+## 디렉토리 구조
+
+```text
+team53-ai53/
+├─ .autocoin-docs/   # 프로젝트 문서
+├─ .subtrees/        # subtree 설정 파일
+├─ autocoin-ai/      # AI 서비스
+├─ autocoin-api/     # API 서비스
+├─ autocoin-web/     # 웹 서비스
+├─ global.config
+├─ README.md
+└─ subtree-setup.sh
 ```
 
-2. Create subtree configuration files in `.subtrees/`:
-```ini
-REPO_URL=https://github.com/owner/repo.git
-BRANCH=main
-PREFIX=path/to/subtree
-MODE=auto
-SQUASH=false
-```
+## 안내
 
-3. Run the setup script:
-```bash
-./subtree-setup.sh
-```
-
-## Features
-
-- **Batch Processing**: Configure multiple subtrees and process them all at once
-- **Auto Mode**: Automatically determines whether to add or pull based on existing directories
-- **Flexible Operations**: Supports add, pull, and push operations
-- **Squash Support**: Optional commit squashing for cleaner history
-
-## Configuration Options
-
-### Global Config
-- `ENTIRE_GIT_GROUP`: Repository base URL
-- `ENTIRE_GIT_NAME`: Main repository name
-- `DEFAULT_BRANCH`: Default branch name
-- `AUTO_PUSH`: Automatically push after processing
-
-### Subtree Config
-- `REPO_URL`: Remote repository URL
-- `BRANCH`: Branch to track
-- `PREFIX`: Local path for the subtree
-- `MODE`: Operation mode (auto/add/pull/push)
-- `SQUASH`: Enable commit squashing (true/false)
-- `REMOTE_NAME`: Custom remote name (optional)
-- `PUSH_BRANCH`: Target branch for push mode (optional)
+- 프로젝트 문서를 확인하려면 `.autocoin-docs/` 폴더로 이동해 주세요.
+- 실제 서비스 코드는 `autocoin-api/`, `autocoin-web/`, `autocoin-ai/`에 나뉘어 있습니다.
