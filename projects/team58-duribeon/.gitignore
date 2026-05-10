@@ -1,0 +1,67 @@
+# ── Environment / secrets ─────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── OS / editor cruft ─────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+
+# ── IDEs ──────────────────────────────────────────────────
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.recommended.json
+.idea/
+*.iml
+
+# ── Python (backend) ──────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+.python-version
+
+# ── Node / SvelteKit (frontend) ───────────────────────────
+node_modules/
+.svelte-kit/
+build/
+dist/
+.vite/
+.turbo/
+*.tsbuildinfo
+
+# ── Logs / temp ───────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.cache/
+tmp/
+.tmp/
+
+# ── Coverage / test output ────────────────────────────────
+coverage/
+.nyc_output/
+htmlcov/
+.coverage
+.coverage.*
+
+# ── Streamlit (legacy from prototype's earlier UI) ────────
+.streamlit/secrets.toml
+
+# ── Optional artifacts ────────────────────────────────────
+*.tgz
+*.tar.gz
+*.zip

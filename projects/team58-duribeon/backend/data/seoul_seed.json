@@ -1,0 +1,883 @@
+{
+    "version": 1,
+    "areas": [
+        {
+            "id": "seosulla",
+            "name_ko": "서순라길",
+            "name_en": "Seosulla-gil",
+            "match_ko": ["서순라길", "권농동", "종묘옆"],
+            "match_en": ["seosulla", "jongmyo", "gwannong"]
+        },
+        {
+            "id": "huam",
+            "name_ko": "후암동",
+            "name_en": "Huam-dong",
+            "match_ko": ["후암동", "남산밑", "숙대입구"],
+            "match_en": ["huam", "namsan", "sookmyung"]
+        },
+        {
+            "id": "mullae",
+            "name_ko": "문래동",
+            "name_en": "Mullae-dong",
+            "match_ko": ["문래동", "문래창작촌", "철공소"],
+            "match_en": ["mullae", "factory", "iron"]
+        },
+        {
+            "id": "yaksu",
+            "name_ko": "약수동",
+            "name_en": "Yaksu-dong",
+            "match_ko": ["약수동", "약수역", "신당동"],
+            "match_en": ["yaksu", "shindang", "local"]
+        },
+        {
+            "id": "seongbuk",
+            "name_ko": "성북동",
+            "name_en": "Seongbuk-dong",
+            "match_ko": ["성북동", "한성대입구", "간송"],
+            "match_en": ["seongbuk", "art", "quiet"]
+        },
+        {
+            "id": "changsin",
+            "name_ko": "창신동",
+            "name_en": "Changsin-dong",
+            "match_ko": ["창신동", "동대문뒷길", "봉제골목"],
+            "match_en": ["changsin", "history", "sewing"]
+        },
+        {
+            "id": "hyehwa",
+            "name_ko": "혜화동",
+            "name_en": "Hyehwa-dong",
+            "match_ko": ["혜화동", "대학로뒷길", "성균관대"],
+            "match_en": ["hyehwa", "theater", "student"]
+        },
+        {
+            "id": "sangsu",
+            "name_ko": "상수동",
+            "name_en": "Sangsu-dong",
+            "match_ko": ["상수동", "상수역", "홍대뒷길"],
+            "match_en": ["sangsu", "hongdae", "music"]
+        },
+        {
+            "id": "euljiro",
+            "name_ko": "을지로3가",
+            "name_en": "Euljiro 3-ga",
+            "match_ko": ["을지로", "힙지로", "인쇄골목"],
+            "match_en": ["euljiro", "industrial", "retro"]
+        },
+        {
+            "id": "yeonhui",
+            "name_ko": "연희동",
+            "name_en": "Yeonhui-dong",
+            "match_ko": ["연희동", "연희삼거리", "서대문"],
+            "match_en": ["yeonhui", "craft", "residential"]
+        },
+        {
+            "id": "haebangchon",
+            "name_ko": "해방촌",
+            "name_en": "Haebangchon",
+            "match_ko": ["해방촌", "HBC", "신흥시장"],
+            "match_en": ["haebangchon", "hbc", "iteawon"]
+        },
+        {
+            "id": "tongin",
+            "name_ko": "통인동",
+            "name_en": "Tongin-dong",
+            "match_ko": ["통인동", "서촌", "통인시장"],
+            "match_en": ["tongin", "seochon", "market"]
+        }
+    ],
+    "places": [
+        {
+            "id": "seosulla_01",
+            "area": "seosulla",
+            "name_ko": "질금",
+            "name_en": "Jilgeun",
+            "category": "food",
+            "tags": ["snack", "traditional", "hanok", "quiet"],
+            "desc_ko": "정갈한 수제 개성주악과 한차를 내는 곳",
+            "desc_en": "Handmade Gaeseong Juak and traditional tea in Hanok.",
+            "offbeat_score": 0.82
+        },
+        {
+            "id": "seosulla_02",
+            "area": "seosulla",
+            "name_ko": "갤러리 나우",
+            "name_en": "Gallery NoW",
+            "category": "place",
+            "tags": ["gallery", "artisan", "photo", "quiet"],
+            "desc_ko": "동시대 사진과 현대미술을 소개하는 아늑한 갤러리",
+            "desc_en": "Cosy gallery showcasing contemporary photography and art.",
+            "offbeat_score": 0.75
+        },
+        {
+            "id": "seosulla_03",
+            "area": "seosulla",
+            "name_ko": "금속공예 스튜디오 술라",
+            "name_en": "Studio Sulla",
+            "category": "experience",
+            "tags": ["craft", "artisan", "couple", "alley"],
+            "desc_ko": "금속 공예 작가의 작업실에서 배우는 원데이 클래스",
+            "desc_en": "Metal craft one-day classes taught by a local artisan.",
+            "offbeat_score": 0.88
+        },
+        {
+            "id": "seosulla_04",
+            "area": "seosulla",
+            "name_ko": "퀸즈가드",
+            "name_en": "Queen's Guard",
+            "category": "food",
+            "tags": ["drink", "bar", "british", "alley"],
+            "desc_ko": "서순라길 골목에 숨은 영국식 정통 진 바",
+            "desc_en": "Authentic British gin bar hidden in a narrow alleyway.",
+            "offbeat_score": 0.68
+        },
+        {
+            "id": "seosulla_05",
+            "area": "seosulla",
+            "name_ko": "우리소리박물관",
+            "name_en": "Seoul Museum of Gugak",
+            "category": "place",
+            "tags": ["history", "music", "traditional", "quiet"],
+            "desc_ko": "한국의 향토 민요를 감상하는 조용한 한옥 박물관",
+            "desc_en": "Quiet Hanok museum dedicated to Korean folk songs.",
+            "offbeat_score": 0.72
+        },
+        {
+            "id": "seosulla_06",
+            "area": "seosulla",
+            "name_ko": "종묘 담벼락 산책로",
+            "name_en": "Jongmyo Wall Path",
+            "category": "place",
+            "tags": ["alley", "history", "quiet", "photo"],
+            "desc_ko": "고즈넉한 종묘 돌담을 따라 걷는 비밀 산책길",
+            "desc_en": "Secret walking path along the serene Jongmyo stone wall.",
+            "offbeat_score": 0.65
+        },
+        {
+            "id": "huam_01",
+            "area": "huam",
+            "name_ko": "후암서재",
+            "name_en": "Huam-Saejae",
+            "category": "place",
+            "tags": ["bookshop", "quiet", "local", "solo"],
+            "desc_ko": "예약을 통해 나만의 서재로 이용하는 공유 공간",
+            "desc_en": "A private shared library space available by reservation.",
+            "offbeat_score": 0.92
+        },
+        {
+            "id": "huam_02",
+            "area": "huam",
+            "name_ko": "따팡",
+            "name_en": "Ta-pang",
+            "category": "food",
+            "tags": ["bakery", "local", "no-spicy", "warm"],
+            "desc_ko": "후암동 주민들이 아끼는 프랑스 정통 베이커리",
+            "desc_en": "Authentic French bakery loved by the local residents.",
+            "offbeat_score": 0.78
+        },
+        {
+            "id": "huam_03",
+            "area": "huam",
+            "name_ko": "후암주방",
+            "name_en": "Huam Kitchen",
+            "category": "experience",
+            "tags": ["craft", "local", "couple", "warm"],
+            "desc_ko": "누구에게나 열려 있는 아담한 공유 주방 체험",
+            "desc_en": "A small shared kitchen for cooking and social gatherings.",
+            "offbeat_score": 0.85
+        },
+        {
+            "id": "huam_04",
+            "area": "huam",
+            "name_ko": "아베크엘",
+            "name_en": "Avec El",
+            "category": "food",
+            "tags": ["cafe", "quiet", "photo", "warm"],
+            "desc_ko": "정갈한 사과 라떼가 유명한 조용한 감성 카페",
+            "desc_en": "Serene cafe famous for its signature apple latte.",
+            "offbeat_score": 0.62
+        },
+        {
+            "id": "huam_05",
+            "area": "huam",
+            "name_ko": "가야식당",
+            "name_en": "Gaya Restaurant",
+            "category": "food",
+            "tags": ["old", "local", "warm", "food"],
+            "desc_ko": "30년 넘게 자리를 지킨 후암동의 투박한 노포",
+            "desc_en": "Rugged old local restaurant with over 30 years of history.",
+            "offbeat_score": 0.89
+        },
+        {
+            "id": "huam_06",
+            "area": "huam",
+            "name_ko": "108계단",
+            "name_en": "108 Stairs",
+            "category": "place",
+            "tags": ["history", "local", "alley", "photo"],
+            "desc_ko": "해방의 역사를 품은 후암동의 상징적인 돌계단",
+            "desc_en": "Iconic stone steps with a deep history of liberation.",
+            "offbeat_score": 0.7
+        },
+        {
+            "id": "mullae_01",
+            "area": "mullae",
+            "name_ko": "대성금속 공방",
+            "name_en": "Daeseong Metal Workshop",
+            "category": "experience",
+            "tags": ["craft", "industrial", "artisan", "factory"],
+            "desc_ko": "철공소 골목에서 즐기는 금속 공예 체험",
+            "desc_en": "Metal craft experience in the heart of iron mill district.",
+            "offbeat_score": 0.91
+        },
+        {
+            "id": "mullae_02",
+            "area": "mullae",
+            "name_ko": "숙희",
+            "name_en": "Sookhee",
+            "category": "food",
+            "tags": ["bar", "whisky", "retro", "drink"],
+            "desc_ko": "인쇄소 간판 뒤 숨겨진 클래식 위스키 바",
+            "desc_en": "Hidden classic whisky bar behind an old print shop sign.",
+            "offbeat_score": 0.84
+        },
+        {
+            "id": "mullae_03",
+            "area": "mullae",
+            "name_ko": "문래 창작촌 벽화길",
+            "name_en": "Mullae Mural Path",
+            "category": "place",
+            "tags": ["artisan", "photo", "alley", "industrial"],
+            "desc_ko": "철공소와 예술이 공존하는 독특한 거리 풍경",
+            "desc_en": "Unique streetscape where iron mills and art coexist.",
+            "offbeat_score": 0.58
+        },
+        {
+            "id": "mullae_04",
+            "area": "mullae",
+            "name_ko": "영일분식",
+            "name_en": "Yeongil Bunsik",
+            "category": "food",
+            "tags": ["noodles", "old", "local", "spicy"],
+            "desc_ko": "철공소 인부들의 단골집이었던 칼비빔국수 맛집",
+            "desc_en": "Spicy mixed noodle shop, once a favorite of ironworkers.",
+            "offbeat_score": 0.65
+        },
+        {
+            "id": "mullae_05",
+            "area": "mullae",
+            "name_ko": "비닐하우스",
+            "name_en": "Vinyl House",
+            "category": "food",
+            "tags": ["bar", "industrial", "music", "rooftop"],
+            "desc_ko": "철공소 건물을 개조한 인더스트리얼 펍",
+            "desc_en": "Industrial pub renovated from an old factory building.",
+            "offbeat_score": 0.72
+        },
+        {
+            "id": "mullae_06",
+            "area": "mullae",
+            "name_ko": "공간 77",
+            "name_en": "Space 77",
+            "category": "place",
+            "tags": ["gallery", "industrial", "artisan", "quiet"],
+            "desc_ko": "로컬 예술가들의 작품이 전시되는 작은 대안 공간",
+            "desc_en": "Small alternative gallery displaying works of local artists.",
+            "offbeat_score": 0.89
+        },
+        {
+            "id": "yaksu_01",
+            "area": "yaksu",
+            "name_ko": "처가집",
+            "name_en": "Cheogajip",
+            "category": "food",
+            "tags": ["no-spicy", "old", "local", "warm"],
+            "desc_ko": "평양식 찜닭을 파는 마당 있는 오래된 가정집",
+            "desc_en": "Old house serving authentic Pyongyang-style steamed chicken.",
+            "offbeat_score": 0.87
+        },
+        {
+            "id": "yaksu_02",
+            "area": "yaksu",
+            "name_ko": "오프레코드",
+            "name_en": "Off the Record",
+            "category": "food",
+            "tags": ["vinyl", "music", "bar", "drink"],
+            "desc_ko": "방대한 바이닐 컬렉션을 갖춘 아지트 같은 바",
+            "desc_en": "Cozy hideout-style bar with a massive vinyl collection.",
+            "offbeat_score": 0.79
+        },
+        {
+            "id": "yaksu_03",
+            "area": "yaksu",
+            "name_ko": "도자기 공방 숨",
+            "name_en": "Ceramic Studio Soom",
+            "category": "experience",
+            "tags": ["pottery", "craft", "artisan", "quiet"],
+            "desc_ko": "약수동 언덕 위 조용한 도자기 빚기 체험",
+            "desc_en": "Quiet pottery classes on the peaceful hills of Yaksu.",
+            "offbeat_score": 0.83
+        },
+        {
+            "id": "yaksu_04",
+            "area": "yaksu",
+            "name_ko": "약수시장",
+            "name_en": "Yaksu Market",
+            "category": "place",
+            "tags": ["market", "local", "traditional", "old"],
+            "desc_ko": "관광지화 되지 않은 서울의 민낯을 담은 시장",
+            "desc_en": "An authentic local market showing the raw side of Seoul.",
+            "offbeat_score": 0.64
+        },
+        {
+            "id": "yaksu_05",
+            "area": "yaksu",
+            "name_ko": "커피 그래",
+            "name_en": "Coffee Grae",
+            "category": "food",
+            "tags": ["cafe", "quiet", "local", "drink-light"],
+            "desc_ko": "진득한 필터 커피를 내리는 동네 사랑방 카페",
+            "desc_en": "Local favorite cafe known for its deep filter coffee.",
+            "offbeat_score": 0.71
+        },
+        {
+            "id": "yaksu_06",
+            "area": "yaksu",
+            "name_ko": "만포막국수",
+            "name_en": "Manpo Makguksu",
+            "category": "food",
+            "tags": ["noodles", "dumplings", "old", "local"],
+            "desc_ko": "이북식 찜닭과 막국수로 유명한 40년 노포",
+            "desc_en": "40-year-old shop famous for North Korean style noodles.",
+            "offbeat_score": 0.6
+        },
+        {
+            "id": "seongbuk_01",
+            "area": "seongbuk",
+            "name_ko": "수연산방",
+            "name_en": "Suyeonsanbang",
+            "category": "food",
+            "tags": ["hanok", "traditional", "quiet", "cafe"],
+            "desc_ko": "상허 이태준 소설가의 고택에서 즐기는 전통차",
+            "desc_en": "Traditional tea in the historic home of a famous novelist.",
+            "offbeat_score": 0.68
+        },
+        {
+            "id": "seongbuk_02",
+            "area": "seongbuk",
+            "name_ko": "성북동 비둘기",
+            "name_en": "Seongbuk-dong Dove",
+            "category": "place",
+            "tags": ["bookshop", "history", "artisan", "quiet"],
+            "desc_ko": "문학적 영감이 가득한 작은 독립 서점",
+            "desc_en": "Small independent bookstore full of literary inspiration.",
+            "offbeat_score": 0.85
+        },
+        {
+            "id": "seongbuk_03",
+            "area": "seongbuk",
+            "name_ko": "우리옛돌박물관",
+            "name_en": "Korean Stone Art Museum",
+            "category": "experience",
+            "tags": ["history", "artisan", "traditional", "outdoor"],
+            "desc_ko": "옛 석조 유물들을 만날 수 있는 산속 박물관",
+            "desc_en": "Mountain museum showcasing ancient Korean stone artifacts.",
+            "offbeat_score": 0.74
+        },
+        {
+            "id": "seongbuk_04",
+            "area": "seongbuk",
+            "name_ko": "성북동 면옥집",
+            "name_en": "Seongbuk-dong Myeonok",
+            "category": "food",
+            "tags": ["warm", "noodles", "local", "family"],
+            "desc_ko": "부드러운 갈비찜과 냉면이 일품인 동네 맛집",
+            "desc_en": "Local spot known for tender braised ribs and cold noodles.",
+            "offbeat_score": 0.59
+        },
+        {
+            "id": "seongbuk_05",
+            "area": "seongbuk",
+            "name_ko": "조셉의 커피나무",
+            "name_en": "Joseph's Coffee Tree",
+            "category": "food",
+            "tags": ["cafe", "rooftop", "vintage", "quiet"],
+            "desc_ko": "성북동 전경이 내려다보이는 빈티지한 카페",
+            "desc_en": "Vintage cafe with a panoramic view of Seongbuk-dong.",
+            "offbeat_score": 0.72
+        },
+        {
+            "id": "seongbuk_06",
+            "area": "seongbuk",
+            "name_ko": "성북동 조각공원",
+            "name_en": "Seongbuk Sculpture Park",
+            "category": "place",
+            "tags": ["artisan", "quiet", "photo", "local"],
+            "desc_ko": "길가에 놓인 조각 작품들을 따라 걷는 산책길",
+            "desc_en": "A quiet walking path decorated with local sculptures.",
+            "offbeat_score": 0.8
+        },
+        {
+            "id": "changsin_01",
+            "area": "changsin",
+            "name_ko": "이음피움 봉제역사관",
+            "name_en": "Ieum-Pium Sewing Museum",
+            "category": "place",
+            "tags": ["history", "factory", "artisan", "quiet"],
+            "desc_ko": "창신동 봉제 역사를 한눈에 보는 아카이브",
+            "desc_en": "An archive showcasing the sewing history of Changsin-dong.",
+            "offbeat_score": 0.82
+        },
+        {
+            "id": "changsin_02",
+            "area": "changsin",
+            "name_ko": "낙산냉면",
+            "name_en": "Naksan Naengmyeon",
+            "category": "food",
+            "tags": ["noodles", "spicy", "old", "local"],
+            "desc_ko": "매운맛 단계 조절이 가능한 창신동 대표 냉면",
+            "desc_en": "Famous spicy cold noodles with adjustable heat levels.",
+            "offbeat_score": 0.64
+        },
+        {
+            "id": "changsin_03",
+            "area": "changsin",
+            "name_ko": "봉제 골목 공방",
+            "name_en": "Sewing Alley Workshop",
+            "category": "experience",
+            "tags": ["craft", "artisan", "factory", "traditional"],
+            "desc_ko": "현직 기술자에게 직접 배우는 기초 미싱 체험",
+            "desc_en": "Basic sewing classes taught by local industry experts.",
+            "offbeat_score": 0.94
+        },
+        {
+            "id": "changsin_04",
+            "area": "changsin",
+            "name_ko": "창신골목시장",
+            "name_en": "Changsin Alley Market",
+            "category": "place",
+            "tags": ["market", "local", "traditional", "old"],
+            "desc_ko": "서민들의 삶이 녹아 있는 좁고 활기찬 시장",
+            "desc_en": "A narrow and vibrant market reflecting local everyday life.",
+            "offbeat_score": 0.7
+        },
+        {
+            "id": "changsin_05",
+            "area": "changsin",
+            "name_ko": "창신동 돌산 밑 길",
+            "name_en": "Changsin Rock Hill Path",
+            "category": "place",
+            "tags": ["alley", "photo", "history", "industrial"],
+            "desc_ko": "채석장 터의 거친 절벽이 보이는 독특한 골목",
+            "desc_en": "Unique alley with a view of a raw abandoned quarry cliff.",
+            "offbeat_score": 0.88
+        },
+        {
+            "id": "changsin_06",
+            "area": "changsin",
+            "name_ko": "동대문 매운족발",
+            "name_en": "Dongdaemun Spicy Jokbal",
+            "category": "food",
+            "tags": ["spicy", "old", "local", "food"],
+            "desc_ko": "강렬한 불맛의 매운 족발을 맛볼 수 있는 곳",
+            "desc_en": "A spot for intense, smoky, and spicy braised pig's feet.",
+            "offbeat_score": 0.6
+        },
+        {
+            "id": "hyehwa_01",
+            "area": "hyehwa",
+            "name_ko": "학림다방",
+            "name_en": "Hakrim Dabang",
+            "category": "food",
+            "tags": ["cafe", "old", "music", "retro"],
+            "desc_ko": "1956년부터 자리를 지켜온 예술가들의 아지트",
+            "desc_en": "A historic hideout for artists since 1956.",
+            "offbeat_score": 0.55
+        },
+        {
+            "id": "hyehwa_02",
+            "area": "hyehwa",
+            "name_ko": "장면 가옥",
+            "name_en": "Chang Myon House",
+            "category": "place",
+            "tags": ["history", "quiet", "hanok", "traditional"],
+            "desc_ko": "근대 역사가 숨 쉬는 고요한 등록 문화재 가옥",
+            "desc_en": "A quiet historic house registered as a cultural asset.",
+            "offbeat_score": 0.81
+        },
+        {
+            "id": "hyehwa_03",
+            "area": "hyehwa",
+            "name_ko": "연극 연습실 투어",
+            "name_en": "Theater Studio Tour",
+            "category": "experience",
+            "tags": ["artisan", "alley", "local", "music"],
+            "desc_ko": "대학로 뒷골목의 소극장 연습실을 둘러보는 경험",
+            "desc_en": "Visiting small rehearsal studios in the theater district.",
+            "offbeat_score": 0.93
+        },
+        {
+            "id": "hyehwa_04",
+            "area": "hyehwa",
+            "name_ko": "동양서림",
+            "name_en": "Dongyang Bookstore",
+            "category": "place",
+            "tags": ["bookshop", "old", "history", "local"],
+            "desc_ko": "60년 넘게 혜화를 지켜온 유서 깊은 서점",
+            "desc_en": "Historic bookstore serving the area for over 60 years.",
+            "offbeat_score": 0.72
+        },
+        {
+            "id": "hyehwa_05",
+            "area": "hyehwa",
+            "name_ko": "나누미떡볶이",
+            "name_en": "Nanumi Tteokbokki",
+            "category": "food",
+            "tags": ["spicy", "snack", "old", "local"],
+            "desc_ko": "쌀떡의 쫀득함이 살아있는 추억의 떡볶이",
+            "desc_en": "Nostalgic tteokbokki with perfectly chewy rice cakes.",
+            "offbeat_score": 0.65
+        },
+        {
+            "id": "hyehwa_06",
+            "area": "hyehwa",
+            "name_ko": "낙산공원 성곽길",
+            "name_en": "Naksan Wall Trail",
+            "category": "place",
+            "tags": ["photo", "rooftop", "couple", "quiet"],
+            "desc_ko": "서울 성곽을 따라 걷는 가장 아름다운 밤길",
+            "desc_en": "Beautiful night walk along the Seoul Fortress Wall.",
+            "offbeat_score": 0.58
+        },
+        {
+            "id": "sangsu_01",
+            "area": "sangsu",
+            "name_ko": "제비다방",
+            "name_en": "Jebi Dabang",
+            "category": "food",
+            "tags": ["cafe", "bar", "music", "underground"],
+            "desc_ko": "낮에는 카페, 밤에는 라이브 공연이 열리는 술집",
+            "desc_en": "Cafe by day and live music bar by night.",
+            "offbeat_score": 0.65
+        },
+        {
+            "id": "sangsu_02",
+            "area": "sangsu",
+            "name_ko": "포르투갈 식당",
+            "name_en": "Portuguese Table",
+            "category": "food",
+            "tags": ["food", "warm", "quiet", "local"],
+            "desc_ko": "상수동 골목 안 소담한 포르투갈 가정식",
+            "desc_en": "Cozy Portuguese home cooking in a quiet Sangsu alley.",
+            "offbeat_score": 0.82
+        },
+        {
+            "id": "sangsu_03",
+            "area": "sangsu",
+            "name_ko": "바이닐 공방",
+            "name_en": "Vinyl Workshop",
+            "category": "experience",
+            "tags": ["vinyl", "music", "craft", "couple"],
+            "desc_ko": "나만의 음악 취향을 공유하며 즐기는 청음 클래스",
+            "desc_en": "Listening classes to share and explore music tastes.",
+            "offbeat_score": 0.89
+        },
+        {
+            "id": "sangsu_04",
+            "area": "sangsu",
+            "name_ko": "편집숍 가가린",
+            "name_en": "Gagarin",
+            "category": "place",
+            "tags": ["stationery", "artisan", "gallery", "alley"],
+            "desc_ko": "예술적 감성이 돋보이는 독립 소품 편집숍",
+            "desc_en": "Independent shop featuring artistic stationery and goods.",
+            "offbeat_score": 0.77
+        },
+        {
+            "id": "sangsu_05",
+            "area": "sangsu",
+            "name_ko": "당인리선로길",
+            "name_en": "Dangin-ri Track Path",
+            "category": "place",
+            "tags": ["alley", "quiet", "photo", "local"],
+            "desc_ko": "기찻길의 흔적이 남은 호젓한 골목길",
+            "desc_en": "A quiet alley with traces of an old railway track.",
+            "offbeat_score": 0.73
+        },
+        {
+            "id": "sangsu_06",
+            "area": "sangsu",
+            "name_ko": "만뽀",
+            "name_en": "Manppo",
+            "category": "food",
+            "tags": ["japanese", "food", "no-spicy", "quiet"],
+            "desc_ko": "장인 정신이 느껴지는 일본식 가정식 덮밥",
+            "desc_en": "Authentic Japanese-style rice bowls made with care.",
+            "offbeat_score": 0.68
+        },
+        {
+            "id": "euljiro_01",
+            "area": "euljiro",
+            "name_ko": "커피한약방",
+            "name_en": "Coffee Hanyakbang",
+            "category": "food",
+            "tags": ["cafe", "retro", "alley", "photo"],
+            "desc_ko": "좁은 골목 끝, 조선시대 혜민서 터에 자리한 카페",
+            "desc_en": "Cafe located in a narrow alley on an old clinic site.",
+            "offbeat_score": 0.62
+        },
+        {
+            "id": "euljiro_02",
+            "area": "euljiro",
+            "name_ko": "세운상가 오락실",
+            "name_en": "Sewoon Arcade",
+            "category": "place",
+            "tags": ["industrial", "retro", "history", "local"],
+            "desc_ko": "80년대 전자 상가의 분위기가 남은 레트로 게임장",
+            "desc_en": "Retro arcade retaining the 80s electronics market vibe.",
+            "offbeat_score": 0.75
+        },
+        {
+            "id": "euljiro_03",
+            "area": "euljiro",
+            "name_ko": "만들자 공방",
+            "name_en": "Mandulja Workshop",
+            "category": "experience",
+            "tags": ["craft", "industrial", "artisan", "factory"],
+            "desc_ko": "을지로 장인들에게 배우는 금속 조명 제작",
+            "desc_en": "Metal lamp making classes taught by Euljiro masters.",
+            "offbeat_score": 0.91
+        },
+        {
+            "id": "euljiro_04",
+            "area": "euljiro",
+            "name_ko": "산수갑산",
+            "name_en": "Sansu Gapsan",
+            "category": "food",
+            "tags": ["food", "old", "local", "traditional"],
+            "desc_ko": "투박한 대창 순대가 일품인 노포 순댓국집",
+            "desc_en": "Legendary spot for thick and authentic blood sausages.",
+            "offbeat_score": 0.68
+        },
+        {
+            "id": "euljiro_05",
+            "area": "euljiro",
+            "name_ko": "신도시",
+            "name_en": "Seendosi",
+            "category": "food",
+            "tags": ["bar", "vinyl", "industrial", "drink"],
+            "desc_ko": "낡은 인쇄소 건물 5층에 숨겨진 몽환적인 펍",
+            "desc_en": "Dreamy pub hidden on the 5th floor of a print shop.",
+            "offbeat_score": 0.84
+        },
+        {
+            "id": "euljiro_06",
+            "area": "euljiro",
+            "name_ko": "인쇄소 골목 투어",
+            "name_en": "Print Shop Alley Tour",
+            "category": "place",
+            "tags": ["alley", "industrial", "history", "photo"],
+            "desc_ko": "종이 냄새와 기계 소리가 가득한 삶의 현장",
+            "desc_en": "Active industrial alley full of paper smell and machines.",
+            "offbeat_score": 0.7
+        },
+        {
+            "id": "yeonhui_01",
+            "area": "yeonhui",
+            "name_ko": "글월",
+            "name_en": "Geulwoll",
+            "category": "place",
+            "tags": ["stationery", "quiet", "artisan", "local"],
+            "desc_ko": "편지를 쓰고 보내는 경험을 파는 편지 가게",
+            "desc_en": "A stationery shop selling the experience of letter writing.",
+            "offbeat_score": 0.88
+        },
+        {
+            "id": "yeonhui_02",
+            "area": "yeonhui",
+            "name_ko": "목공방 나무그늘",
+            "name_en": "Tree Shade Woodworking",
+            "category": "experience",
+            "tags": ["craft", "pottery", "artisan", "warm"],
+            "desc_ko": "나무의 결을 만지며 나만의 도마를 만드는 곳",
+            "desc_en": "Workshop for crafting personalized wooden cutting boards.",
+            "offbeat_score": 0.85
+        },
+        {
+            "id": "yeonhui_03",
+            "area": "yeonhui",
+            "name_ko": "연희동 칼국수",
+            "name_en": "Yeonhui-dong Kalguksu",
+            "category": "food",
+            "tags": ["noodles", "old", "local", "warm"],
+            "desc_ko": "진한 사골 육수로 이름난 연희동의 터줏대감",
+            "desc_en": "Famous local spot known for deep beef bone broth noodles.",
+            "offbeat_score": 0.6
+        },
+        {
+            "id": "yeonhui_04",
+            "area": "yeonhui",
+            "name_ko": "희락",
+            "name_en": "Heerak",
+            "category": "food",
+            "tags": ["dumplings", "old", "local", "food"],
+            "desc_ko": "화상(華商)이 운영하는 육즙 가득한 만두 맛집",
+            "desc_en": "Authentic Chinese-style juicy dumplings in a quiet street.",
+            "offbeat_score": 0.78
+        },
+        {
+            "id": "yeonhui_05",
+            "area": "yeonhui",
+            "name_ko": "연희동 사진관",
+            "name_en": "Yeonhui-dong Studio",
+            "category": "place",
+            "tags": ["photo", "vintage", "quiet", "couple"],
+            "desc_ko": "흑백 사진으로 추억을 남기는 아날로그 사진관",
+            "desc_en": "Analog photo studio specializing in black and white prints.",
+            "offbeat_score": 0.67
+        },
+        {
+            "id": "yeonhui_06",
+            "area": "yeonhui",
+            "name_ko": "궁뜰 어린이공원 골목",
+            "name_en": "Gungtteul Alley",
+            "category": "place",
+            "tags": ["alley", "quiet", "residential", "local"],
+            "desc_ko": "아기자기한 주택들이 모여 있는 평화로운 산책로",
+            "desc_en": "Peaceful walking path lined with charming houses.",
+            "offbeat_score": 0.74
+        },
+        {
+            "id": "haebangchon_01",
+            "area": "haebangchon",
+            "name_ko": "신흥시장",
+            "name_en": "Sinheung Market",
+            "category": "place",
+            "tags": ["market", "retro", "alley", "photo"],
+            "desc_ko": "낡은 시장 건물 안에 힙한 공간들이 모인 곳",
+            "desc_en": "A hub of hip spaces inside a weathered old market building.",
+            "offbeat_score": 0.58
+        },
+        {
+            "id": "haebangchon_02",
+            "area": "haebangchon",
+            "name_ko": "별책부록",
+            "name_en": "Byeolcheck",
+            "category": "place",
+            "tags": ["bookshop", "quiet", "artisan", "solo"],
+            "desc_ko": "예술과 디자인 서적이 가득한 독립 서점",
+            "desc_en": "Independent bookstore focused on art and design books.",
+            "offbeat_score": 0.72
+        },
+        {
+            "id": "haebangchon_03",
+            "area": "haebangchon",
+            "name_ko": "가죽공방 본",
+            "name_en": "Leather Workshop Bon",
+            "category": "experience",
+            "tags": ["craft", "artisan", "couple", "warm"],
+            "desc_ko": "언덕 위 풍경을 보며 즐기는 가죽 소품 만들기",
+            "desc_en": "Leather crafting with a beautiful view of the hillside.",
+            "offbeat_score": 0.88
+        },
+        {
+            "id": "haebangchon_04",
+            "area": "haebangchon",
+            "name_ko": "노아",
+            "name_en": "Noah",
+            "category": "food",
+            "tags": ["food", "spicy", "local", "warm"],
+            "desc_ko": "해방촌 주민들이 줄 서서 먹는 작은 파스타 집",
+            "desc_en": "A tiny pasta restaurant loved by the local community.",
+            "offbeat_score": 0.79
+        },
+        {
+            "id": "haebangchon_05",
+            "area": "haebangchon",
+            "name_ko": "더 로열 푸드 앤 드링크",
+            "name_en": "The Royal Food & Drink",
+            "category": "food",
+            "tags": ["rooftop", "drink", "photo", "cafe"],
+            "desc_ko": "서울 시내가 한눈에 들어오는 루프탑 브런치 카페",
+            "desc_en": "Rooftop brunch cafe with a stunning view of Seoul.",
+            "offbeat_score": 0.61
+        },
+        {
+            "id": "haebangchon_06",
+            "area": "haebangchon",
+            "name_ko": "해방촌 예술인 거리",
+            "name_en": "HBC Art Street",
+            "category": "place",
+            "tags": ["artisan", "alley", "local", "photo"],
+            "desc_ko": "골목마다 예술가들의 흔적이 담긴 벽화와 조형물",
+            "desc_en": "Alleys filled with murals and artworks by local artists.",
+            "offbeat_score": 0.75
+        },
+        {
+            "id": "tongin_01",
+            "area": "tongin",
+            "name_ko": "기름떡볶이",
+            "name_en": "Oil Tteokbokki",
+            "category": "food",
+            "tags": ["spicy", "snack", "traditional", "market"],
+            "desc_ko": "가마솥 뚜껑에 볶아내는 통인시장만의 명물",
+            "desc_en": "Tongin Market's specialty fried on a cauldron lid.",
+            "offbeat_score": 0.58
+        },
+        {
+            "id": "tongin_02",
+            "area": "tongin",
+            "name_ko": "청전 이상범 가옥",
+            "name_en": "Yi Sang-beom House",
+            "category": "place",
+            "tags": ["history", "hanok", "quiet", "artisan"],
+            "desc_ko": "한국화의 거장이 머물던 단아한 한옥 화실",
+            "desc_en": "The elegant Hanok studio of a master Korean painter.",
+            "offbeat_score": 0.83
+        },
+        {
+            "id": "tongin_03",
+            "area": "tongin",
+            "name_ko": "전통 매듭 체험",
+            "name_en": "Traditional Knot Class",
+            "category": "experience",
+            "tags": ["craft", "traditional", "artisan", "hanok"],
+            "desc_ko": "한옥 마루에서 배우는 섬세한 전통 매듭 공예",
+            "desc_en": "Intricate traditional knotting classes in a Hanok.",
+            "offbeat_score": 0.9
+        },
+        {
+            "id": "tongin_04",
+            "area": "tongin",
+            "name_ko": "서촌 갤러리 골목",
+            "name_en": "Seochon Gallery Alley",
+            "category": "place",
+            "tags": ["gallery", "alley", "quiet", "artisan"],
+            "desc_ko": "담장 너머 작은 전시들이 숨어 있는 골목 투어",
+            "desc_en": "Alley tour featuring small galleries hidden behind walls.",
+            "offbeat_score": 0.74
+        },
+        {
+            "id": "tongin_05",
+            "area": "tongin",
+            "name_ko": "영화루",
+            "name_en": "Yeonghwaru",
+            "category": "food",
+            "tags": ["spicy", "old", "local", "food"],
+            "desc_ko": "50년 넘게 운영 중인 고추 간짜장 명가",
+            "desc_en": "50-year-old shop famous for spicy chili black bean noodles.",
+            "offbeat_score": 0.65
+        },
+        {
+            "id": "tongin_06",
+            "area": "tongin",
+            "name_ko": "보안여관",
+            "name_en": "Boan Inn",
+            "category": "place",
+            "tags": ["history", "gallery", "bookshop", "artisan"],
+            "desc_ko": "여관에서 복합문화공간으로 재탄생한 역사적 장소",
+            "desc_en": "An old inn transformed into a complex cultural space.",
+            "offbeat_score": 0.69
+        }
+    ]
+}
