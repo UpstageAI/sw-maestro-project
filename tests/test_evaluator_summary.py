@@ -11,7 +11,7 @@ from autocoin_ai.constants import (
     LIFECYCLE_NO_ORDER,
     LIFECYCLE_READY_FOR_BE,
 )
-from autocoin_ai.models import ensure_state_shape
+from autocoin_ai.models import AgentState, ensure_state_shape
 from autocoin_ai.nodes.evaluator import evaluator_node
 
 MOCK_LLM_RESP = {
@@ -22,7 +22,7 @@ MOCK_LLM_RESP = {
 }
 
 
-def _base_state(lifecycle: str, extra: dict | None = None) -> dict:
+def _base_state(lifecycle: str, extra: dict | None = None) -> AgentState:
     state = {
         "run_id": "test_eval",
         "request_context": {
@@ -70,6 +70,36 @@ def _base_state(lifecycle: str, extra: dict | None = None) -> dict:
             "run_summary": {},
         },
     }
+    if extra:
+        state.update(extra)
+    return ensure_state_shape(state)
+
+
+def _non_agentic_state(lifecycle: str, extra: dict | None = None) -> AgentState:
+    state = _base_state(
+        lifecycle,
+        {
+            "trader_id": "",
+            "llm_proposal": {},
+            "risk_tool_calls": [],
+            "risk_assessment": {"verdict": "ALLOW", "fail_reason": None, "tools_called": []},
+            "verification_checks": [
+                {"name": "initial_request_contract", "stage": "policy", "result": "pass", "evidence_refs": ["request_context"]},
+                {"name": "policy_context_available", "stage": "policy", "result": "pass", "evidence_refs": ["policy_context.policy_refs[0]"]},
+                {"name": "policy_context_grounded", "stage": "policy", "result": "pass", "evidence_refs": ["trader_principles"]},
+                {"name": "risk_gate_rules", "stage": "risk", "result": "pass", "evidence_refs": ["normalized_order_intent"]},
+            ],
+            "decision_trace": {
+                "intake": {"reason_codes": [], "evidence_refs": [], "final_action": ""},
+                "policy": {"reason_codes": ["ORDER_INTENT_NORMALIZED", "POLICY_GROUNDED"], "evidence_refs": ["policy_context.policy_refs[0]", "trader_principles"], "final_action": "PASS"},
+                "strategy": {"reason_codes": [], "evidence_refs": [], "final_action": ""},
+                "risk": {"reason_codes": ["ALL_CHECKS_PASSED"], "evidence_refs": ["verification_checks[-1]"], "final_action": "PASS"},
+                "evaluator": {},
+                "execution": {},
+                "run_summary": {},
+            },
+        },
+    )
     if extra:
         state.update(extra)
     return ensure_state_shape(state)
@@ -125,3 +155,30 @@ def test_evaluator_skips_failed():
     result = evaluator_node(state)
     assert result["lifecycle_status"] == LIFECYCLE_FAILED
     assert result.get("evaluator_review", {}) == {}
+
+
+def test_evaluator_non_agentic_hold_does_not_require_agentic_stages():
+    state = _non_agentic_state(
+        LIFECYCLE_HOLD,
+        {
+            "hold_reason": HOLD_LOW_CONVICTION,
+            "risk_assessment": {"verdict": "HOLD", "fail_reason": "LOW_CONVICTION", "tools_called": []},
+            "decision_trace": {
+                "intake": {"reason_codes": [], "evidence_refs": [], "final_action": ""},
+                "policy": {"reason_codes": ["ORDER_INTENT_NORMALIZED", "POLICY_GROUNDED"], "evidence_refs": ["policy_context.policy_refs[0]", "trader_principles"], "final_action": "PASS"},
+                "strategy": {"reason_codes": [], "evidence_refs": [], "final_action": ""},
+                "risk": {"reason_codes": ["LOW_CONVICTION"], "evidence_refs": ["verification_checks[-1]"], "final_action": LIFECYCLE_HOLD},
+                "evaluator": {},
+                "execution": {},
+                "run_summary": {},
+            },
+        },
+    )
+    hold_resp = dict(MOCK_LLM_RESP, summary="낮은 확신으로 홀드.", reason_codes=["HOLD_LOW_CONVICTION"])
+
+    with patch("autocoin_ai.nodes.evaluator.gemini_generate", return_value=hold_resp):
+        result = evaluator_node(state)
+
+    assert result["lifecycle_status"] == LIFECYCLE_HOLD
+    assert result["evaluator_review"]["schema_warnings"] == []
+    assert result["decision_trace"]["evaluator"]["final_action"] == LIFECYCLE_HOLD

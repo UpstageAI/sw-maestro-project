@@ -7,7 +7,7 @@ import autocoin_ai.tools.market_tools
 import autocoin_ai.tools.policy_tools
 from fastapi.testclient import TestClient
 
-from autocoin_ai.constants import LIFECYCLE_HOLD, LIFECYCLE_READY_FOR_BE, LIFECYCLE_REPORT_READY
+from autocoin_ai.constants import LIFECYCLE_HOLD, LIFECYCLE_NO_ORDER, LIFECYCLE_READY_FOR_BE, LIFECYCLE_REPORT_READY
 from autocoin_ai.http_api import app, create_app
 from autocoin_ai.llm import StepResult
 from autocoin_ai.run_store import JsonFileRunStore
@@ -46,6 +46,29 @@ def test_start_endpoint_returns_canonical_agent_state():
     assert payload["run_id"] == "airun_test_001"
     assert payload["lifecycle_status"] == LIFECYCLE_READY_FOR_BE
     assert set(("policy", "risk", "evaluator", "execution", "run_summary")).issubset(payload["decision_trace"].keys())
+    assert payload["evaluator_review"]["summary"]
+
+
+def test_start_endpoint_returns_evaluator_review_for_hold_run():
+    with TestClient(app) as client:
+        response = client.post("/runs/start", json=request_with_user_input(market_snapshot_fresh=False))
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["lifecycle_status"] == LIFECYCLE_HOLD
+    assert payload["evaluator_review"]["reason_codes"]
+    assert payload["decision_trace"]["run_summary"]["final_action"] == LIFECYCLE_HOLD
+
+
+def test_start_endpoint_returns_evaluator_review_for_no_order_run():
+    with TestClient(app) as client:
+        response = client.post("/runs/start", json=request_with_user_input(symbol="DOGEUSDT"))
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["lifecycle_status"] == LIFECYCLE_NO_ORDER
+    assert payload["evaluator_review"]["summary"]
+    assert payload["decision_trace"]["run_summary"]["final_action"] == LIFECYCLE_NO_ORDER
 
 
 def test_start_agentic_endpoint_returns_canonical_agent_state():

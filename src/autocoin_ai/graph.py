@@ -7,7 +7,7 @@ from typing import Any
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 
-from autocoin_ai.constants import LIFECYCLE_FAILED, LIFECYCLE_HOLD, LIFECYCLE_READY_FOR_BE
+from autocoin_ai.constants import LIFECYCLE_FAILED, LIFECYCLE_HOLD
 from autocoin_ai.models import AgentState
 from autocoin_ai.nodes.evaluator import evaluator_node
 from autocoin_ai.nodes.execution import execution_node
@@ -26,9 +26,9 @@ def route_after_policy(state: AgentState) -> str:
 
 
 def route_after_risk(state: AgentState) -> str:
-    if state.get("lifecycle_status") == LIFECYCLE_READY_FOR_BE:
-        return "evaluator"
-    return END
+    if state.get("lifecycle_status") == LIFECYCLE_FAILED:
+        return END
+    return "evaluator"
 
 
 # --- Agentic graph routing (§10.2) ---

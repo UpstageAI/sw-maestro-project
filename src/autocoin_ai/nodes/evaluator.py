@@ -14,6 +14,7 @@ def evaluator_node(state: AgentState) -> AgentState:
     if lifecycle == LIFECYCLE_FAILED:
         return next_state
 
+    is_agentic = bool(next_state.get("trader_id"))
     proposal = next_state.get("llm_proposal", {})
     risk_assessment = next_state.get("risk_assessment", {})
     trader_principles = next_state.get("trader_principles", [])
@@ -22,7 +23,7 @@ def evaluator_node(state: AgentState) -> AgentState:
     risk_tool_calls = next_state.get("risk_tool_calls", [])
     intent = next_state.get("normalized_order_intent", {})
 
-    action = str(proposal.get("action", ""))
+    action = str(proposal.get("action") or intent.get("side", ""))
     symbol = str(intent.get("symbol", ""))
     size_usd = str(proposal.get("size_usd", intent.get("quoteOrderQty", "0")))
     verdict = str(risk_assessment.get("verdict", ""))
@@ -32,17 +33,22 @@ def evaluator_node(state: AgentState) -> AgentState:
     pre_warnings: list[str] = []
 
     # Check 1: decision_trace stages filled (except run_summary)
-    required_stages = ("intake", "policy", "strategy", "risk", "evaluator")
+    required_stages = ("intake", "policy", "strategy", "risk") if is_agentic else ("policy", "risk")
     for stage in required_stages:
         if stage not in decision_trace or not decision_trace[stage]:
             pre_warnings.append("decision_trace missing stage: %s" % stage)
 
-    # Check 2: verification_checks has strategy pass (when not FAILED)
-    has_strategy_pass = any(
-        c.get("stage") == "strategy" and c.get("result") == "pass" for c in checks
-    )
-    if not has_strategy_pass:
-        pre_warnings.append("verification_checks missing strategy pass")
+    # Check 2: verification_checks has required stage passes.
+    if is_agentic:
+        has_strategy_pass = any(
+            c.get("stage") == "strategy" and c.get("result") == "pass" for c in checks
+        )
+        if not has_strategy_pass:
+            pre_warnings.append("verification_checks missing strategy pass")
+    else:
+        has_policy_pass = any(c.get("stage") == "policy" and c.get("result") == "pass" for c in checks)
+        if not has_policy_pass:
+            pre_warnings.append("verification_checks missing policy pass")
 
     # Check 3: risk_tool_calls matches risk_assessment.tools_called
     tools_from_calls = [t["tool"] for t in risk_tool_calls]
@@ -59,9 +65,12 @@ def evaluator_node(state: AgentState) -> AgentState:
     if hallucinated:
         pre_warnings.append("hallucinated principle titles: %s" % hallucinated)
 
-    prompt = _build_prompt(lifecycle, hold_reason=next_state.get("hold_reason"), proposal=proposal,
-                            risk_assessment=risk_assessment, decision_trace=decision_trace,
-                            pre_warnings=pre_warnings)
+    prompt_proposal = dict(proposal)
+    prompt_proposal.setdefault("action", action)
+    prompt_proposal.setdefault("size_usd", size_usd)
+    prompt = _build_prompt(lifecycle, hold_reason=next_state.get("hold_reason"), proposal=prompt_proposal,
+                             risk_assessment=risk_assessment, decision_trace=decision_trace,
+                             pre_warnings=pre_warnings)
 
     try:
         review = gemini_generate(prompt, EVALUATOR_SCHEMA, EVALUATOR_SYSTEM_INSTRUCTION)
