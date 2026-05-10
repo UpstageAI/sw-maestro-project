@@ -61,7 +61,7 @@ uvicorn app.main:app --reload --port 8000
 | `AI_SERVICE_HTTP_URL` | `http://localhost:8001` | AI 서비스 URL |
 | `APP_ENV` | `local` | `local` \| `demo` \| `testnet` |
 | `LOG_LEVEL` | `INFO` | 로그 레벨 |
-| `CORS_ORIGINS` | `["http://localhost:3000"]` | CORS 허용 오리진 |
+| `CORS_ORIGINS` | `["http://localhost:3000"]` | 추가 허용 오리진 목록. `APP_ENV=local`이면 `http://localhost:5173`, `http://127.0.0.1:5173` 가 자동 병합됨 |
 
 ## API 엔드포인트
 
@@ -74,6 +74,7 @@ uvicorn app.main:app --reload --port 8000
 | GET | `/api/v1/testnet/klines` | 캔들 데이터 조회 |
 | POST | `/api/v1/testnet/orders` | 주문 생성 (AI Gateway 연동) |
 | POST | `/api/v1/testnet/orders/resume` | HOLD run 재개 |
+| GET | `/api/v1/testnet/orders/report` | runId 기준 최종 리포트 조회 |
 | GET | `/api/v1/testnet/orders/status` | 주문 상태 조회 |
 | DELETE | `/api/v1/testnet/orders` | 주문 취소 |
 | GET | `/api/v1/testnet/stream/status` | WebSocket 스트림 상태 |
@@ -114,15 +115,15 @@ BE/
 
 ## 응답 포맷
 
-모든 응답은 camelCase JSON으로 반환됩니다.
+성공 응답은 camelCase JSON으로 반환됩니다.
 
 에러 응답:
 ```json
 {
-  "errorCode": "REQUEST_FAILED",
+  "error_code": "REQUEST_FAILED",
   "message": "사람이 읽을 수 있는 메시지",
   "detail": "기술적 상세 내용",
-  "requestId": "req_a1b2c3d4",
+  "request_id": "req_a1b2c3d4",
   "timestamp": "2026-01-01T00:00:00+00:00"
 }
 ```

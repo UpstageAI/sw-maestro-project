@@ -3,7 +3,7 @@
 Coin Agent BE — Binance Spot Testnet 전용 백엔드 API 명세.
 
 - Base URL: `http://localhost:8000`
-- 모든 응답은 **camelCase JSON**
+- 성공 응답은 **camelCase JSON**
 - 인증: 서버가 환경 변수의 API Key / Secret으로 Binance Testnet에 서명하여 호출 (클라이언트는 별도 인증 불필요)
 
 ---
@@ -19,6 +19,7 @@ Coin Agent BE — Binance Spot Testnet 전용 백엔드 API 명세.
 | `GET /api/v1/testnet/klines` | ✅ 구현 완료 |
 | `POST /api/v1/testnet/orders` | ✅ 구현 완료 (AI Gateway 연동) |
 | `POST /api/v1/testnet/orders/resume` | ✅ 구현 완료 (HOLD run resume) |
+| `GET /api/v1/testnet/orders/report` | ✅ 구현 완료 (persisted published report 조회) |
 | `GET /api/v1/testnet/orders/status` | ✅ 구현 완료 |
 | `DELETE /api/v1/testnet/orders` | ✅ 구현 완료 |
 | `GET /api/v1/testnet/stream/status` | ✅ 구현 완료 |
@@ -31,15 +32,15 @@ HTTP 4xx / 5xx 시 아래 형식으로 반환됩니다.
 
 ```json
 {
-  "errorCode": "REQUEST_FAILED",
+  "error_code": "REQUEST_FAILED",
   "message": "사람이 읽을 수 있는 메시지",
   "detail": "기술적 상세 내용 (local 환경에서만 노출)",
-  "requestId": "req_a1b2c3d4",
+  "request_id": "req_a1b2c3d4",
   "timestamp": "2026-01-01T00:00:00+00:00"
 }
 ```
 
-| errorCode | HTTP | 상황 |
+| error_code | HTTP | 상황 |
 |---|---|---|
 | `VALIDATION_ERROR` | 422 | 요청 파라미터 오류 |
 | `REQUEST_FAILED` | 4xx | 일반 요청 실패 (Binance 에러 포함) |
@@ -403,6 +404,93 @@ FE가 사용자 승인 또는 보완 데이터를 받은 후 호출합니다.
 | 400 | `REQUEST_FAILED` | HOLD 상태가 아닌 run에 resume 시도 |
 | 410 | `REQUEST_FAILED` | Checkpoint 만료 (기본 60분) |
 | 500 | `INTERNAL_SERVER_ERROR` | AI 서비스 연결 실패 |
+
+---
+
+## GET /api/v1/testnet/orders/report
+
+`runId` 기준으로 저장된 최종 리포트를 조회합니다.
+
+- 이 엔드포인트는 raw checkpoint 전체를 반환하지 않고, 저장된 published report만 반환합니다.
+- `clientOrderId` 는 공개 응답에 포함하지 않습니다.
+- `HOLD` 와 `NO_ORDER` 는 `report.userSummary` 가 비어 있으면 evaluator 요약으로 fallback 할 수 있습니다.
+
+### 쿼리 파라미터
+
+| 파라미터 | 타입 | 필수 | 설명 |
+|---|---|---|---|
+| `runId` | `string` | ✅ | `POST /orders` 또는 `POST /orders/resume` 결과에서 받은 run 식별자 |
+
+### 응답 `200`
+
+```json
+{
+  "runId": "run_abc123",
+  "report": {
+    "lifecycleStatus": "NO_ORDER",
+    "holdReason": null,
+    "reasonCodes": ["SYMBOL_NOT_ALLOWED"],
+    "userSummary": "BUY DOGEUSDT 1 USDT 평가 완료. 결과: NO_ORDER",
+    "decisionTrace": {
+      "policy": {
+        "reasonCodes": ["ORDER_INTENT_NORMALIZED", "POLICY_GROUNDED"],
+        "evidenceRefs": ["policy_context.policy_refs[0]", "trader_principles"],
+        "finalAction": "PASS",
+        "notes": null
+      },
+      "risk": {
+        "reasonCodes": ["SYMBOL_NOT_ALLOWED"],
+        "evidenceRefs": ["verification_checks[-1]"],
+        "finalAction": "NO_ORDER",
+        "notes": null
+      },
+      "evaluator": {
+        "reasonCodes": ["EVALUATOR_LLM_FALLBACK"],
+        "evidenceRefs": ["evaluator_review"],
+        "finalAction": "NO_ORDER",
+        "notes": null
+      },
+      "execution": {
+        "reasonCodes": [],
+        "evidenceRefs": [],
+        "finalAction": "",
+        "notes": null
+      },
+      "runSummary": {
+        "reasonCodes": ["RUN_COMPLETE"],
+        "evidenceRefs": ["evaluator_review", "decision_trace"],
+        "finalAction": "NO_ORDER",
+        "notes": null
+      }
+    },
+    "order": null
+  }
+}
+```
+
+### 필드 설명
+
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `runId` | `string` | run 식별자 |
+| `report.lifecycleStatus` | `string` | `HOLD` \| `NO_ORDER` \| `BE_REJECTED` \| `REPORT_READY` \| `FAILED` |
+| `report.holdReason` | `string \| null` | `HOLD` 인 경우 상세 사유 |
+| `report.reasonCodes` | `string[]` | 최종 상태 요약 코드 |
+| `report.userSummary` | `string \| null` | 사용자용 요약 문장 |
+| `report.decisionTrace` | `object \| null` | 단계별 trace 요약 |
+| `report.order` | `object \| null` | 주문이 실제 제출된 경우의 공개 주문 결과 |
+| `report.order.orderId` | `number \| null` | Binance 주문 ID |
+| `report.order.symbol` | `string \| null` | 심볼 |
+| `report.order.status` | `string \| null` | Binance 주문 상태 |
+| `report.order.type` | `string \| null` | 주문 유형 |
+| `report.order.side` | `string \| null` | 매수/매도 |
+
+### 에러 응답
+
+| HTTP | errorCode | 상황 |
+|---|---|---|
+| 404 | `REQUEST_FAILED` | `runId` 자체를 찾을 수 없음 |
+| 404 | `REQUEST_FAILED` | checkpoint는 있으나 persisted report 가 없음 |
 
 ---
 

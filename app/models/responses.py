@@ -113,7 +113,6 @@ class PublishedOrderOutcome(_CamelModel):
     status: _OrderStatus | None = None
     type: str | None = None
     side: str | None = None
-    client_order_id: str | None = None
 
 
 class PublishedRunReport(_CamelModel):

@@ -105,7 +105,7 @@
 }
 ```
 
-### 2.5 SpotOrderResponse
+### 2.5 Binance SpotOrderResponse (internal raw example)
 
 ```json
 {
@@ -125,7 +125,7 @@
 }
 ```
 
-### 2.6 OrderStatusResponse
+### 2.6 Binance OrderStatusResponse (internal/raw example)
 
 ```json
 {
@@ -144,7 +144,7 @@
 }
 ```
 
-### 2.7 CancelOrderResponse
+### 2.7 Binance CancelOrderResponse (internal/raw example)
 
 ```json
 {
@@ -178,6 +178,25 @@
   "final_action": "HOLD"
 }
 ```
+
+### 2.10 OrderRunResponse (public contract)
+
+```json
+{
+  "runId": "run_abc123",
+  "lifecycleStatus": "NO_ORDER",
+  "holdReason": null,
+  "orderId": null,
+  "symbol": null,
+  "status": null,
+  "type": null,
+  "side": null,
+  "reasonCodes": ["SYMBOL_NOT_ALLOWED"]
+}
+```
+
+- `POST /api/v1/testnet/orders` 와 `POST /api/v1/testnet/orders/resume` 의 public 응답은 위 run 중심 계약을 사용한다.
+- Binance 원본 order payload 전체는 내부 저장/원본 로그 용도이며, public contract가 아니다.
 
 ### 2.10 GateDecision
 
@@ -309,8 +328,9 @@
 | `GateDecision` | gate 결과 | `decision`, `reason_codes` |
 | `HoldDecision` | hold 세부 원인 | `decision`, `hold_reason`, `resume_required` |
 | `VerificationResult` | 실행 결과를 포함한 공통 검증 결과 | `name`, `result`, `evidence_refs` |
-| `ReportPayload` | 사용자/저장 리포트 | `run_id`, `gate_decision`, `final_action`, `decision_trace`, `user_summary` |
-| `RunDecisionTrace` | run 요약 | `run_id`, `final_action`, `be_override` |
+| `ReportPayload` | AI 내부 리포트 payload | `run_id`, `gate_decision`, `final_action`, `decision_trace`, `user_summary` |
+| `PublishedRunReport` | BE가 FE에 공개하는 최종 리포트 | `lifecycleStatus`, `holdReason`, `reasonCodes`, `userSummary`, `decisionTrace`, `order` |
+| `RunDecisionTrace` | run 요약 trace stage | `reason_codes`, `evidence_refs`, `final_action` |
 
 ### 2.19 PolicyRetrievalPacket
 
@@ -469,17 +489,24 @@
 }
 ```
 
-응답 예시:
+공개 응답 예시:
 
 ```json
 {
+  "runId": "run_abc123",
+  "lifecycleStatus": "REPORT_READY",
+  "holdReason": null,
   "orderId": 123456789,
   "symbol": "BTCUSDT",
   "status": "NEW",
   "type": "LIMIT",
-  "side": "BUY"
+  "side": "BUY",
+  "reasonCodes": []
 }
 ```
+
+- `POST /api/v1/testnet/orders` 의 public 응답은 Binance raw order payload가 아니라 run 중심 `OrderRunResponse` 다.
+- `HOLD`, `NO_ORDER`, `BE_REJECTED` 도 같은 엔드포인트에서 `lifecycleStatus` 와 `reasonCodes` 중심으로 반환될 수 있다.
 
 ### 3.6 주문 상태 조회
 

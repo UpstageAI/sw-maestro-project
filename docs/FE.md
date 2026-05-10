@@ -76,8 +76,10 @@ flowchart LR
 
 ### 5.4 리포트/로그 화면
 
-1. 최근 주문 테스트 이력을 시간순으로 보여준다.
-2. 실패 원인과 Binance 에러 코드를 함께 표시한다.
+1. 기본 구현은 `run_id` 기준 단일 리포트 조회다.
+2. FE는 `GET /api/v1/testnet/orders/report?runId=...` 로 published report 를 조회한다.
+3. cadence/history 전용 API가 없으면 해당 영역은 placeholder로 표시할 수 있다.
+4. 실패 원인과 핵심 `reason_codes`를 함께 표시한다.
 
 ## 6. UI 상태 정의
 
@@ -103,8 +105,8 @@ flowchart LR
 
 - FE는 가능하면 `decision_trace.policy`, `decision_trace.risk`, `decision_trace.evaluator`, `decision_trace.execution`, `decision_trace.run_summary`를 단계 카드로 구분한다.
 - Policy/Planning 단계에는 policy retrieval 근거가 요약되어야 한다.
-- Risk 단계에는 `verification_checks`와 `gate_decision`이 보여야 한다.
-- `PASS` 배지는 단독으로 초록 완료 의미를 주지 않고, “BE 재검증 대기” 설명과 함께 표시한다.
+- Risk 단계에는 핵심 `reason_codes`와 trace 근거가 보여야 한다.
+- `PASS` 배지는 pre-BE handoff 상태를 뜻할 수 있으므로, 단독 완료 의미로 쓰지 않고 “BE 재검증 대기” 설명과 함께 표시한다.
 
 ## 7. UI/UX 원칙
 
@@ -127,16 +129,16 @@ flowchart LR
 - FE는 `run_id`를 숨기지 않고 디버그/로그 영역에서 확인 가능하게 한다.
 - `HOLD_REVIEW_REQUIRED` 응답에는 승인/거절 액션을 노출한다.
 - `HOLD_DATA_INSUFFICIENT` 응답에는 재조회 또는 보완 입력 액션을 노출한다.
-- `decision_trace`의 핵심 `reason_codes`와 `verification_checks` 요약을 리포트/로그 화면에 표시한다.
+- `decision_trace`의 핵심 `reason_codes`와 단계별 근거를 리포트/로그 화면에 표시한다.
 - schema mismatch나 `FAILED` 상태는 일반 주문 차단과 구분된 오류 스타일을 사용한다.
 
 ### 9.1 리포트 단위와 cadence 표시
 
-- 리포트 목록의 기본 행 단위는 `run_id`다.
-- 상세 보기에서는 cadence 이벤트를 시간순으로 보여준다.
-- canonical cadence는 request accepted, policy retrieval complete, policy complete, risk gate complete, evaluator complete, BE revalidation complete, final report ready 다.
+- 기본 구현의 리포트 조회 단위는 `run_id`다.
+- cadence/history 전용 API가 없으면 상세 보기에서 placeholder를 보여줄 수 있다.
+- canonical cadence 자체는 request accepted, policy retrieval complete, policy complete, risk gate complete, evaluator complete, BE revalidation complete, final report ready 순서를 기준으로 유지한다.
 - FE 기본 화면은 이 canonical cadence 중 사용자에게 중요한 subset만 간략히 보여줄 수 있다.
-- `HOLD` 이후 resume가 발생하면 같은 `run_id` 안에서 이어 붙여 보여준다.
+- `HOLD` 이후 resume가 발생하면 같은 `run_id` 안에서 이어 붙인 표현을 사용할 수 있다.
 
 ## 10. FE에서 호출하는 API 요약
 
@@ -147,6 +149,7 @@ flowchart LR
 | `GET /api/v1/testnet/ticker/book` | orderbook depth 조회 |
 | `GET /api/v1/testnet/klines` | 캔들 조회 |
 | `POST /api/v1/testnet/orders` | Spot 주문 테스트 |
+| `GET /api/v1/testnet/orders/report` | `run_id` 기준 최종 리포트 조회 |
 | `GET /api/v1/testnet/orders/status` | 주문 상태 조회 |
 | `DELETE /api/v1/testnet/orders` | 주문 취소 |
 | `GET /api/v1/testnet/stream/status` | WebSocket 연결 상태 확인 |

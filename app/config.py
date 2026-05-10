@@ -6,6 +6,12 @@ _PRODUCTION_HOSTS = [
     "ws-api.binance.com",
 ]
 
+_LOCAL_DEV_CORS_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
@@ -18,11 +24,17 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite:///./coin_agent.db"
     ai_service_http_url: str = "http://localhost:8001"
-    cors_origins: list[str] = ["http://localhost:3000"]
+    cors_origins: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]
     app_env: str = "local"
     log_level: str = "INFO"
 
     def model_post_init(self, __context: object) -> None:
+        if self.app_env == "local":
+            self.cors_origins = list(dict.fromkeys([*self.cors_origins, *_LOCAL_DEV_CORS_ORIGINS]))
         self._validate_no_production_urls()
 
     def _validate_no_production_urls(self) -> None:
@@ -35,9 +47,8 @@ class Settings(BaseSettings):
             for host in _PRODUCTION_HOSTS:
                 if host in url:
                     raise ValueError(
-                        f"Production Binance URL detected: {url}. "
-                        "Only Testnet URLs are allowed."
+                        f"Production Binance URL detected: {url}. Only Testnet URLs are allowed."
                     )
 
 
-settings = Settings()
+settings = Settings()  # pyright: ignore[reportCallIssue]

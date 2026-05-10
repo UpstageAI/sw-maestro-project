@@ -110,6 +110,7 @@ def test_create_order_hold(client: TestClient, db_session: Session):
         **_AI_READY,
         "lifecycle_status": "HOLD",
         "hold_reason": "HOLD_REVIEW_REQUIRED",
+        "evaluator_review": {"user_summary": "hold fallback summary"},
     }
     with patch("app.services.order_service.ai_gateway_service.start_run", new_callable=AsyncMock) as mock_start:
         mock_start.return_value = ai_hold
@@ -125,12 +126,14 @@ def test_create_order_hold(client: TestClient, db_session: Session):
     report_json = cast(dict[str, object], report.report_json)
     assert report_json["lifecycle_status"] == "HOLD"
     assert report_json["hold_reason"] == "HOLD_REVIEW_REQUIRED"
+    assert report_json["user_summary"] == "hold fallback summary"
 
 
 def test_create_order_no_order(client: TestClient, db_session: Session):
     ai_no_order = {
         **_AI_READY,
         "lifecycle_status": "NO_ORDER",
+        "evaluator_review": {"user_summary": "no order fallback summary"},
         "decision_trace": {
             "policy": {"reason_codes": ["ORDER_INTENT_NORMALIZED"], "evidence_refs": [], "final_action": "PASS"},
             "risk": {"reason_codes": ["RISK_THRESHOLD_EXCEEDED"], "evidence_refs": [], "final_action": "NO_ORDER"},
@@ -152,6 +155,7 @@ def test_create_order_no_order(client: TestClient, db_session: Session):
     report_json = cast(dict[str, object], report.report_json)
     assert report_json["lifecycle_status"] == "NO_ORDER"
     assert report_json["reason_codes"] == ["RISK_THRESHOLD_EXCEEDED"]
+    assert report_json["user_summary"] == "no order fallback summary"
 
 
 def test_create_order_ai_unavailable(client: TestClient):
