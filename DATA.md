@@ -365,5 +365,5 @@
 
 - FE 타입 일부는 아직 raw order response 성격의 이름을 유지하고 있다.
 - 그러나 canonical public contract는 `OrderRunResponse` 다.
-- Reports 페이지는 현재 mock 기반이므로 live report API 계약을 완료된 화면처럼 가정하지 않는다. 다만 BE public API 자체는 이미 존재한다.
+- Reports 페이지는 현재 `runId` 기준 단일 live report 조회가 연결되어 있다.
 - Settings 화면은 현재 placeholder 단계지만, `GET /api/v1/testnet/config` public endpoint 자체는 이미 존재한다.
