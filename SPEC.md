@@ -74,7 +74,7 @@
 
 사용자는 최소한 `runId`, `lifecycleStatus`, `holdReason`, `reasonCodes` 수준의 결과를 확인할 수 있어야 하며, 추후 화면이나 저장 계층에서 상세 trace를 조회할 수 있어야 한다.
 
-현재 구현 기준에서 run report는 공개 BE API로 조회 가능하지만, FE Reports 페이지는 아직 live 연동이 아니라 mock 기반이다.
+현재 구현 기준에서 run report는 공개 BE API와 FE Reports 페이지 양쪽에 live 연동되어 있다. 다만 cadence/history 전용 API는 아직 없어 placeholder 상태다.
 
 ## 5. 기능 요구사항
 
@@ -97,7 +97,7 @@
 | FR-13 | BE만 실행 권한을 가져야 한다. | Binance 제출, 서명, 최종 판정은 BE만 수행한다. |
 | FR-14 | 성공 응답 명명은 camelCase여야 한다. | `runId`, `lifecycleStatus`, `holdReason`, `reasonCodes` 를 사용한다. |
 | FR-15 | 현재 오류 응답 명명은 snake_case여야 한다. | `error_code`, `request_id` 를 사용한다. |
-| FR-16 | FE Reports 현재 상태를 사실대로 명시해야 한다. | mock 기반임을 문서화한다. |
+| FR-16 | FE Reports 현재 상태를 사실대로 명시해야 한다. | `runId` 기준 live report 조회와 cadence/history placeholder 상태를 문서화한다. |
 | FR-17 | FE Settings config 조회 현재 상태를 사실대로 명시해야 한다. | pending 또는 미구현으로 문서화한다. |
 
 ## 6. 비기능 요구사항
@@ -121,8 +121,8 @@
 
 - 주문 생성 플로우는 run 중심 계약을 향하고 있다.
 - 주문 상태 조회와 취소는 separate API 흐름으로 동작한다.
-- 리포트 화면은 현재 mock 데이터 시각화 단계다.
+- 리포트 화면은 현재 `runId` 기준 live report 조회 단계다.
 - 설정 화면은 현재 placeholder 단계지만, BE의 config 조회 endpoint 자체는 구현되어 있다.
-- Reports 화면은 현재 mock 기반이지만, BE의 run report 조회 endpoint 자체는 구현되어 있다.
+- Reports 화면은 현재 BE의 run report 조회 endpoint와 연결되어 있다. 다만 cadence/history 전용 API는 아직 없다.
 
 이 성숙도 차이는 제품 요구사항의 축소가 아니라, 현재 구현 단계의 차이로 해석한다.

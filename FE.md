@@ -15,7 +15,7 @@ FE는 입력, 조회, 시각화, 상태 분기 UX를 담당한다. FE는 Binance
 | Settings | Testnet 환경과 서버 연결 상태 표시 | BE config endpoint는 존재하지만, 현재 FE는 placeholder 중심 read-only 표시 |
 | Dashboard | 잔고, 현재가, 호가, 캔들, stream 상태 표시 | live 연동 대상 |
 | Orders | 주문 생성, 상태 조회, 취소 | 주문 생성은 run 계약 대상, 상태/취소는 separate API |
-| Reports | run 리포트와 cadence 표시 | 현재 mock 데이터 기반, BE report endpoint는 아직 미연동 |
+| Reports | run 리포트와 cadence 표시 | `runId` 기준 단일 live report 조회 연결, cadence/history는 placeholder |
 
 ## 3. FE가 호출해야 하는 API
 
@@ -83,8 +83,8 @@ FE는 `POST /api/v1/testnet/orders` 를 호출한 뒤 아래 중 하나를 처�
 
 ### Reports
 
-- Reports 페이지는 현재 mock 리포트와 mock cadence 데이터를 사용한다.
-- BE의 `GET /api/v1/testnet/orders/report` 가 존재하더라도, FE에서 live report 조회 API가 연결된 상태로 문서화하면 안 된다.
+- Reports 페이지는 현재 `runId` 기준 단일 live report 조회를 사용한다.
+- cadence/history 전용 API는 아직 없으므로 해당 영역은 placeholder로 남아 있다.
 
 ### Settings
 
@@ -113,4 +113,4 @@ FE는 `POST /api/v1/testnet/orders` 를 호출한 뒤 아래 중 하나를 처�
 - Binance URL을 코드에 직접 들고 있지 않는다.
 - API Key, Secret 원문을 입력받거나 저장하지 않는다.
 - Binance 서명이나 timestamp 생성 로직을 FE에 두지 않는다.
-- Reports가 mock 기반인 현재 상태를 숨기지 않는다.
+- Reports의 현재 상태가 단일 live report 조회 + cadence/history placeholder 임을 숨기지 않는다.

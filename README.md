@@ -82,7 +82,7 @@ AI 서비스는 독립 HTTP 서비스이며, 현재 구현은 로컬 JSON 파일
 
 - FE 주문 생성은 이미 run 중심 payload를 기대하는 방향으로 설계되어 있다.
 - FE 주문 상태 조회와 주문 취소는 별도 API 흐름으로 분리되어 있다.
-- FE Reports 페이지는 현재 mock 데이터 기반이다. 다만 BE에는 `GET /api/v1/testnet/orders/report` 공개 API가 이미 존재한다.
+- FE Reports 페이지는 현재 `runId` 기준 단일 live report 조회가 연결되어 있다. cadence/history 전용 API는 아직 없어 placeholder를 표시한다.
 - FE Settings 페이지는 현재 placeholder 상태다. 다만 BE에는 `GET /api/v1/testnet/config` 공개 API가 이미 존재한다.
 - FE에서 `POST /api/v1/testnet/orders/resume` 연동은 canonical 계약에는 포함되지만, 현재 UI는 아직 완전하게 연결되지 않았다.
 - AI resume는 이전 이력과 이전 trace 스냅샷을 보존하지만, 재개 후 현재 stage trace와 현재 verification 결과는 새로 계산되어 overwrite된다.

@@ -27,7 +27,7 @@
 | T-07 | 성공 응답 | camelCase 필드 유지 여부 |
 | T-08 | AI service | `/runs/start`, `/runs/resume`, `/runs/complete` 동작 여부 |
 | T-09 | AI resume | 이전 이력 보존과 현재 trace overwrite 특성 검증 |
-| T-10 | FE maturity | Reports mock, Settings 미연동 상태가 사실대로 반영되는지 |
+| T-10 | FE maturity | Reports live 조회 + cadence/history placeholder, Settings 미연동 상태가 사실대로 반영되는지 |
 
 ## 3. 백엔드 API 체크리스트
 
@@ -102,8 +102,9 @@
 
 ### Reports
 
-- 현재 mock 기반 페이지임을 확인
-- BE report API 존재와 FE live 연동 상태를 구분해서 발표하도록 확인
+- `runId` 기준 live report 조회가 연결된 상태임을 확인
+- cadence/history 는 아직 placeholder 상태임을 확인
+- BE report API 존재와 FE의 현재 화면 성숙도를 구분해서 발표하도록 확인
 
 ### Settings
 
@@ -119,7 +120,7 @@
 - `POST /orders` 는 run 응답을 반환한다.
 - `POST /orders/resume` 는 hold run을 이어가기 위한 public endpoint다.
 - `GET /config` 와 `GET /orders/report` 는 BE에 존재하지만, FE의 Settings/Reports 연동 상태와 동일한 말이 아니다.
-- Reports는 현재 mock 기반이다.
+- Reports는 현재 `runId` 기준 live report 조회가 연결되어 있고, cadence/history 는 placeholder 상태다.
 - Settings 화면 연동은 아직 pending 이다.
 
 ## 8. 합격 기준
