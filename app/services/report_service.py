@@ -91,8 +91,22 @@ def _build_order_outcome(order_outcome: JsonDict | None) -> PublishedOrderOutcom
         status=_as_order_status(order_outcome.get("status")),
         type=_as_string(order_outcome.get("type")),
         side=_as_string(order_outcome.get("side")),
-        client_order_id=_as_string(order_outcome.get("clientOrderId")),
     )
+
+
+def _extract_evaluator_review_summary(ai_state: JsonDict) -> str | None:
+    raw_review = ai_state.get("evaluator_review")
+    if isinstance(raw_review, str):
+        return raw_review
+    if not isinstance(raw_review, dict):
+        return None
+
+    review_dict = cast(JsonDict, raw_review)
+    for key in ("user_summary", "summary", "message", "notes", "content"):
+        summary = _as_string(review_dict.get(key))
+        if summary:
+            return summary
+    return None
 
 
 def build_published_run_report(
@@ -109,7 +123,12 @@ def build_published_run_report(
         hold_reason=_as_string(ai_state.get("hold_reason")),
         reason_codes=_extract_reason_codes(ai_state, lifecycle_status, fallback_reason_codes),
         user_summary=(_as_string(ai_report.get("user_summary")) if ai_report else None)
-        or (_as_string(ai_report.get("message")) if ai_report else None),
+        or (_as_string(ai_report.get("message")) if ai_report else None)
+        or (
+            _extract_evaluator_review_summary(ai_state)
+            if lifecycle_status in {"HOLD", "NO_ORDER"}
+            else None
+        ),
         decision_trace=_build_decision_trace(ai_state),
         order=_build_order_outcome(order_outcome),
     )

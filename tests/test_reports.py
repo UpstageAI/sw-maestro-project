@@ -1,10 +1,15 @@
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import Session
+from sqlalchemy.orm import sessionmaker
 
 from app.db.crud import save_or_update_report
 from app.db.models import AgentRunCheckpoint
+from app.database import create_tables
 
 
 def _create_report_checkpoint(
@@ -33,7 +38,7 @@ def _create_published_report(
     run_id: str = "run_report_001",
     lifecycle_status: str = "REPORT_READY",
 ):
-    save_or_update_report(
+    _ = save_or_update_report(
         db,
         run_id=run_id,
         report_json={
@@ -100,3 +105,47 @@ def test_get_run_report_missing_report_returns_404(client: TestClient, db_sessio
 
     assert resp.status_code == 404
     assert resp.json()["error_code"] == "REQUEST_FAILED"
+
+
+def test_create_tables_upgrades_legacy_reports_schema(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    db_path = tmp_path / "legacy_reports.db"
+    temp_engine = create_engine(f"sqlite:///{db_path.as_posix()}")
+
+    with temp_engine.begin() as connection:
+        _ = connection.execute(
+            text(
+                """
+                CREATE TABLE reports (
+                    report_id VARCHAR PRIMARY KEY NOT NULL,
+                    order_id VARCHAR,
+                    report_json JSON NOT NULL,
+                    created_at DATETIME
+                )
+                """
+            )
+        )
+
+    monkeypatch.setattr("app.database.engine", temp_engine)
+    create_tables()
+
+    report_columns = {column["name"] for column in inspect(temp_engine).get_columns("reports")}
+    assert "run_id" in report_columns
+
+    temp_session = sessionmaker(autocommit=False, autoflush=False, bind=temp_engine)()
+    try:
+        first_report = save_or_update_report(
+            temp_session,
+            run_id="legacy_run_001",
+            report_json={"lifecycle_status": "REPORT_READY", "user_summary": "first"},
+        )
+        second_report = save_or_update_report(
+            temp_session,
+            run_id="legacy_run_001",
+            report_json={"lifecycle_status": "REPORT_READY", "user_summary": "second"},
+        )
+
+        assert first_report.report_id == second_report.report_id
+        assert second_report.report_json["user_summary"] == "second"
+    finally:
+        temp_session.close()
+        temp_engine.dispose()
