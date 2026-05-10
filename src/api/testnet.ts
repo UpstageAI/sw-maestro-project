@@ -5,6 +5,7 @@ import type {
   CancelOrderResponse,
   KlineResponse,
   OrderRunResponse,
+  RunReportResponse,
   OrderStatusResponse,
   ResumeCommandPayload,
   SpotOrderRequest,
@@ -43,6 +44,10 @@ export function resumeOrder(
   payload: ResumeCommandPayload,
 ): Promise<OrderRunResponse> {
   return post<OrderRunResponse>(ENDPOINTS.ordersResume, payload);
+}
+
+export function fetchRunReport(runId: string): Promise<RunReportResponse> {
+  return get<RunReportResponse>(ENDPOINTS.ordersReport, { runId });
 }
 
 export function fetchOrderStatus(

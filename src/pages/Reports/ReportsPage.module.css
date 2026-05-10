@@ -16,6 +16,12 @@
   margin-top: calc(-1 * var(--spacing-sm));
 }
 
+.inlineCode {
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+  color: var(--color-text);
+}
+
 .reportList {
   display: flex;
   flex-direction: column;
@@ -32,6 +38,18 @@
   font-weight: var(--font-weight-semibold);
   color: var(--color-text);
   margin-bottom: var(--spacing-md);
+}
+
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.placeholderText {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-normal);
 }
 
 .columns {
