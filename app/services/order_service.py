@@ -2,7 +2,7 @@ import logging
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
-from typing import Any
+from typing import Any, cast
 
 import httpx
 from fastapi import HTTPException
@@ -215,8 +215,14 @@ async def _execute_order(
             logger.exception("send_completion(BE_REJECTED) failed for run_id=%s", run_id)
 
         report_json = final_state.get("report", {})
-        if report_json:
-            save_run_report(db, report_json, order_id=None)
+        if report_json or final_state.get("lifecycle_status") == "BE_REJECTED":
+            save_run_report(
+                db,
+                run_id=run_id,
+                ai_state=final_state,
+                order_id=None,
+                fallback_reason_codes=rejection["reason_codes"],
+            )
 
         save_or_update_checkpoint(
             db,
@@ -271,8 +277,13 @@ async def _execute_order(
         logger.exception("send_completion(execution_result) failed for run_id=%s", run_id)
         final_state = ai_state
 
-    report_json = final_state.get("report", {})
-    save_run_report(db, report_json, order_id=order_row.order_id)
+    save_run_report(
+        db,
+        run_id=run_id,
+        ai_state=final_state,
+        order_id=order_row.order_id,
+        order_outcome=binance_resp,
+    )
     save_or_update_checkpoint(db, run_id, final_state.get("lifecycle_status", "REPORT_READY"), None, final_state)
 
     return OrderRunResponse(
@@ -297,12 +308,14 @@ async def _process_lifecycle(
     if lifecycle == "READY_FOR_BE":
         return await _execute_order(db, run_id, req, ai_state, settings)
     if lifecycle == "HOLD":
+        save_run_report(db, run_id=run_id, ai_state=ai_state)
         return OrderRunResponse(
             run_id=run_id,
             lifecycle_status="HOLD",
             hold_reason=ai_state.get("hold_reason"),
         )
     if lifecycle == "NO_ORDER":
+        save_run_report(db, run_id=run_id, ai_state=ai_state)
         return OrderRunResponse(
             run_id=run_id,
             lifecycle_status="NO_ORDER",
@@ -349,7 +362,10 @@ async def resume_order(db: Session, payload: ResumeCommandPayload, settings: Set
     lifecycle = ai_state.get("lifecycle_status", "FAILED")
     save_or_update_checkpoint(db, payload.run_id, lifecycle, ai_state.get("hold_reason"), ai_state)
 
-    user_input = checkpoint.state_json.get("request_context", {}).get("user_input", {})
+    request_context = checkpoint.state_json.get("request_context")
+    request_context_dict = cast(dict[str, object], request_context) if isinstance(request_context, dict) else {}
+    user_input_value = request_context_dict.get("user_input")
+    user_input = cast(dict[str, Any], user_input_value) if isinstance(user_input_value, dict) else {}
     merged_user_input = _apply_resume_patch_fields(user_input, payload.patch_fields)
     req = _user_input_to_request(merged_user_input)
     return await _process_lifecycle(db, payload.run_id, req, ai_state, lifecycle, settings)

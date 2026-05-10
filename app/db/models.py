@@ -35,7 +35,7 @@ class BalanceSnapshot(Base):
 
     snapshot_id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
     config_id: Mapped[str] = mapped_column(ForeignKey("testnet_configs.config_id"), nullable=True)
-    snapshot_json: Mapped[dict] = mapped_column(JSON, nullable=False)
+    snapshot_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
     config: Mapped["TestnetConfig"] = relationship(back_populates="balance_snapshots")
@@ -47,7 +47,7 @@ class PriceSnapshot(Base):
     snapshot_id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
     config_id: Mapped[str] = mapped_column(ForeignKey("testnet_configs.config_id"), nullable=True)
     symbol: Mapped[str] = mapped_column(String, nullable=False)
-    snapshot_json: Mapped[dict] = mapped_column(JSON, nullable=False)
+    snapshot_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
     config: Mapped["TestnetConfig"] = relationship(back_populates="price_snapshots")
@@ -60,8 +60,8 @@ class SpotOrder(Base):
     config_id: Mapped[str] = mapped_column(ForeignKey("testnet_configs.config_id"), nullable=True)
     binance_order_id: Mapped[str | None] = mapped_column(String, nullable=True)
     symbol: Mapped[str] = mapped_column(String, nullable=False)
-    request_json: Mapped[dict] = mapped_column(JSON, nullable=False)
-    response_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    request_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
+    response_json: Mapped[dict[str, object] | None] = mapped_column(JSON, nullable=True)
     status: Mapped[str] = mapped_column(String, nullable=False, default="PENDING")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
@@ -76,7 +76,7 @@ class OrderStatusLog(Base):
 
     log_id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
     order_id: Mapped[str] = mapped_column(ForeignKey("spot_orders.order_id"), nullable=False)
-    status_json: Mapped[dict] = mapped_column(JSON, nullable=False)
+    status_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
     order: Mapped["SpotOrder"] = relationship(back_populates="status_logs")
@@ -87,7 +87,7 @@ class CancelLog(Base):
 
     cancel_id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
     order_id: Mapped[str] = mapped_column(ForeignKey("spot_orders.order_id"), nullable=False)
-    cancel_json: Mapped[dict] = mapped_column(JSON, nullable=False)
+    cancel_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
     order: Mapped["SpotOrder"] = relationship(back_populates="cancel_logs")
@@ -99,7 +99,7 @@ class StreamEvent(Base):
     event_id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
     config_id: Mapped[str] = mapped_column(ForeignKey("testnet_configs.config_id"), nullable=True)
     stream_name: Mapped[str] = mapped_column(String, nullable=False)
-    event_json: Mapped[dict] = mapped_column(JSON, nullable=False)
+    event_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
     config: Mapped["TestnetConfig"] = relationship(back_populates="stream_events")
@@ -109,8 +109,9 @@ class Report(Base):
     __tablename__ = "reports"
 
     report_id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
+    run_id: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
     order_id: Mapped[str | None] = mapped_column(ForeignKey("spot_orders.order_id"), nullable=True)
-    report_json: Mapped[dict] = mapped_column(JSON, nullable=False)
+    report_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
     order: Mapped["SpotOrder | None"] = relationship(back_populates="reports")
@@ -122,7 +123,7 @@ class AgentRunCheckpoint(Base):
     run_id: Mapped[str] = mapped_column(String, primary_key=True)
     lifecycle_status: Mapped[str] = mapped_column(String, nullable=False)
     hold_reason: Mapped[str | None] = mapped_column(String, nullable=True)
-    state_json: Mapped[dict] = mapped_column(JSON, nullable=False)
+    state_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
     schema_version: Mapped[str] = mapped_column(String, nullable=False, default="1.0")
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)

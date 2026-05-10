@@ -1,7 +1,10 @@
+from typing import cast
 from unittest.mock import AsyncMock, patch
-
-import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.db.models import Report
 
 
 _LIMIT_ORDER_BODY = {
@@ -51,7 +54,7 @@ _BINANCE_ORDER_RESP = {
 }
 
 
-def test_create_order_ready_for_be_success(client: TestClient):
+def test_create_order_ready_for_be_success(client: TestClient, db_session: Session):
     with patch("app.services.order_service.ai_gateway_service.start_run", new_callable=AsyncMock) as mock_start, \
          patch("app.services.order_service._revalidate", new_callable=AsyncMock) as mock_rv, \
          patch("app.services.order_service._submit_to_binance", new_callable=AsyncMock) as mock_submit, \
@@ -71,15 +74,22 @@ def test_create_order_ready_for_be_success(client: TestClient):
     assert data["symbol"] == "BTCUSDT"
     assert data["runId"] is not None
 
+    report = db_session.scalars(select(Report).where(Report.run_id == data["runId"])).one()
+    report_json = cast(dict[str, object], report.report_json)
+    order_json = cast(dict[str, object], report_json["order"])
+    assert report_json["lifecycle_status"] == "REPORT_READY"
+    assert order_json["order_id"] == 123456
+    assert report_json["user_summary"] == "done"
 
-def test_create_order_be_rejected(client: TestClient):
+
+def test_create_order_be_rejected(client: TestClient, db_session: Session):
     with patch("app.services.order_service.ai_gateway_service.start_run", new_callable=AsyncMock) as mock_start, \
          patch("app.services.order_service._revalidate", new_callable=AsyncMock) as mock_rv, \
          patch("app.services.order_service.ai_gateway_service.send_completion", new_callable=AsyncMock) as mock_complete:
 
         mock_start.return_value = _AI_READY
         mock_rv.return_value = {"reason_codes": ["MIN_NOTIONAL_NOT_MET"], "notes": "blocked"}
-        mock_complete.return_value = {**_AI_READY, "lifecycle_status": "BE_REJECTED"}
+        mock_complete.return_value = {**_AI_READY, "lifecycle_status": "BE_REJECTED", "report": {"message": "blocked"}}
 
         resp = client.post("/api/v1/testnet/orders", json=_LIMIT_ORDER_BODY)
 
@@ -88,8 +98,14 @@ def test_create_order_be_rejected(client: TestClient):
     assert data["lifecycleStatus"] == "BE_REJECTED"
     assert "MIN_NOTIONAL_NOT_MET" in data["reasonCodes"]
 
+    report = db_session.scalars(select(Report).where(Report.run_id == data["runId"])).one()
+    report_json = cast(dict[str, object], report.report_json)
+    assert report_json["lifecycle_status"] == "BE_REJECTED"
+    assert report_json["reason_codes"] == ["MIN_NOTIONAL_NOT_MET"]
+    assert report_json["user_summary"] == "blocked"
 
-def test_create_order_hold(client: TestClient):
+
+def test_create_order_hold(client: TestClient, db_session: Session):
     ai_hold = {
         **_AI_READY,
         "lifecycle_status": "HOLD",
@@ -105,14 +121,22 @@ def test_create_order_hold(client: TestClient):
     assert data["holdReason"] == "HOLD_REVIEW_REQUIRED"
     assert data["runId"] is not None
 
+    report = db_session.scalars(select(Report).where(Report.run_id == data["runId"])).one()
+    report_json = cast(dict[str, object], report.report_json)
+    assert report_json["lifecycle_status"] == "HOLD"
+    assert report_json["hold_reason"] == "HOLD_REVIEW_REQUIRED"
 
-def test_create_order_no_order(client: TestClient):
+
+def test_create_order_no_order(client: TestClient, db_session: Session):
     ai_no_order = {
         **_AI_READY,
         "lifecycle_status": "NO_ORDER",
         "decision_trace": {
-            **_AI_READY["decision_trace"],
+            "policy": {"reason_codes": ["ORDER_INTENT_NORMALIZED"], "evidence_refs": [], "final_action": "PASS"},
             "risk": {"reason_codes": ["RISK_THRESHOLD_EXCEEDED"], "evidence_refs": [], "final_action": "NO_ORDER"},
+            "evaluator": {"reason_codes": ["EVIDENCE_SUFFICIENT"], "evidence_refs": [], "final_action": "PASS"},
+            "execution": {"reason_codes": [], "evidence_refs": [], "final_action": ""},
+            "run_summary": {"reason_codes": [], "evidence_refs": [], "final_action": ""},
         },
     }
     with patch("app.services.order_service.ai_gateway_service.start_run", new_callable=AsyncMock) as mock_start:
@@ -123,6 +147,11 @@ def test_create_order_no_order(client: TestClient):
     data = resp.json()
     assert data["lifecycleStatus"] == "NO_ORDER"
     assert "RISK_THRESHOLD_EXCEEDED" in data["reasonCodes"]
+
+    report = db_session.scalars(select(Report).where(Report.run_id == data["runId"])).one()
+    report_json = cast(dict[str, object], report.report_json)
+    assert report_json["lifecycle_status"] == "NO_ORDER"
+    assert report_json["reason_codes"] == ["RISK_THRESHOLD_EXCEEDED"]
 
 
 def test_create_order_ai_unavailable(client: TestClient):
