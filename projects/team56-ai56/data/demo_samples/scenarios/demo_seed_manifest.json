@@ -1,0 +1,33 @@
+{
+  "jobs": [
+    {
+      "key": "backend",
+      "title": "백엔드 엔지니어 인턴",
+      "jd_file": "jds/jd_backend_intern_ko.txt",
+      "candidate_files": [
+        "candidates/candidate_backend_strong_ko.txt",
+        "candidates/candidate_backend_api_reliable_ko.txt",
+        "candidates/candidate_backend_llm_ops_ko.txt",
+        "candidates/candidate_backend_sql_focus_ko.txt",
+        "candidates/candidate_backend_docs_collab_ko.txt",
+        "candidates/candidate_backend_mixed_ko.txt",
+        "candidates/candidate_backend_junior_growth_ko.txt",
+        "candidates/candidate_no_github_ko.txt",
+        "candidates/candidate_backend_github_fail_ko.txt",
+        "candidates/candidate_backend_low_fit_ko.txt",
+        "candidates/candidate_masking_focus_ko.txt"
+      ]
+    },
+    {
+      "key": "frontend",
+      "title": "프론트엔드 주니어 개발자",
+      "jd_file": "jds/jd_frontend_junior_ko.txt",
+      "candidate_files": [
+        "candidates/candidate_frontend_dashboard_strong_ko.txt",
+        "candidates/candidate_frontend_data_viz_ko.txt",
+        "candidates/candidate_frontend_react_mixed_ko.txt",
+        "candidates/candidate_frontend_low_fit_ko.txt"
+      ]
+    }
+  ]
+}

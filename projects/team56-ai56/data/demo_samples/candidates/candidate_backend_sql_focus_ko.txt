@@ -1,0 +1,21 @@
+이름: 송예준
+이메일: yejun.song@example.com
+연락처: 010-3344-5566
+
+[한 줄 소개]
+백엔드 중에서도 데이터 모델링과 SQL 최적화에 강점이 있는 지원자입니다.
+
+[기술]
+Python, SQL, PostgreSQL, SQLite, ETL, GitHub
+
+[프로젝트]
+- 사용자 행동 로그를 정제해 리포트 API에서 조회할 수 있도록 구성했습니다.
+- SQL 뷰와 집계 쿼리를 분리해 대시보드 조회 속도를 개선했습니다.
+- Python 스크립트로 배치성 데이터 정리 작업을 자동화했습니다.
+
+[보완점]
+- FastAPI 실전 경험은 많지 않지만 Flask와 간단한 API 구현 경험은 있습니다.
+
+GitHub: https://github.com/pandas-dev
+포트폴리오: https://example.com/yejun-sql
+
