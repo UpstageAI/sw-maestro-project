@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>autocoin-ai · Agentic Workflow 이해하기</title>
+<style>
+  :root {
+    --bg: #0b0d12;
+    --panel: #141821;
+    --panel-2: #1b2130;
+    --ink: #eef2f7;
+    --muted: #9aa4b5;
+    --line: #2b3446;
+    --ai: #9b8cff;
+    --code: #5fd0ff;
+    --safe: #47d18c;
+    --warn: #f6bd4b;
+    --bad: #ff6b6b;
+    --user: #f4d06f;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Pretendard", sans-serif;
+    line-height: 1.62;
+  }
+  a { color: inherit; }
+  .wrap { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+
+  header {
+    padding: 54px 0 30px;
+    border-bottom: 1px solid var(--line);
+  }
+  .eyebrow {
+    color: var(--ai);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(32px, 5vw, 56px);
+    line-height: 1.12;
+    letter-spacing: 0;
+  }
+  .lead {
+    max-width: 820px;
+    color: var(--muted);
+    font-size: 18px;
+    margin: 18px 0 0;
+  }
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 28px;
+  }
+  .summary div {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: 8px;
+    padding: 14px;
+    min-height: 100px;
+  }
+  .summary b { color: var(--ink); display: block; margin-bottom: 6px; }
+  .summary span { color: var(--muted); font-size: 13px; }
+
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(11, 13, 18, .92);
+    border-bottom: 1px solid var(--line);
+    backdrop-filter: blur(10px);
+  }
+  nav .wrap {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding: 12px 0;
+  }
+  nav a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  nav a:hover { color: var(--ink); }
+
+  section {
+    padding: 44px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  h2 {
+    margin: 0 0 10px;
+    font-size: 28px;
+    letter-spacing: 0;
+  }
+  .section-lead {
+    color: var(--muted);
+    max-width: 820px;
+    margin: 0 0 22px;
+  }
+
+  .before-after {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 14px;
+  }
+  .box {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: 8px;
+    padding: 18px;
+  }
+  .box h3 { margin: 0 0 10px; font-size: 17px; }
+  .box p { margin: 0; color: var(--muted); font-size: 14px; }
+  .old-flow, .new-flow {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 14px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 7px 10px;
+    border-radius: 7px;
+    border: 1px solid var(--line);
+    background: #0f131c;
+    color: var(--muted);
+    font-size: 13px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .arrow { color: var(--muted); }
+  .chip.ai { color: var(--ai); border-color: rgba(155,140,255,.55); }
+  .chip.code { color: var(--code); border-color: rgba(95,208,255,.48); }
+  .chip.safe { color: var(--safe); border-color: rgba(71,209,140,.5); }
+
+  .workflow {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .step {
+    display: grid;
+    grid-template-columns: 170px 1fr 230px;
+    gap: 14px;
+    align-items: stretch;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .step .name {
+    border-radius: 7px;
+    background: #101522;
+    border: 1px solid var(--line);
+    padding: 14px;
+  }
+  .step .name strong {
+    display: block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 15px;
+    margin-bottom: 5px;
+  }
+  .step .name span { color: var(--muted); font-size: 12px; }
+  .step.ai .name strong { color: var(--ai); }
+  .step.code .name strong { color: var(--code); }
+  .step.safe .name strong { color: var(--safe); }
+  .step .body { padding: 2px 0; }
+  .step .body b { color: var(--ink); }
+  .step .body p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+  .step .out {
+    border-left: 1px dashed var(--line);
+    padding-left: 14px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .step .out code, code {
+    color: var(--code);
+    background: rgba(95, 208, 255, .08);
+    border: 1px solid rgba(95, 208, 255, .18);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: .92em;
+  }
+
+  .scenario {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+  }
+  .scenario .card {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: 8px;
+    padding: 18px;
+  }
+  .card h3 { margin: 0 0 8px; font-size: 17px; }
+  .card .tag {
+    display: inline-block;
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: var(--bg);
+    background: var(--safe);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 700;
+  }
+  .card .tag.hold { background: var(--warn); }
+  .card .tag.no { background: var(--bad); }
+  .card p { color: var(--muted); font-size: 14px; margin: 0 0 12px; }
+  .mini-list {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .mini-list li { margin: 5px 0; }
+
+  .terms {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .term {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .term h3 { margin: 0 0 8px; color: var(--ai); font-size: 16px; }
+  .term p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  .state-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .state {
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--muted);
+    background: var(--panel);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .state.ready { border-left-color: var(--safe); }
+  .state.hold { border-left-color: var(--warn); }
+  .state.failed { border-left-color: var(--bad); }
+  .state h3 {
+    margin: 0 0 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 15px;
+  }
+  .state p { margin: 0; color: var(--muted); font-size: 13px; }
+
+  .files {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .file {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .file strong {
+    display: block;
+    color: var(--code);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  .file span { color: var(--muted); font-size: 13px; }
+
+  .note {
+    border: 1px solid rgba(246, 189, 75, .35);
+    background: rgba(246, 189, 75, .08);
+    border-radius: 8px;
+    padding: 14px;
+    color: #ffe0a0;
+    font-size: 14px;
+  }
+
+  footer {
+    padding: 34px 0 50px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  @media (max-width: 900px) {
+    .summary, .before-after, .scenario, .terms, .state-grid, .files { grid-template-columns: 1fr; }
+    .step { grid-template-columns: 1fr; }
+    .step .out { border-left: 0; border-top: 1px dashed var(--line); padding-left: 0; padding-top: 12px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="eyebrow">autocoin-ai agentic workflow</div>
+    <h1>구현되면 무엇이 어떻게 바뀌는가</h1>
+    <p class="lead">
+      이 페이지는 <code>plan/MASTER_PLAN.md</code>, <code>plan/CONTRACTS.md</code>, <code>plan/PHASES.md</code> 기준으로
+      새 AI 흐름을 한 번에 이해하기 위한 문서다. 핵심은 주문 실행 자동화가 아니라
+      자연어 이해, 원칙 기반 판단, 안전 검증, 설명 가능한 trace다.
+    </p>
+    <div class="summary">
+      <div><b>사용자 입력</b><span>폼 입력뿐 아니라 “BTC 5만원 사줘” 같은 문장도 받는다.</span></div>
+      <div><b>AI 판단</b><span>트레이더 원칙 RAG를 참고해 매매 제안을 만든다.</span></div>
+      <div><b>코드 검증</b><span>Risk Gate가 한도, 잔고, 변동성을 결정론적으로 막는다.</span></div>
+      <div><b>설명 출력</b><span>Evaluator가 사용자가 이해할 수 있는 요약과 이유를 만든다.</span></div>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="wrap">
+    <a href="#change">Before/After</a>
+    <a href="#workflow">실행 흐름</a>
+    <a href="#scenarios">예시 시나리오</a>
+    <a href="#terms">가벼운 용어 설명</a>
+    <a href="#states">상태값</a>
+    <a href="#files">수정 파일</a>
+  </div>
+</nav>
+
+<main>
+  <section id="change">
+    <div class="wrap">
+      <h2>1. Before / After</h2>
+      <p class="section-lead">
+        기존은 이미 정리된 주문 dict를 받아 규칙 검증만 했다. 새 흐름은 앞에 AI 이해 단계와 원칙 기반 strategy가 붙는다.
+      </p>
+      <div class="before-after">
+        <div class="box">
+          <h3>기존 흐름</h3>
+          <p>사용자가 주문 필드를 이미 채워줬다고 가정한다. AI 느낌보다는 계약 검증에 가깝다.</p>
+          <div class="old-flow">
+            <span class="chip code">policy</span>
+            <span class="arrow">→</span>
+            <span class="chip safe">risk</span>
+            <span class="arrow">→</span>
+            <span class="chip code">evaluator</span>
+          </div>
+        </div>
+        <div class="box">
+          <h3>Agentic MVP 흐름</h3>
+          <p>자연어를 이해하고, 트레이더 원칙을 찾아보고, LLM이 제안한 뒤, 코드가 마지막 안전 검증을 한다.</p>
+          <div class="new-flow">
+            <span class="chip ai">intake</span>
+            <span class="arrow">→</span>
+            <span class="chip code">policy + RAG</span>
+            <span class="arrow">→</span>
+            <span class="chip ai">strategy</span>
+            <span class="arrow">→</span>
+            <span class="chip safe">risk_gate</span>
+            <span class="arrow">→</span>
+            <span class="chip ai">evaluator</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="workflow">
+    <div class="wrap">
+      <h2>2. 한 요청이 지나가는 길</h2>
+      <p class="section-lead">
+        예시는 “리버모어 스타일로 BTCUSDT 100 USDT 매수” 또는 “워뇨띠처럼 BTC 5만원 사줘” 같은 입력이다.
+        모든 단계는 <code>decision_trace</code>와 <code>verification_checks</code>에 흔적을 남긴다.
+      </p>
+
+      <div class="workflow">
+        <div class="step ai">
+          <div class="name"><strong>intake</strong><span>말을 주문 데이터로 바꿈</span></div>
+          <div class="body">
+            <b>사용자 문장을 해석한다.</b>
+            <p><code>text</code>나 <code>raw_text</code>가 있으면 Gemini로 파싱한다. 기존 <code>symbol/side/type</code> dict도 그대로 지원한다.</p>
+          </div>
+          <div class="out">
+            출력: <code>normalized_order_intent</code>, <code>trader_id</code>, <code>inferred_persona</code><br />
+            실패: 모호하면 <code>HOLD_INPUT_AMBIGUOUS</code>, schema가 깨지면 <code>FAILED</code>
+          </div>
+        </div>
+
+        <div class="step code">
+          <div class="name"><strong>policy + RAG</strong><span>정책과 원칙을 붙임</span></div>
+          <div class="body">
+            <b>이 요청을 어떤 기준으로 판단할지 준비한다.</b>
+            <p>persona 한도와 허용 심볼을 붙이고, <code>knowledge/{trader_id}/principles.md</code>에서 관련 원칙을 가져온다.</p>
+          </div>
+          <div class="out">
+            출력: <code>persona_bounds</code>, <code>trader_principles</code><br />
+            현재: 키워드 RAG, 후속: embedding vector retrieval
+          </div>
+        </div>
+
+        <div class="step ai">
+          <div class="name"><strong>strategy</strong><span>LLM 매매 제안</span></div>
+          <div class="body">
+            <b>트레이더 원칙을 근거로 BUY/HOLD를 제안한다.</b>
+            <p>Gemini 2.5 Pro가 원칙, persona, 주문 의도를 보고 <code>conviction</code>과 이유를 만든다.</p>
+          </div>
+          <div class="out">
+            출력: <code>llm_proposal</code><br />
+            핵심 필드: <code>action</code>, <code>size_usd</code>, <code>conviction</code>, <code>matched_principle_titles</code>
+          </div>
+        </div>
+
+        <div class="step safe">
+          <div class="name"><strong>risk_gate</strong><span>결정론 안전장치</span></div>
+          <div class="body">
+            <b>LLM 제안을 그대로 믿지 않고 코드로 막는다.</b>
+            <p>확신도, 주문 한도, 허용 심볼, 잔고, 변동성을 순서대로 검사한다. 여기서는 LLM을 부르지 않는다.</p>
+          </div>
+          <div class="out">
+            출력: <code>risk_assessment</code>, <code>risk_tool_calls</code>, <code>lifecycle_status</code><br />
+            통과하면 <code>READY_FOR_BE</code>, 애매하면 <code>HOLD</code>, 불가하면 <code>NO_ORDER</code>
+          </div>
+        </div>
+
+        <div class="step ai">
+          <div class="name"><strong>evaluator</strong><span>최종 설명 정리</span></div>
+          <div class="body">
+            <b>판단을 뒤집지 않고 사용자가 이해할 말로 바꾼다.</b>
+            <p><code>risk_gate</code>가 정한 결과를 echo하고, 왜 그런지 2~3문장으로 설명한다. LLM 실패 시 코드 요약으로 대체한다.</p>
+          </div>
+          <div class="out">
+            출력: <code>evaluator_review.summary</code>, <code>user_message</code><br />
+            모든 종료 케이스가 evaluator를 거쳐 설명을 만든다.
+          </div>
+        </div>
+
+        <div class="step code">
+          <div class="name"><strong>BE revalidation</strong><span>실행 전 최종 검증</span></div>
+          <div class="body">
+            <b>AI가 통과시켜도 BE가 다시 확인한다.</b>
+            <p><code>READY_FOR_BE</code>는 체결 성공이 아니라 BE에게 넘길 준비가 됐다는 뜻이다. 실제 제출 전 BE가 다시 검증한다.</p>
+          </div>
+          <div class="out">
+            성공: <code>execution_result</code><br />
+            차단: <code>BE_REJECTED</code> + <code>be_rejection_evidence</code>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="scenarios">
+    <div class="wrap">
+      <h2>3. 데모에서 보일 시나리오</h2>
+      <p class="section-lead">
+        같은 파이프라인을 지나지만, 입력과 원칙, risk_gate 결과에 따라 최종 상태가 달라진다.
+      </p>
+      <div class="scenario">
+        <div class="card">
+          <span class="tag">READY_FOR_BE</span>
+          <h3>워뇨띠 buy</h3>
+          <p>“BTC 5만원치 사줘”를 자연어로 받아 BTCUSDT 시장가 매수 제안으로 바꾼다.</p>
+          <ul class="mini-list">
+            <li>워뇨띠 원칙 중 리스크 관리, 추세 확인 매칭</li>
+            <li>conviction이 persona 기준 이상</li>
+            <li>잔고와 변동성 검사 통과</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="tag hold">HOLD</span>
+          <h3>낮은 확신도</h3>
+          <p>횡보장이나 근거 부족이면 strategy가 낮은 conviction을 내고 risk_gate가 보류한다.</p>
+          <ul class="mini-list">
+            <li><code>conviction &lt; min_conviction</code></li>
+            <li><code>HOLD_LOW_CONVICTION</code></li>
+            <li>evaluator가 “왜 관망인지” 설명</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="tag no">NO_ORDER</span>
+          <h3>한도 초과</h3>
+          <p>“보수적으로 BTC 200만원”처럼 persona 한도를 넘으면 주문을 만들지 않는다.</p>
+          <ul class="mini-list">
+            <li>CONSERVATIVE max_order_usd 초과</li>
+            <li>risk_gate에서 즉시 차단</li>
+            <li>BE까지 가지 않는다</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="terms">
+    <div class="wrap">
+      <h2>4. 말이 어려운 것들, 가볍게 풀면</h2>
+      <p class="section-lead">
+        문서에 자주 나오는 단어를 구현 관점으로 짧게 풀었다.
+      </p>
+      <div class="terms">
+        <div class="term">
+          <h3>intake</h3>
+          <p>사람 말을 주문 데이터로 바꾸는 입구다. <code>text/raw_text</code>가 있으면 AI가 해석하고, 기존 dict는 그대로 통과시킨다.</p>
+        </div>
+        <div class="term">
+          <h3>RAG</h3>
+          <p>LLM이 그냥 상상하지 않도록 원칙 문서를 먼저 찾아 넣는 방식이다. 워뇨띠와 리버모어 원칙이 여기 들어간다.</p>
+        </div>
+        <div class="term">
+          <h3>strategy</h3>
+          <p>AI가 “살지, 말지, 얼마나 확신하는지”를 제안하는 단계다. 최종 실행 권한은 없다.</p>
+        </div>
+        <div class="term">
+          <h3>risk_gate</h3>
+          <p>LLM 제안을 코드로 검사하는 문이다. 확신도, 잔고, 한도, 변동성을 결정론적으로 본다.</p>
+        </div>
+        <div class="term">
+          <h3>evaluator</h3>
+          <p>심판이 아니라 설명 정리자다. 결과를 바꾸지 않고 사용자가 이해할 문장과 trace 요약을 만든다.</p>
+        </div>
+        <div class="term">
+          <h3>LangSmith trace</h3>
+          <p>각 노드와 LLM 호출이 어떻게 이어졌는지 보는 실행 기록 화면이다. 데모에서는 “AI가 뭘 했는지” 보여주기 좋다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="states">
+    <div class="wrap">
+      <h2>5. 최종 상태를 어떻게 읽으면 되나</h2>
+      <p class="section-lead">
+        상태값은 사용자에게 그대로 보여주기보다 evaluator 설명과 함께 보여주는 게 좋다.
+      </p>
+      <div class="state-grid">
+        <div class="state ready">
+          <h3>READY_FOR_BE</h3>
+          <p>AI와 risk_gate 기준으로는 넘길 수 있다. 아직 체결 성공이 아니다. BE 재검증이 남아 있다.</p>
+        </div>
+        <div class="state hold">
+          <h3>HOLD</h3>
+          <p>지금은 보류다. 모호한 입력, 낮은 확신도, 변동성, 데이터 부족 등이 이유가 될 수 있다.</p>
+        </div>
+        <div class="state">
+          <h3>NO_ORDER</h3>
+          <p>주문을 만들지 않는다. 허용 심볼이 아니거나 persona 한도를 넘는 경우가 대표적이다.</p>
+        </div>
+        <div class="state failed">
+          <h3>FAILED</h3>
+          <p>입력 계약, LLM schema, 필수 필드 같은 기술적 문제가 깨진 상태다.</p>
+        </div>
+        <div class="state failed">
+          <h3>BE_REJECTED</h3>
+          <p>AI는 넘겼지만 BE의 최종 검증에서 막힌 상태다. 실제 실행 전 마지막 안전망이다.</p>
+        </div>
+        <div class="state ready">
+          <h3>REPORT_READY</h3>
+          <p>실행 또는 차단 결과까지 사용자에게 설명할 준비가 끝난 상태다.</p>
+        </div>
+      </div>
+      <div class="note" style="margin-top:14px;">
+        핵심: <code>PASS</code>는 내부 stage 통과 표시일 뿐 사용자에게 “주문 성공”처럼 보여주면 안 된다.
+      </div>
+    </div>
+  </section>
+
+  <section id="files">
+    <div class="wrap">
+      <h2>6. 구현되면 주로 바뀌는 코드</h2>
+      <p class="section-lead">
+        전체를 외울 필요는 없다. 아래 파일들이 새 workflow의 뼈대다.
+      </p>
+      <div class="files">
+        <div class="file"><strong>src/autocoin_ai/graph.py</strong><span>노드 순서를 <code>intake → policy → strategy → risk_gate → evaluator</code>로 연결한다.</span></div>
+        <div class="file"><strong>src/autocoin_ai/models.py</strong><span><code>trader_id</code>, <code>llm_proposal</code>, <code>risk_assessment</code>, <code>evaluator_review</code> 같은 AI 상태 필드를 추가한다.</span></div>
+        <div class="file"><strong>src/autocoin_ai/nodes/intake.py</strong><span>자연어 입력과 기존 dict 입력을 모두 처리한다.</span></div>
+        <div class="file"><strong>src/autocoin_ai/nodes/strategy.py</strong><span>RAG 원칙을 넣어 Gemini 2.5 Pro가 매매 제안을 만들게 한다.</span></div>
+        <div class="file"><strong>src/autocoin_ai/nodes/risk_gate.py</strong><span>LLM 없이 코드로 안전 조건을 검사한다.</span></div>
+        <div class="file"><strong>src/autocoin_ai/nodes/evaluator.py</strong><span>최종 사용자 메시지와 run summary를 만든다.</span></div>
+        <div class="file"><strong>src/autocoin_ai/rag/retriever.py</strong><span>워뇨띠/리버모어 원칙 문서에서 관련 chunk를 찾아온다.</span></div>
+        <div class="file"><strong>knowledge/*/principles.md</strong><span>트레이더별 판단 원칙 데이터셋이다. 현재 <code>wonyotti</code>, <code>livermore</code>가 있다.</span></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    Source of truth: <code>plan/MASTER_PLAN.md</code>, <code>plan/CONTRACTS.md</code>, <code>plan/PHASES.md</code>, <code>plan/FIXTURES.md</code>, <code>plan/DOWNSTREAM.md</code>.
+    이 HTML은 구현 후 workflow를 이해하기 위한 설명용 문서다.
+  </div>
+</footer>
+</body>
+</html>

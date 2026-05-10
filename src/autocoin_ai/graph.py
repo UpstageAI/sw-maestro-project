@@ -54,10 +54,6 @@ def route_after_strategy(state: AgentState) -> str:
     return "risk_agent"
 
 
-def route_after_risk_gate(state: AgentState) -> str:
-    return "evaluator"
-
-
 def build_agentic_order_graph() -> Any:
     graph = StateGraph(AgentState)
     graph.add_node("intake", intake_node)
@@ -71,7 +67,7 @@ def build_agentic_order_graph() -> Any:
     graph.add_conditional_edges("policy", route_after_agentic_policy)
     graph.add_conditional_edges("strategy", route_after_strategy)
     graph.add_edge("risk_agent", "risk_gate")
-    graph.add_conditional_edges("risk_gate", route_after_risk_gate)
+    graph.add_edge("risk_gate", "evaluator")
     graph.add_edge("evaluator", END)
     return graph.compile(checkpointer=MemorySaver())
 

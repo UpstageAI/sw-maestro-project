@@ -279,6 +279,105 @@ flowchart LR
     </ul>
   </section>
 
+  <!-- Real Scenarios -->
+  <section>
+    <h2>🧪 실제 실행 시나리오 (Gemini 2.5 실측)</h2>
+    <p style="margin-bottom:1.2rem;color:#94a3b8;font-size:0.88rem;">아래 두 시나리오는 실제 Gemini 2.5 API를 호출해 얻은 결과입니다.</p>
+
+    <div class="compare-grid">
+
+      <!-- Scenario 1: HOLD -->
+      <div>
+        <h3>시나리오 1 — HOLD <span class="tag" style="background:#3d2b00;color:#fbd38d;">HOLD</span></h3>
+        <div class="highlight-box" style="border-color:#ed8936;margin-bottom:0.8rem;">
+          <strong>입력 (워뇨띠):</strong><br>
+          <em>"비트코인 100달러치 시장가로 매수하고 싶어"</em>
+        </div>
+        <div class="diagram-box">
+          <div class="mermaid">
+flowchart TD
+  S([시작]) --> A["🔵 intake\nNL_PARSED\nBTCUSDT BUY MARKET $100"]
+  A --> B["🟢 policy\nPOLICY_GROUNDED\nwonyotti 원칙 로드"]
+  B --> C["🔵 strategy\n⚠️ action=HOLD\nconviction=0.80"]
+  C --> D["🟢 risk_gate\nHOLD_ACTION\n전략이 HOLD → 즉시 홀드"]
+  D --> E["🔵 evaluator\nHOLD_LOW_CONVICTION"]
+  E --> F([HOLD])
+
+  style A fill:#1a365d,stroke:#4299e1,color:#90cdf4
+  style B fill:#1c4532,stroke:#48bb78,color:#9ae6b4
+  style C fill:#4a2800,stroke:#ed8936,color:#fbd38d
+  style D fill:#1c4532,stroke:#48bb78,color:#9ae6b4
+  style E fill:#1a365d,stroke:#4299e1,color:#90cdf4
+  style F fill:#3d2b00,stroke:#ed8936,color:#fbd38d
+          </div>
+        </div>
+        <table>
+          <tr><th>항목</th><th>값</th></tr>
+          <tr><td>lifecycle</td><td><code>HOLD</code></td></tr>
+          <tr><td>strategy 판단</td><td>action=HOLD, conviction=0.80</td></tr>
+          <tr><td>risk tools</td><td>get_balance, get_volatility</td></tr>
+          <tr><td>risk verdict</td><td>HOLD (HOLD_ACTION)</td></tr>
+        </table>
+        <div class="highlight-box" style="border-color:#ed8936;margin-top:0.8rem;">
+          <strong>AI 응답:</strong><br>
+          현재 거래 신호에 대한 확신이 낮아 포지션을 유지합니다. 시스템은 시장 상황을 계속 주시하며 다음 기회를 모색할 예정입니다.
+        </div>
+      </div>
+
+      <!-- Scenario 2: READY_FOR_BE -->
+      <div>
+        <h3>시나리오 2 — 승인 <span class="tag" style="background:#1c4532;color:#9ae6b4;">READY_FOR_BE</span></h3>
+        <div class="highlight-box" style="border-color:#48bb78;margin-bottom:0.8rem;">
+          <strong>입력 (리버모어):</strong><br>
+          <em>"비트코인 상승 추세 확인됐어, 지금 바로 100달러 시장가 매수해줘"</em>
+        </div>
+        <div class="diagram-box">
+          <div class="mermaid">
+flowchart TD
+  S([시작]) --> A["🔵 intake\nNL_PARSED\nBTCUSDT BUY MARKET $100"]
+  A --> B["🟢 policy\nPOLICY_GROUNDED\nlivermore 원칙 로드"]
+  B --> C["🔵 strategy\n✅ action=BUY\nconviction=0.70"]
+  C --> D["🟠 risk_agent\nget_balance ✓\nget_volatility ✓"]
+  D --> E["🟢 risk_gate\nALL_CHECKS_PASSED\nverdict=ALLOW"]
+  E --> F["🔵 evaluator\nBUY_PROPOSED\nRISK_GATE_PASSED"]
+  F --> G([READY_FOR_BE])
+
+  style A fill:#1a365d,stroke:#4299e1,color:#90cdf4
+  style B fill:#1c4532,stroke:#48bb78,color:#9ae6b4
+  style C fill:#1a365d,stroke:#4299e1,color:#90cdf4
+  style D fill:#7b341e,stroke:#ed8936,color:#fbd38d
+  style E fill:#1c4532,stroke:#48bb78,color:#9ae6b4
+  style F fill:#1a365d,stroke:#4299e1,color:#90cdf4
+  style G fill:#1c4532,stroke:#48bb78,color:#9ae6b4
+          </div>
+        </div>
+        <table>
+          <tr><th>항목</th><th>값</th></tr>
+          <tr><td>lifecycle</td><td><code>READY_FOR_BE</code></td></tr>
+          <tr><td>strategy 판단</td><td>action=BUY, conviction=0.70</td></tr>
+          <tr><td>risk tools</td><td>get_balance, get_volatility</td></tr>
+          <tr><td>risk verdict</td><td>ALLOW (ALL_CHECKS_PASSED)</td></tr>
+        </table>
+        <div class="highlight-box" style="border-color:#48bb78;margin-top:0.8rem;">
+          <strong>AI 응답:</strong><br>
+          AI의 매수 제안이 위험 평가를 통과하여 승인되었습니다. 높은 확신도(0.7)와 '강한 종목만 선택' 원칙에 부합하여 거래가 진행될 예정입니다.
+        </div>
+      </div>
+
+    </div><!-- /compare-grid -->
+
+    <h3 style="margin-top:1.5rem;">두 시나리오 비교</h3>
+    <table>
+      <tr><th>항목</th><th>시나리오 1 (HOLD)</th><th>시나리오 2 (BUY)</th></tr>
+      <tr><td>트레이더</td><td>워뇨띠 (MODERATE)</td><td>리버모어 (MODERATE)</td></tr>
+      <tr><td>입력 방식</td><td>NL 텍스트</td><td>NL 텍스트</td></tr>
+      <tr><td>strategy 결과</td><td>HOLD (conviction 0.80)</td><td>BUY (conviction 0.70)</td></tr>
+      <tr><td>risk_agent 실행</td><td>미실행 (HOLD_ACTION 즉시)</td><td>실행 (도구 2회 호출)</td></tr>
+      <tr><td>risk_gate verdict</td><td>HOLD</td><td>ALLOW</td></tr>
+      <tr><td>최종 lifecycle</td><td><code>HOLD</code></td><td><code>READY_FOR_BE</code></td></tr>
+    </table>
+  </section>
+
   <!-- Lifecycle State Machine -->
   <section>
     <h2>🔄 lifecycle_status 상태 전이</h2>

@@ -32,7 +32,7 @@ def evaluator_node(state: AgentState) -> AgentState:
     pre_warnings: list[str] = []
 
     # Check 1: decision_trace stages filled (except run_summary)
-    required_stages = ("intake", "policy", "strategy", "risk", "evaluator", "execution")
+    required_stages = ("intake", "policy", "strategy", "risk", "evaluator")
     for stage in required_stages:
         if stage not in decision_trace or not decision_trace[stage]:
             pre_warnings.append("decision_trace missing stage: %s" % stage)

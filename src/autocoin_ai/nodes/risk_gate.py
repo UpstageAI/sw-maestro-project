@@ -24,7 +24,7 @@ from autocoin_ai.tools.registry import dispatch
 def risk_gate_node(state: AgentState) -> AgentState:
     next_state = ensure_state_shape(state)
     lifecycle = next_state.get("lifecycle_status")
-    if lifecycle in (LIFECYCLE_FAILED,):
+    if lifecycle == LIFECYCLE_FAILED:
         return next_state
 
     proposal = next_state.get("llm_proposal", {})
@@ -53,11 +53,11 @@ def risk_gate_node(state: AgentState) -> AgentState:
 
     # Check 1: action == HOLD
     if action == "HOLD":
-        return _hold(next_state, tool_calls, "HOLD_ACTION", HOLD_LOW_CONVICTION, None)
+        return _hold(next_state, tool_calls, "HOLD_ACTION", HOLD_LOW_CONVICTION)
 
     # Check 2: conviction too low
     if conviction < min_conviction:
-        return _hold(next_state, tool_calls, "LOW_CONVICTION", HOLD_LOW_CONVICTION, None)
+        return _hold(next_state, tool_calls, "LOW_CONVICTION", HOLD_LOW_CONVICTION)
 
     # Check 3: size exceeds persona max
     if size_usd > max_order:
@@ -76,8 +76,7 @@ def risk_gate_node(state: AgentState) -> AgentState:
     except InvalidOperation:
         free_balance = Decimal("0")
     if free_balance < size_usd:
-        next_state["risk_tool_calls"] = tool_calls
-        return _hold(next_state, tool_calls, "INSUFFICIENT_BALANCE", HOLD_DATA_INSUFFICIENT, None)
+        return _hold(next_state, tool_calls, "INSUFFICIENT_BALANCE", HOLD_DATA_INSUFFICIENT)
 
     # Check 6: volatility check
     vol_result = dispatch("get_volatility", {"symbol": symbol, "days": 7})
@@ -88,8 +87,7 @@ def risk_gate_node(state: AgentState) -> AgentState:
     except InvalidOperation:
         atr_pct = Decimal("0")
     if atr_pct > Decimal(str(VOLATILITY_HIGH_THRESHOLD)):
-        next_state["risk_tool_calls"] = tool_calls
-        return _hold(next_state, tool_calls, "VOLATILITY_HIGH", HOLD_RISK_AGENT_FLAGGED, None)
+        return _hold(next_state, tool_calls, "VOLATILITY_HIGH", HOLD_RISK_AGENT_FLAGGED)
 
     # Check 7: concentration risk (conservative only)
     if persona == PERSONA_CONSERVATIVE:
@@ -100,8 +98,7 @@ def risk_gate_node(state: AgentState) -> AgentState:
         except InvalidOperation:
             conc_pct = Decimal("0")
         if conc_pct > Decimal(str(MAX_CONCENTRATION)):
-            next_state["risk_tool_calls"] = tool_calls
-            return _hold(next_state, tool_calls, "CONCENTRATION_HIGH", HOLD_RISK_AGENT_FLAGGED, None)
+            return _hold(next_state, tool_calls, "CONCENTRATION_HIGH", HOLD_RISK_AGENT_FLAGGED)
 
     # All checks passed
     next_state["risk_tool_calls"] = tool_calls
@@ -113,7 +110,7 @@ def risk_gate_node(state: AgentState) -> AgentState:
     return next_state
 
 
-def _hold(state: AgentState, tool_calls: list, reason: str, hold_reason: str, fail_reason) -> AgentState:
+def _hold(state: AgentState, tool_calls: list, reason: str, hold_reason: str) -> AgentState:
     tools_called = [t["tool"] for t in tool_calls]
     state["risk_tool_calls"] = tool_calls
     state["risk_assessment"] = {"verdict": "HOLD", "fail_reason": reason, "tools_called": tools_called}

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Iterable, List
 
-from autocoin_ai.constants import LIFECYCLE_FAILED, PASS_ACTION, TRACE_STAGES
+from autocoin_ai.constants import LIFECYCLE_FAILED, PASS_ACTION
 from autocoin_ai.models import AgentState, JsonDict
 
 

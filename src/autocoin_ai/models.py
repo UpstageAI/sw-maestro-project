@@ -89,7 +89,7 @@ def ensure_state_shape(state: Mapping[str, Any]) -> AgentState:
     next_state.setdefault("risk_assessment", {})
     next_state.setdefault("risk_tool_calls", [])
     next_state.setdefault("evaluator_review", {})
-    return cast(AgentState, cast(object, next_state))
+    return cast(AgentState, next_state)
 
 
 def append_check(state: AgentState, name: str, stage: str, result: str, evidence_refs: List[str]) -> None:
@@ -136,4 +136,4 @@ def set_trace(
 
 
 def state_copy(state: Mapping[str, Any]) -> AgentState:
-    return cast(AgentState, cast(object, deepcopy(state)))
+    return cast(AgentState, deepcopy(state))
