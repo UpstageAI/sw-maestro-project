@@ -20,7 +20,7 @@
   - [x] 서버 환경 변수 설정 상태 표시 (설정됨/미설정)
   - [x] API Key 원문 입력/표시 금지
   - [x] 실거래 URL이 아님을 경고 배너로 항상 노출
-- [ ] 설정 상태 조회 API 연동 (BE 대기)
+- [ ] 설정 상태 조회 API 연동 (현재 placeholder 유지)
 
 ## 2. 대시보드 페이지 (`/dashboard`) — FR-02, FR-03, FR-04, FR-05, FR-10
 
@@ -73,7 +73,7 @@
   - [x] 필수 파라미터 모두 채워져야 주문 버튼 활성화
   - [x] 주문 타입에 맞지 않는 파라미터 조합 사전 차단
   - [x] Testnet 주문임을 명확히 표시
-- [ ] `POST /api/v1/testnet/orders` 연동 (BE 대기)
+- [x] `POST /api/v1/testnet/orders` 연동
 - [x] 주문 결과 즉시 로그 영역 표시
 
 ### 3.2 주문 상태 조회 — FR-08
@@ -105,7 +105,7 @@
 - [x] `run_id` 디버그/로그 영역 확인 가능
 - [x] `decision_trace` 단계 카드 구분 표시
   - [x] Policy/Planning 단계 (policy retrieval 근거 요약)
-  - [x] Risk 단계 (`verification_checks`, `gate_decision`)
+  - [x] Risk 단계 (`reasonCodes`, trace 근거)
   - [x] Evaluator 단계
   - [x] Execution 단계
   - [x] Run Summary
@@ -121,9 +121,10 @@
 
 ### 4.4 리포트 cadence 표시
 
-- [x] 리포트 목록 기본 행 단위: `run_id`
-- [x] 상세 보기: cadence 이벤트 시간순 표시 (CadenceTimeline)
-- [x] `HOLD` 후 resume 시 같은 `run_id` 안에서 이어 붙여 표시
+- [x] 단일 `run_id` 기준 리포트 조회
+- [x] cadence/history 미지원 시 placeholder 안내 표시
+- [ ] cadence 이벤트 시간순 표시 (전용 API 추가 후 구현)
+- [ ] `HOLD` 후 resume 시 같은 `run_id` 안에서 이어 붙여 표시 (전용 API 추가 후 구현)
 
 ## 5. 공통 UI/UX 요구사항
 

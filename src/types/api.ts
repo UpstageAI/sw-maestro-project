@@ -1,4 +1,4 @@
-import type { HoldReason, ReportPayload } from './agent';
+import type { HoldReason } from './agent';
 
 export interface Balance {
   asset: string;
@@ -90,9 +90,43 @@ export interface OrderRunResponse {
   reasonCodes: string[];
 }
 
+export type PublishedRunLifecycleStatus = OrderRunLifecycleStatus | 'FAILED';
+
+export interface RunDecisionTraceStage {
+  reasonCodes: string[];
+  evidenceRefs: string[];
+  finalAction: string | null;
+  notes: string | null;
+}
+
+export interface PublishedRunDecisionTrace {
+  policy: RunDecisionTraceStage | null;
+  risk: RunDecisionTraceStage | null;
+  evaluator: RunDecisionTraceStage | null;
+  execution: RunDecisionTraceStage | null;
+  runSummary: RunDecisionTraceStage | null;
+}
+
+export interface PublishedOrderOutcome {
+  orderId: number | null;
+  symbol: string | null;
+  status: OrderStatus | null;
+  type: OrderType | null;
+  side: OrderSide | null;
+}
+
+export interface PublishedRunReport {
+  lifecycleStatus: PublishedRunLifecycleStatus;
+  holdReason: HoldReason | null;
+  reasonCodes: string[];
+  userSummary: string | null;
+  decisionTrace: PublishedRunDecisionTrace | null;
+  order: PublishedOrderOutcome | null;
+}
+
 export interface RunReportResponse {
   runId: string;
-  report: ReportPayload;
+  report: PublishedRunReport;
 }
 
 export interface ResumeCommandPayload {

@@ -58,7 +58,7 @@ export function ReportsPage() {
 
         {runId && reportQuery.report && !reportQuery.isLoading && !reportQuery.isError && (
           <div className={styles.reportList}>
-            <RunReportCard report={reportQuery.report} />
+            <RunReportCard runId={reportQuery.runId} report={reportQuery.report} />
           </div>
         )}
       </div>

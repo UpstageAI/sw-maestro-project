@@ -13,6 +13,7 @@ export function useRunReport(runId: string) {
 
   return {
     runReport: query.data,
+    runId: query.data?.runId ?? normalizedRunId,
     report: query.data?.report,
     error: query.error,
     isLoading: query.isLoading && query.isFetching,
