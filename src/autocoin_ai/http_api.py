@@ -33,6 +33,11 @@ class AgentStateResponse(BaseModel):
     model_config = ConfigDict(extra="allow")
 
 
+class CheckpointEvidenceResponse(BaseModel):
+    final_snapshot_lifecycle_status: str | None
+    history_snapshot_count: int
+
+
 router = APIRouter()
 
 
@@ -45,6 +50,8 @@ def create_app(run_store: JsonFileRunStore | None = None) -> FastAPI:
     created_app = FastAPI(title="autocoin-ai", lifespan=lifespan)
     created_app.include_router(router)
     return created_app
+
+
 def get_agent_app(request: Request) -> AutocoinAgentApp:
     return request.app.state.agent_app
 
@@ -65,6 +72,15 @@ def start_run(state: StartRunRequest, request: Request) -> dict[str, Any]:
         raise map_value_error(exc) from exc
 
 
+@router.post("/runs/agentic/start", response_model=AgentStateResponse)
+def start_agentic_run(state: StartRunRequest, request: Request) -> dict[str, Any]:
+    agent_app = get_agent_app(request)
+    try:
+        return dict(agent_app.start_agentic(state.model_dump()))
+    except ValueError as exc:
+        raise map_value_error(exc) from exc
+
+
 @router.post("/runs/resume", response_model=AgentStateResponse)
 def resume_run(payload: ResumeRunRequest, request: Request) -> dict[str, Any]:
     agent_app = get_agent_app(request)
@@ -79,6 +95,24 @@ def complete_run(payload: CompleteRunRequest, request: Request) -> dict[str, Any
     agent_app = get_agent_app(request)
     try:
         return dict(agent_app.complete(payload.run_id, payload.completion_payload))
+    except ValueError as exc:
+        raise map_value_error(exc) from exc
+
+
+@router.get("/runs/{run_id}/checkpoints/order", response_model=CheckpointEvidenceResponse)
+def order_checkpoint(run_id: str, request: Request) -> dict[str, Any]:
+    agent_app = get_agent_app(request)
+    try:
+        return dict(agent_app.order_checkpoint_evidence(run_id))
+    except ValueError as exc:
+        raise map_value_error(exc) from exc
+
+
+@router.get("/runs/{run_id}/checkpoints/completion", response_model=CheckpointEvidenceResponse)
+def completion_checkpoint(run_id: str, request: Request) -> dict[str, Any]:
+    agent_app = get_agent_app(request)
+    try:
+        return dict(agent_app.completion_checkpoint_evidence(run_id))
     except ValueError as exc:
         raise map_value_error(exc) from exc
 
