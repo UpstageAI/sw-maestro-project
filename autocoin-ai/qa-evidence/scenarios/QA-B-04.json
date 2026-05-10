@@ -1,0 +1,148 @@
+{
+  "decision_trace": {
+    "evaluator": {
+      "final_action": "PASS",
+      "reason_codes": [
+        "EVIDENCE_SUFFICIENT"
+      ]
+    },
+    "execution": {
+      "final_action": "",
+      "reason_codes": []
+    },
+    "policy": {
+      "final_action": "PASS",
+      "reason_codes": [
+        "ORDER_INTENT_NORMALIZED"
+      ]
+    },
+    "risk": {
+      "final_action": "PASS",
+      "reason_codes": [
+        "ALL_CHECKS_PASSED"
+      ]
+    },
+    "run_summary": {
+      "final_action": "",
+      "reason_codes": []
+    }
+  },
+  "expected": {
+    "lifecycle_advanced": "READY_FOR_BE",
+    "policy_refs_preserved": true,
+    "request_id_preserved": true,
+    "resume_history_recorded": true,
+    "run_id_preserved": true
+  },
+  "input_payload": {
+    "initial": {
+      "policy_context": {
+        "policy_refs": [
+          "policy.symbol_allowlist",
+          "policy.spot_testnet_only"
+        ]
+      },
+      "request_context": {
+        "request_id": "req_test_001",
+        "request_type": "PLACE_ORDER_TEST",
+        "requested_at": "2026-05-07T10:00:00+09:00",
+        "user_input": {
+          "market_snapshot_fresh": false,
+          "quoteOrderQty": "50",
+          "side": "BUY",
+          "symbol": "BTCUSDT",
+          "type": "MARKET"
+        }
+      },
+      "run_id": "airun_test_001"
+    },
+    "resume_patch": {
+      "supplemental_user_input": {
+        "market_snapshot_fresh": true
+      }
+    },
+    "resume_reason": "MARKET_DATA_SUPPLIED"
+  },
+  "notes": "tests/test_resume.py:10-25의 패턴을 그대로 검증. run_id, request_context.request_id, policy_context.policy_refs 가 모두 보존되며 lifecycle은 READY_FOR_BE로 전진한다. 다만 docs/AI.md §6.1이 immutable로 명시한 '이전 decision_trace'는 구현이 graph 재실행으로 stage entry를 덮어쓰므로 spec과 divergence가 있다 (spec_divergence_decision_trace_immutability 참조). 본 시나리오 PASS 판정은 lifecycle/run_id/policy_refs/resume_history 기준만 따른 lenient 해석이며, decision_trace immutability는 별도 REPORT.md §2 대표 발견 사례로 escalate.",
+  "observed": {
+    "lifecycle_advanced": "READY_FOR_BE",
+    "policy_refs_preserved": true,
+    "request_id_preserved": true,
+    "resume_history_recorded": true,
+    "run_id_preserved": true
+  },
+  "passed": true,
+  "post_resume_risk_trace": {
+    "evidence_refs": [
+      "verification_checks[-1]"
+    ],
+    "final_action": "PASS",
+    "reason_codes": [
+      "ALL_CHECKS_PASSED"
+    ]
+  },
+  "pre_resume_risk_trace": {
+    "evidence_refs": [
+      "verification_checks[-1]"
+    ],
+    "final_action": "HOLD",
+    "reason_codes": [
+      "STALE_MARKET_SNAPSHOT"
+    ]
+  },
+  "purpose": "hold 후 같은 run_id로 resume되고 immutable 필드가 보존되며 보완 결과만 추가되는지 확인",
+  "resume_history": [
+    {
+      "patch_fields": {
+        "supplemental_user_input": {
+          "market_snapshot_fresh": true
+        }
+      },
+      "resume_reason": "MARKET_DATA_SUPPLIED"
+    }
+  ],
+  "reviewer": "검수자 B",
+  "scenario_id": "QA-B-04",
+  "spec_divergence_decision_trace_immutability": {
+    "explanation": "app.resume → app.start → graph 재실행 → 모든 node의 set_trace가 decision_trace[stage]를 새 entry로 교체한다(models.py:97). 결과적으로 pre-resume의 risk stage entry(STALE_MARKET_SNAPSHOT/HOLD)는 post-resume에서 ALL_CHECKS_PASSED/PASS로 덮어써진다.",
+    "previous_decision_trace_risk_preserved": false,
+    "spec_reference": "docs/AI.md §6.1 (이전 decision_trace는 immutable)"
+  },
+  "verification_checks": [
+    {
+      "name": "initial_request_contract",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "name": "policy_context_available",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "name": "market_snapshot_freshness",
+      "result": "fail",
+      "stage": "risk"
+    },
+    {
+      "name": "initial_request_contract",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "name": "policy_context_available",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "name": "risk_gate_rules",
+      "result": "pass",
+      "stage": "risk"
+    },
+    {
+      "name": "evidence_sufficiency",
+      "result": "pass",
+      "stage": "evaluator"
+    }
+  ]
+}

@@ -1,0 +1,174 @@
+{
+  "approved_verification_checks": [
+    {
+      "name": "initial_request_contract",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "name": "policy_context_available",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "name": "human_review_boundary",
+      "result": "fail",
+      "stage": "risk"
+    },
+    {
+      "name": "initial_request_contract",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "name": "policy_context_available",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "name": "human_review_boundary",
+      "result": "fail",
+      "stage": "risk"
+    },
+    {
+      "name": "initial_request_contract",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "name": "policy_context_available",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "name": "risk_gate_rules",
+      "result": "pass",
+      "stage": "risk"
+    },
+    {
+      "name": "evidence_sufficiency",
+      "result": "pass",
+      "stage": "evaluator"
+    }
+  ],
+  "expected": {
+    "approved_status": "READY_FOR_BE",
+    "initial_hold_reason": "HOLD_REVIEW_REQUIRED",
+    "initial_status": "HOLD",
+    "no_approval_hold_reason": "HOLD_REVIEW_REQUIRED",
+    "no_approval_status": "HOLD"
+  },
+  "input_payload": {
+    "initial": {
+      "policy_context": {
+        "policy_refs": [
+          "policy.symbol_allowlist",
+          "policy.spot_testnet_only"
+        ]
+      },
+      "request_context": {
+        "request_id": "req_test_001",
+        "request_type": "PLACE_ORDER_TEST",
+        "requested_at": "2026-05-07T10:00:00+09:00",
+        "user_input": {
+          "quoteOrderQty": "50",
+          "requires_review": true,
+          "side": "BUY",
+          "symbol": "BTCUSDT",
+          "type": "MARKET"
+        }
+      },
+      "run_id": "airun_test_001"
+    },
+    "resume_attempts": [
+      {
+        "patch_fields": {},
+        "resume_reason": "NO_APPROVAL_YET"
+      },
+      {
+        "patch_fields": {
+          "approval": {
+            "approved": true
+          }
+        },
+        "resume_reason": "USER_APPROVED"
+      }
+    ]
+  },
+  "no_approval_verification_checks": [
+    {
+      "name": "initial_request_contract",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "name": "policy_context_available",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "name": "human_review_boundary",
+      "result": "fail",
+      "stage": "risk"
+    },
+    {
+      "name": "initial_request_contract",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "name": "policy_context_available",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "name": "human_review_boundary",
+      "result": "fail",
+      "stage": "risk"
+    }
+  ],
+  "notes": "requires_review=True로 첫 HOLD를 만든 뒤 (1) 빈 patch로 resume → 여전히 HOLD/HOLD_REVIEW_REQUIRED, (2) approval.approved=True로 다시 resume → READY_FOR_BE로 전진. 즉 resume이 단독으로는 승인 의미를 가지지 않으며 patch 내용이 검증을 통과해야 전진함을 확인.",
+  "observed": {
+    "approved_status": "READY_FOR_BE",
+    "initial_hold_reason": "HOLD_REVIEW_REQUIRED",
+    "initial_status": "HOLD",
+    "no_approval_hold_reason": "HOLD_REVIEW_REQUIRED",
+    "no_approval_status": "HOLD"
+  },
+  "passed": true,
+  "post_approved_risk_trace": {
+    "evidence_refs": [
+      "verification_checks[-1]"
+    ],
+    "final_action": "PASS",
+    "reason_codes": [
+      "ALL_CHECKS_PASSED"
+    ]
+  },
+  "post_no_approval_risk_trace": {
+    "evidence_refs": [
+      "verification_checks[-1]"
+    ],
+    "final_action": "HOLD",
+    "reason_codes": [
+      "HUMAN_REVIEW_REQUIRED"
+    ]
+  },
+  "purpose": "resume 자체가 자동 승인 의미를 가지면 안 되고, 필요한 검증이 다시 수행되는지 확인",
+  "resume_history": [
+    {
+      "patch_fields": {},
+      "resume_reason": "NO_APPROVAL_YET"
+    },
+    {
+      "patch_fields": {
+        "approval": {
+          "approved": true
+        }
+      },
+      "resume_reason": "USER_APPROVED"
+    }
+  ],
+  "reviewer": "검수자 B",
+  "scenario_id": "QA-B-05"
+}
