@@ -1,0 +1,167 @@
+{
+  "project": "hwp-editor-chatbot",
+  "branchName": "ralph/hwpx-editor-chatbot",
+  "description": "한글 파일 편집 챗봇 - 자연어로 HWPX 문서를 생성/편집하고 다운로드할 수 있는 웹 챗봇 서비스",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Docker Compose 프로젝트 스캐폴딩",
+      "description": "As a developer, I need a working Docker Compose setup with three services (frontend, backend, hwpx-mcp) so that the entire stack can be run with one command.",
+      "acceptanceCriteria": [
+        "docker-compose.yml에 frontend(Next.js :3000), backend(FastAPI :8000), hwpx-mcp(:3001) 서비스가 정의된다",
+        "각 서비스의 Dockerfile이 존재한다 (frontend/, backend/, 또는 hwpx-mcp는 공식 이미지 사용)",
+        ".env.example에 ANTHROPIC_API_KEY, HWPX_MCP_URL 변수가 문서화된다",
+        "docker compose up 실행 시 세 컨테이너가 모두 healthy 상태로 기동된다",
+        "README.md에 실행 방법이 명시된다",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "FastAPI 백엔드 스켈레톤 + 세션 관리",
+      "description": "As a developer, I need a FastAPI backend with session management so that each user's files and conversation history are isolated.",
+      "acceptanceCriteria": [
+        "GET /health 엔드포인트가 200 OK를 반환한다",
+        "모든 API 요청 헤더에서 X-Session-ID를 읽어 세션을 식별한다",
+        "세션별 임시 디렉토리 /tmp/sessions/{session_id}/가 자동 생성된다",
+        "세션 생성 후 1시간 미사용 시 디렉토리가 자동 삭제된다 (BackgroundTask)",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "hwpx-mcp 서버 HTTP 클라이언트 연동",
+      "description": "As a developer, I need the backend to connect to the hwpx-mcp server and proxy tool calls so that Claude can manipulate HWPX files.",
+      "acceptanceCriteria": [
+        "백엔드가 시작 시 HWPX_MCP_URL 환경변수로 hwpx-mcp 서버에 연결을 확인한다",
+        "GET /mcp/tools 엔드포인트가 hwpx-mcp에서 사용 가능한 툴 목록을 반환한다",
+        "POST /mcp/call 엔드포인트가 tool_name과 arguments를 받아 hwpx-mcp 서버로 프록시하고 결과를 반환한다",
+        "hwpx-mcp 서버가 stdio만 지원할 경우 백엔드가 자식 프로세스로 MCP 서버를 실행하는 fallback이 구현된다",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "HTTP JSON-RPC primary; stdio subprocess fallback implemented in mcp_client.py"
+    },
+    {
+      "id": "US-004",
+      "title": "HWPX 파일 업로드 API",
+      "description": "As a developer, I need a file upload endpoint so that users can provide existing HWPX files to edit.",
+      "acceptanceCriteria": [
+        "POST /upload 엔드포인트가 multipart/form-data로 .hwpx 파일을 받는다",
+        ".hwpx 이외의 확장자는 400 에러를 반환한다",
+        "파일 크기가 10MB를 초과하면 413 에러를 반환한다",
+        "업로드된 파일은 /tmp/sessions/{session_id}/current.hwpx로 저장된다",
+        "성공 시 { filename, size, session_id } JSON을 반환한다",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "POST /upload: validates .hwpx ext (400), 10MB limit (413), saves to /tmp/sessions/{id}/current.hwpx"
+    },
+    {
+      "id": "US-005",
+      "title": "Next.js 채팅 UI 셸",
+      "description": "As a user, I want to see a chat interface so that I can type editing requests and receive AI responses.",
+      "acceptanceCriteria": [
+        "페이지 로드 시 채팅 입력창과 전송 버튼이 표시된다",
+        "사용자 메시지와 AI 응답이 말풍선 형식으로 좌/우 구분 표시된다",
+        "전송 버튼 클릭 또는 Enter 키로 메시지가 전송된다 (Shift+Enter는 줄바꿈)",
+        "메시지 전송 중 로딩 스피너가 표시된다",
+        "세션 ID가 localStorage에서 생성/조회되어 모든 API 요청 헤더(X-Session-ID)에 포함된다",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": "Chat UI with session localStorage, user/AI bubbles, Enter-to-send, Shift+Enter newline, loading spinner. next.config.ts → next.config.mjs required for Next.js 14."
+    },
+    {
+      "id": "US-006",
+      "title": "파일 업로드 UI 컴포넌트",
+      "description": "As a user, I want to upload an HWPX file from the chat UI so that I can edit an existing document.",
+      "acceptanceCriteria": [
+        "채팅 입력창 옆에 파일 첨부 버튼(📎 아이콘)이 존재한다",
+        ".hwpx 이외의 파일 선택 시 '지원하지 않는 파일 형식입니다' 에러 메시지가 채팅창에 표시된다",
+        "업로드 성공 시 '{파일명} 업로드 완료' 메시지가 채팅창에 시스템 메시지로 표시된다",
+        "업로드 중 버튼이 비활성화 상태로 표시된다",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": "📎 attach button triggers hidden file input; .hwpx validated client-side; upload via POST /upload multipart; info/system bubbles for success/failure; isUploading disables button"
+    },
+    {
+      "id": "US-007",
+      "title": "새 HWPX 파일 생성 + 텍스트 편집 채팅 흐름",
+      "description": "As a user, I want to type a request in chat and have the AI create or edit an HWPX file so that I get the document I described.",
+      "acceptanceCriteria": [
+        "POST /chat 엔드포인트가 { message, session_id } 를 받는다",
+        "백엔드가 hwpx-mcp 툴 목록을 Claude API의 tools 파라미터로 전달한다",
+        "Claude의 tool_use 응답을 받으면 해당 툴을 /mcp/call로 실행하고 결과를 다시 Claude에 전달한다",
+        "파일이 없는 상태에서 생성 요청 시 create_document 툴이 호출되어 새 .hwpx 파일이 생성된다",
+        "텍스트 삽입/수정/삭제 요청이 각각 적절한 hwpx-mcp 툴로 실행된다",
+        "최종 AI 응답 텍스트와 파일 준비 완료 여부(file_ready: true/false)를 반환한다",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": "POST /chat: agentic loop with tool_use; MCP tools converted from inputSchema → input_schema; up to 10 tool rounds; returns { response, file_ready }"
+    },
+    {
+      "id": "US-008",
+      "title": "기본 서식 편집 (폰트, 크기, 정렬, 볼드/이탤릭/밑줄)",
+      "description": "As a user, I want to request formatting changes through chat so that I can style the document without knowing HWP format details.",
+      "acceptanceCriteria": [
+        "'제목을 나눔고딕으로 바꿔줘' 같은 폰트 변경 요청이 set_font 툴 호출로 처리된다",
+        "'본문 글자 크기를 12pt로' 같은 크기 변경 요청이 처리된다",
+        "좌측/가운데/우측/양쪽 정렬 변경 요청이 set_alignment 툴로 처리된다",
+        "볼드, 이탤릭, 밑줄 적용 요청이 각각 처리된다",
+        "hwpx-mcp가 지원하지 않는 서식 요청(예: 표 삽입) 시 '지원하지 않는 기능입니다' 메시지가 반환된다",
+        "Typecheck passes"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": "Enhanced system prompt guides Claude to use set_font/set_font_size/set_alignment/set_bold/set_italic/set_underline tools; instructs Claude to respond '지원하지 않는 기능입니다' for unsupported ops"
+    },
+    {
+      "id": "US-009",
+      "title": "HWPX 파일 다운로드 버튼",
+      "description": "As a user, I want a download button in the chat response so that I can save the edited HWPX file to my computer.",
+      "acceptanceCriteria": [
+        "GET /download?session_id={id} 엔드포인트가 현재 세션의 .hwpx 파일을 반환한다",
+        "다운로드 파일명은 edited_YYYYMMDD_HHMMSS.hwpx 형식이다",
+        "file_ready: true인 AI 응답 메시지 하단에 'HWPX 다운로드' 버튼이 표시된다",
+        "버튼 클릭 시 브라우저가 파일 다운로드를 시작한다",
+        "파일이 아직 없는 경우 버튼이 비활성화 상태로 표시된다",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": "GET /download uses X-Session-ID header (not query param); FileResponse with edited_YYYYMMDD_HHMMSS.hwpx filename; frontend handleDownload() creates ObjectURL for browser save; download button disabled when !msg.fileReady"
+    },
+    {
+      "id": "US-010",
+      "title": "대화 컨텍스트 유지 (누적 편집)",
+      "description": "As a user, I want my editing session to remember previous requests so that I can iteratively refine the document in multiple messages.",
+      "acceptanceCriteria": [
+        "세션 내 대화 기록이 백엔드의 /tmp/sessions/{session_id}/history.json에 저장된다",
+        "POST /chat 호출 시 이전 대화 기록이 Claude API messages 배열에 포함된다",
+        "'방금 바꾼 내용을 원래대로 되돌려줘' 같은 이전 대화 참조 요청이 컨텍스트 기반으로 처리된다",
+        "세션 초기화(새로고침) 시 localStorage의 세션 ID가 유지되어 기존 컨텍스트를 복원할 수 있다",
+        "Typecheck passes"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
