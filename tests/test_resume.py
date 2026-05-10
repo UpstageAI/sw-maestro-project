@@ -1,9 +1,14 @@
 from datetime import datetime, timedelta, timezone
+from typing import cast
 from unittest.mock import AsyncMock, patch
+
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.db.crud import save_or_update_report
 from app.db.crud import save_or_update_checkpoint
+from app.db.models import Report
 
 
 _HOLD_STATE = {
@@ -74,6 +79,25 @@ def _create_hold_checkpoint(db: Session, run_id: str = "run_hold_001", expired: 
 
 def test_resume_hold_to_ready_for_be(client: TestClient, db_session: Session):
     _create_hold_checkpoint(db_session)
+    save_or_update_report(
+        db_session,
+        run_id="run_hold_001",
+        report_json={
+            "lifecycle_status": "HOLD",
+            "hold_reason": "HOLD_REVIEW_REQUIRED",
+            "reason_codes": ["HOLD_REVIEW_REQUIRED"],
+            "user_summary": "awaiting approval",
+            "decision_trace": {
+                "risk": {
+                    "reason_codes": ["HOLD_REVIEW_REQUIRED"],
+                    "evidence_refs": [],
+                    "final_action": "HOLD",
+                    "notes": None,
+                }
+            },
+            "order": None,
+        },
+    )
     body = {
         **_RESUME_BODY,
         "patchFields": {
@@ -90,7 +114,7 @@ def test_resume_hold_to_ready_for_be(client: TestClient, db_session: Session):
         mock_resume.return_value = _AI_READY
         mock_rv.return_value = None
         mock_submit.return_value = _BINANCE_RESP
-        mock_complete.return_value = {**_AI_READY, "lifecycle_status": "REPORT_READY", "report": {}}
+        mock_complete.return_value = {**_AI_READY, "lifecycle_status": "REPORT_READY", "report": {"message": "done"}}
 
         resp = client.post("/api/v1/testnet/orders/resume", json=body)
 
@@ -102,6 +126,14 @@ def test_resume_hold_to_ready_for_be(client: TestClient, db_session: Session):
     submitted_request = mock_submit.await_args_list[0].args[0]
     assert revalidated_request.price == "79000.00"
     assert submitted_request.price == "79000.00"
+
+    reports = db_session.scalars(select(Report).where(Report.run_id == "run_hold_001")).all()
+    assert len(reports) == 1
+    report_json = cast(dict[str, object], reports[0].report_json)
+    order_json = cast(dict[str, object], report_json["order"])
+    assert report_json["lifecycle_status"] == "REPORT_READY"
+    assert order_json["order_id"] == 999
+    assert report_json["user_summary"] == "done"
 
 
 def test_resume_hold_stays_hold(client: TestClient, db_session: Session):
