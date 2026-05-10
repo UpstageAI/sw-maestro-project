@@ -54,18 +54,15 @@ export function CadenceTimeline({ events }: CadenceTimelineProps) {
     (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
   );
 
-  let previousWasHold = false;
-
   return (
     <div className={styles.container}>
       <div className={styles.line} />
       {sorted.map((event, idx) => {
         const isHold = event.lifecycle_status === 'HOLD';
-        const isResumeAfterHold = previousWasHold && !isHold;
+        const previousEvent = sorted[idx - 1];
+        const isResumeAfterHold = previousEvent?.lifecycle_status === 'HOLD' && !isHold;
         const isLast = idx === sorted.length - 1;
         const dotClass = getDotClass(event.lifecycle_status, isLast);
-
-        previousWasHold = isHold;
 
         return (
           <div
