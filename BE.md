@@ -70,10 +70,10 @@ BE는 Binance Spot Testnet과 직접 통신하는 유일한 계층이다. 동시
 
 ## 5B. run report 조회 API의 canonical 의미
 
-`GET /api/v1/testnet/orders/report` 는 `runId` 기준으로 checkpoint 에 저장된 report payload를 반환한다.
+`GET /api/v1/testnet/orders/report` 는 `runId` 기준으로 persisted published report 를 반환한다.
 
 - report 가 없으면 404 를 반환한다.
-- FE Reports 페이지의 현재 mock 상태와, BE report 조회 capability 자체는 구분해서 문서화해야 한다.
+- FE Reports 페이지의 현재 live report 조회 상태와, cadence/history 미지원 상태를 구분해서 문서화해야 한다.
 
 ## 6. 내부 orchestration 흐름
 
