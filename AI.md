@@ -20,8 +20,9 @@ AI는 주문 테스트 요청을 구조화하고, 정책과 리스크를 근거�
 
 - AI는 standalone HTTP 서비스다.
 - 공개 엔드포인트는 `/runs/start`, `/runs/resume`, `/runs/complete` 다.
-- 현재 run 저장소는 in-memory dictionary 다.
-- 프로세스 재시작 시 in-memory run은 유지되지 않는다.
+- 현재 기본 run 저장소는 로컬 JSON 파일 기반이다.
+- 같은 저장소 파일을 유지하는 한 프로세스 재시작 이후에도 non-agentic run 상태를 다시 읽을 수 있다.
+- 현재 구현에는 `/runs/agentic/start` 엔드포인트도 존재한다.
 
 ## 4. AI HTTP 계약
 
@@ -105,7 +106,7 @@ AI는 주문 테스트 요청을 구조화하고, 정책과 리스크를 근거�
 
 현재 구현에서 resume는 다음처럼 동작한다.
 
-1. 기존 run 상태를 메모리에서 읽는다.
+1. 기존 run 상태를 현재 run 저장소에서 읽는다.
 2. 현재 상태가 `HOLD` 인지 확인한다.
 3. `resume_history` 에 `resume_reason`, `patch_fields` 를 추가한다.
 4. `decision_trace_history` 에 재개 직전 trace와 check 개수를 저장한다.
@@ -117,6 +118,11 @@ AI는 주문 테스트 요청을 구조화하고, 정책과 리스크를 근거�
 - 재개 후 현재 `decision_trace` 와 현재 `verification_checks` 는 재계산되어 overwrite될 수 있다.
 
 따라서 현재 구현의 resume는 append-only current trace 모델이 아니다. 과거 상태는 history로 보존하고, 현재 상태는 새 계산 결과로 덮어쓴다.
+
+추가 제약도 있다.
+
+- 현재 MVP 구현에서 agentic run resume 는 지원하지 않는다.
+- 현재 공개 BE 주문 흐름에서 사용하는 resume 는 non-agentic run 을 기준으로 동작한다.
 
 ## 9. completion의 실제 구현 의미
 
@@ -134,6 +140,7 @@ AI는 주문 테스트 요청을 구조화하고, 정책과 리스크를 근거�
 ## 11. 현재 구현 메모
 
 - AI 서비스는 public BE API가 아니라 내부 서비스 역할이지만, 별도 HTTP 프로세스다.
+- 현재 risk/account/policy tool 호출은 로컬 mock 데이터 기반 평가를 포함한다.
 - 오류는 HTTP 400 또는 404 성격으로 매핑될 수 있다.
 - 같은 `run_id` 로 `FAILED` run 을 resume 할 수 없다.
 - 같은 `run_id` 로 `HOLD` 가 아닌 run 을 resume 할 수 없다.

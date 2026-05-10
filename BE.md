@@ -21,12 +21,14 @@ BE는 Binance Spot Testnet과 직접 통신하는 유일한 계층이다. 동시
 |---|---|---|
 | GET | `/health` | 서버 상태 |
 | GET | `/api/v1/testnet/account` | 잔고 조회 |
+| GET | `/api/v1/testnet/config` | Testnet 연결 기준 URL 조회 |
 | GET | `/api/v1/testnet/ticker/price` | 현재가 조회 |
 | GET | `/api/v1/testnet/ticker/book` | 호가 및 depth 조회 |
 | GET | `/api/v1/testnet/klines` | 캔들 조회 |
 | POST | `/api/v1/testnet/orders` | 주문 run 시작 |
 | POST | `/api/v1/testnet/orders/resume` | hold run 재개 |
 | GET | `/api/v1/testnet/orders/status` | 주문 상태 조회 |
+| GET | `/api/v1/testnet/orders/report` | run report 조회 |
 | DELETE | `/api/v1/testnet/orders` | 주문 취소 |
 | GET | `/api/v1/testnet/stream/status` | stream 상태 확인 |
 
@@ -57,7 +59,21 @@ BE는 Binance Spot Testnet과 직접 통신하는 유일한 계층이다. 동시
 4. BE는 AI `/runs/resume` 를 호출한다.
 5. 반환된 lifecycle 에 따라 다시 hold 를 유지하거나, 재검증 및 제출을 이어간다.
 
-현재 구현에서는 BE checkpoint 만으로 resume 가 완전하게 복구되는 것이 아니다. AI 서비스가 in-memory run 상태를 잃은 경우, BE 쪽 checkpoint 가 남아 있어도 AI 프로세스 재기동 이후 동일 run resume 는 실패할 수 있다.
+현재 구현에서는 BE checkpoint 만으로 resume 가 완전하게 복구되는 것은 아니다. 다만 AI 서비스가 로컬 JSON run 저장소를 유지하는 한, AI 프로세스 재기동 이후에도 non-agentic 동일 run resume 를 이어갈 수 있다.
+
+## 5A. config 조회 API의 canonical 의미
+
+`GET /api/v1/testnet/config` 는 현재 서버가 사용하는 Testnet REST, WebSocket Stream, WebSocket API 기준 URL을 반환한다.
+
+- 성공 응답은 camelCase `TestnetConfigResponse` 다.
+- 이 endpoint 존재와 FE Settings 화면 연결 여부는 구분해서 문서화해야 한다.
+
+## 5B. run report 조회 API의 canonical 의미
+
+`GET /api/v1/testnet/orders/report` 는 `runId` 기준으로 checkpoint 에 저장된 report payload를 반환한다.
+
+- report 가 없으면 404 를 반환한다.
+- FE Reports 페이지의 현재 mock 상태와, BE report 조회 capability 자체는 구분해서 문서화해야 한다.
 
 ## 6. 내부 orchestration 흐름
 
@@ -137,5 +153,6 @@ BE는 AI에 다음 의미의 payload를 전달한다.
 
 - `POST /orders` 와 `POST /orders/resume` 는 둘 다 `OrderRunResponse` 로 응답한다.
 - `GET /orders/status` 와 `DELETE /orders` 는 별도 응답 모델을 유지한다.
-- config 조회용 public endpoint는 현재 없다.
+- config 조회용 public endpoint는 현재 존재한다.
+- run report 조회용 public endpoint도 현재 존재한다.
 - stream 상태는 별도 `GET /stream/status` 로 확인한다.

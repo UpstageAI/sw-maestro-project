@@ -9,9 +9,11 @@
 사용자가 다음 흐름을 안전하게 검증할 수 있어야 한다.
 
 - 계정 잔고 조회
+- Testnet 연결 설정 조회
 - 시세, 호가, 캔들 조회
 - 현물 주문 테스트 요청
 - run 상태 확인과 필요 시 resume
+- run report 조회
 - 주문 상태 조회
 - 주문 취소
 - WebSocket 시세 상태 확인
@@ -27,6 +29,8 @@
 - 주문 생성 전 AI 기반 판단과 BE 재검증
 - `POST /api/v1/testnet/orders` run 중심 응답
 - `POST /api/v1/testnet/orders/resume` 공개 재개 API
+- `GET /api/v1/testnet/config` 공개 설정 조회 API
+- `GET /api/v1/testnet/orders/report` 공개 run report 조회 API
 - 주문 상태 조회와 주문 취소의 분리된 API
 - 단계별 trace와 상태값 기반 설명
 
@@ -50,6 +54,10 @@
 
 사용자는 주문 전 잔고, 현재가, 호가, 캔들을 조회할 수 있어야 한다.
 
+### US-01A Testnet 설정 확인
+
+사용자는 현재 서버가 사용하는 Testnet REST, WebSocket Stream, WebSocket API 기준 URL을 조회할 수 있어야 한다.
+
 ### US-02 주문 테스트 시작
 
 사용자는 `POST /api/v1/testnet/orders` 로 주문 테스트를 시작하고, Binance 원본 응답이 아니라 run 중심 응답을 받아야 한다.
@@ -66,6 +74,8 @@
 
 사용자는 최소한 `runId`, `lifecycleStatus`, `holdReason`, `reasonCodes` 수준의 결과를 확인할 수 있어야 하며, 추후 화면이나 저장 계층에서 상세 trace를 조회할 수 있어야 한다.
 
+현재 구현 기준에서 run report는 공개 BE API로 조회 가능하지만, FE Reports 페이지는 아직 live 연동이 아니라 mock 기반이다.
+
 ## 5. 기능 요구사항
 
 | ID | 요구사항 | 수용 기준 |
@@ -73,13 +83,15 @@
 | FR-01 | 시스템은 Binance Spot Testnet만 사용해야 한다. | Production URL과 키를 사용하지 않는다. |
 | FR-02 | FE는 Binance를 직접 호출하지 않아야 한다. | 모든 외부 호출이 BE 공개 API를 경유한다. |
 | FR-03 | 시스템은 잔고 조회를 제공해야 한다. | `GET /api/v1/testnet/account` 가 정규화 응답을 반환한다. |
+| FR-03A | 시스템은 Testnet 연결 설정 조회를 제공해야 한다. | `GET /api/v1/testnet/config` 가 REST/WS 기준 URL을 camelCase 응답으로 반환한다. |
 | FR-04 | 시스템은 가격, 호가, 캔들 조회를 제공해야 한다. | `ticker/price`, `ticker/book`, `klines` 가 동작한다. |
 | FR-05 | 주문 생성 API는 run 중심 응답을 반환해야 한다. | `POST /api/v1/testnet/orders` 가 `runId`, `lifecycleStatus` 를 포함한다. |
 | FR-06 | 주문 생성 API는 Binance 원본 응답을 public contract로 사용하지 않아야 한다. | 직접 `clientOrderId`, `transactTime`, `origQty` 전체를 canonical 성공 계약으로 문서화하지 않는다. |
 | FR-07 | 시스템은 공개 resume API를 제공해야 한다. | `POST /api/v1/testnet/orders/resume` 가 public contract에 포함된다. |
 | FR-08 | 주문 상태 조회와 주문 취소는 별도 API로 제공해야 한다. | `GET /orders/status`, `DELETE /orders` 가 유지된다. |
+| FR-08A | 시스템은 run report 조회를 제공해야 한다. | `GET /api/v1/testnet/orders/report` 가 `runId` 기준 report payload를 반환한다. |
 | FR-09 | AI는 별도 HTTP 서비스로 동작해야 한다. | `/runs/start`, `/runs/resume`, `/runs/complete` 가 존재한다. |
-| FR-10 | AI run 저장소의 현재 구현 특성을 문서화해야 한다. | in-memory 저장소임을 명시한다. |
+| FR-10 | AI run 저장소의 현재 구현 특성을 문서화해야 한다. | 로컬 JSON 파일 기반 저장소임을 명시한다. |
 | FR-11 | resume 시 이전 이력은 보존되어야 한다. | `resume_history`, 이전 trace 스냅샷 보존 의미가 문서화된다. |
 | FR-12 | resume 후 현재 stage trace는 재계산될 수 있어야 한다. | 현재 trace overwrite 특성이 문서화된다. |
 | FR-13 | BE만 실행 권한을 가져야 한다. | Binance 제출, 서명, 최종 판정은 BE만 수행한다. |
@@ -110,6 +122,7 @@
 - 주문 생성 플로우는 run 중심 계약을 향하고 있다.
 - 주문 상태 조회와 취소는 separate API 흐름으로 동작한다.
 - 리포트 화면은 현재 mock 데이터 시각화 단계다.
-- 설정 화면의 config 조회는 placeholder 단계다.
+- 설정 화면은 현재 placeholder 단계지만, BE의 config 조회 endpoint 자체는 구현되어 있다.
+- Reports 화면은 현재 mock 기반이지만, BE의 run report 조회 endpoint 자체는 구현되어 있다.
 
 이 성숙도 차이는 제품 요구사항의 축소가 아니라, 현재 구현 단계의 차이로 해석한다.

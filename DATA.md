@@ -28,12 +28,14 @@
 |---|---|---|
 | GET | `/health` | `HealthResponse` |
 | GET | `/api/v1/testnet/account` | `BalanceResponse` |
+| GET | `/api/v1/testnet/config` | `TestnetConfigResponse` |
 | GET | `/api/v1/testnet/ticker/price` | `PriceResponse` |
 | GET | `/api/v1/testnet/ticker/book` | `BookResponse` |
 | GET | `/api/v1/testnet/klines` | `KlinesResponse` |
 | POST | `/api/v1/testnet/orders` | `OrderRunResponse` |
 | POST | `/api/v1/testnet/orders/resume` | `OrderRunResponse` |
 | GET | `/api/v1/testnet/orders/status` | `OrderStatusResponse` |
+| GET | `/api/v1/testnet/orders/report` | `RunReportResponse` |
 | DELETE | `/api/v1/testnet/orders` | `CancelOrderResponse` |
 | GET | `/api/v1/testnet/stream/status` | `StreamStatusResponse` |
 
@@ -194,6 +196,16 @@
 
 ## 8. market 조회 계약
 
+### 8.0 TestnetConfigResponse
+
+```json
+{
+  "restBaseUrl": "https://testnet.binance.vision/api",
+  "wsStreamUrl": "wss://stream.testnet.binance.vision/ws",
+  "wsApiUrl": "wss://ws-api.testnet.binance.vision/ws-api/v3"
+}
+```
+
 ### 8.1 BalanceResponse
 
 ```json
@@ -252,6 +264,20 @@
   ]
 }
 ```
+
+## 8.5 run report 조회 계약
+
+```json
+{
+  "runId": "run_report_001",
+  "report": {
+    "status": "success",
+    "message": "done"
+  }
+}
+```
+
+`GET /api/v1/testnet/orders/report?runId=...` 는 checkpoint 에 저장된 run report를 반환한다.
 
 ## 9. stream 상태 계약
 
@@ -339,5 +365,5 @@
 
 - FE 타입 일부는 아직 raw order response 성격의 이름을 유지하고 있다.
 - 그러나 canonical public contract는 `OrderRunResponse` 다.
-- Reports 페이지는 현재 mock 기반이므로 live report API 계약을 완료된 화면처럼 가정하지 않는다.
-- Settings config 조회용 public endpoint는 아직 없다.
+- Reports 페이지는 현재 mock 기반이므로 live report API 계약을 완료된 화면처럼 가정하지 않는다. 다만 BE public API 자체는 이미 존재한다.
+- Settings 화면은 현재 placeholder 단계지만, `GET /api/v1/testnet/config` public endpoint 자체는 이미 존재한다.

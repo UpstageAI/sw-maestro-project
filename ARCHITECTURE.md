@@ -30,12 +30,14 @@
 
 - `GET /health`
 - `GET /api/v1/testnet/account`
+- `GET /api/v1/testnet/config`
 - `GET /api/v1/testnet/ticker/price`
 - `GET /api/v1/testnet/ticker/book`
 - `GET /api/v1/testnet/klines`
 - `POST /api/v1/testnet/orders`
 - `POST /api/v1/testnet/orders/resume`
 - `GET /api/v1/testnet/orders/status`
+- `GET /api/v1/testnet/orders/report`
 - `DELETE /api/v1/testnet/orders`
 - `GET /api/v1/testnet/stream/status`
 
@@ -81,15 +83,16 @@
 7. 결과가 `READY_FOR_BE` 면 BE가 재검증과 실행을 이어간다.
 8. 결과가 여전히 `HOLD` 또는 `NO_ORDER` 면 해당 run 상태를 그대로 반환한다.
 
-`POST /api/v1/testnet/orders/resume` 는 보조 기능이 아니라 public API의 1급 엔드포인트다. 다만 현재 구현에서는 resume 가 BE checkpoint 와 AI in-memory run 상태를 함께 전제로 하므로, AI 프로세스 재시작 이후에는 BE checkpoint 만으로 동일 run 복구가 보장되지는 않는다.
+`POST /api/v1/testnet/orders/resume` 는 보조 기능이 아니라 public API의 1급 엔드포인트다. 현재 구현에서는 BE checkpoint 와 AI 로컬 JSON run 저장소를 함께 사용하므로, 같은 저장소 파일이 유지되는 한 AI 프로세스 재시작 이후에도 non-agentic run resume 를 이어갈 수 있다. 다만 저장소 파일이 유실되거나 교체되면 BE checkpoint 만으로 동일 run 복구가 완전하게 보장되지는 않는다.
 
 ## 6. AI 서비스의 현재 구현 특성
 
 - AI는 BE 내부 모듈이 아니라 별도 HTTP 서비스다.
-- 현재 run 저장소는 in-memory dictionary 기반이다.
+- 현재 기본 run 저장소는 로컬 JSON 파일 기반이다.
 - `start()` 는 run 상태를 메모리에 저장한다.
 - `resume()` 는 기존 run을 읽어 이력을 추가한 뒤 다시 graph를 실행한다.
 - `complete()` 는 `READY_FOR_BE` run에 completion payload를 주입한다.
+- 현재 구현에는 `/runs/agentic/start` 도 존재하지만, 공통 FE→BE→AI 주문 흐름의 canonical 경로는 여전히 `/runs/start` 다.
 
 현재 resume 의미는 다음과 같다.
 
@@ -112,15 +115,15 @@
 
 ### AI 저장
 
-- 현재 구현에서는 프로세스 메모리 안의 run 상태만 유지
+- 현재 구현에서는 로컬 JSON 파일에 run 상태를 저장
 
-이 차이 때문에 AI 프로세스 재시작 시 run 보존성은 BE SQLite checkpoint와 동일하지 않다.
+이 차이 때문에 AI 보존성은 순수 in-memory 수준은 아니지만, BE SQLite checkpoint와 완전히 같은 durability 계층도 아니다.
 
 ## 8. 현재 FE 성숙도 위치
 
 - Orders 플로우는 run 중심 응답을 받아야 하는 구조로 가고 있다.
-- Reports 페이지는 현재 mock 기반이다.
-- Settings 페이지는 config 조회 endpoint가 아직 없어 placeholder를 표시한다.
+- Reports 페이지는 현재 mock 기반이다. 다만 BE의 `GET /api/v1/testnet/orders/report` 는 이미 존재한다.
+- Settings 페이지는 현재 placeholder를 표시한다. 다만 BE의 `GET /api/v1/testnet/config` 는 이미 존재한다.
 - resume API는 canonical 구조에 포함되지만, 현재 FE 연결은 완전하지 않다.
 
 ## 9. 응답 명명 정책

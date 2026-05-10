@@ -16,27 +16,31 @@
 
 | ID | 대상 | 검증 포인트 |
 |---|---|---|
+| T-00 | `GET /api/v1/testnet/config` | Testnet 기준 URL을 camelCase로 반환하는지 |
 | T-01 | `POST /api/v1/testnet/orders` | `runId`, `lifecycleStatus` 중심 응답 여부 |
 | T-02 | `POST /api/v1/testnet/orders` | `HOLD`, `NO_ORDER`, `BE_REJECTED`, `REPORT_READY` 분기 |
 | T-03 | `POST /api/v1/testnet/orders/resume` | hold run 재개 가능 여부 |
 | T-04 | `GET /api/v1/testnet/orders/status` | 주문 상태 조회가 생성 API와 분리되어 있는지 |
+| T-04A | `GET /api/v1/testnet/orders/report` | `runId` 기준 report 조회가 가능한지 |
 | T-05 | `DELETE /api/v1/testnet/orders` | 주문 취소가 생성 API와 분리되어 있는지 |
 | T-06 | 오류 응답 | `error_code`, `request_id` snake_case 유지 여부 |
 | T-07 | 성공 응답 | camelCase 필드 유지 여부 |
 | T-08 | AI service | `/runs/start`, `/runs/resume`, `/runs/complete` 동작 여부 |
 | T-09 | AI resume | 이전 이력 보존과 현재 trace overwrite 특성 검증 |
-| T-10 | FE maturity | Reports mock, Settings config pending 상태가 사실대로 반영되는지 |
+| T-10 | FE maturity | Reports mock, Settings 미연동 상태가 사실대로 반영되는지 |
 
 ## 3. 백엔드 API 체크리스트
 
 - `GET /health` 응답 확인
 - `GET /api/v1/testnet/account` 응답 확인
+- `GET /api/v1/testnet/config` 응답 확인
 - `GET /api/v1/testnet/ticker/price` 응답 확인
 - `GET /api/v1/testnet/ticker/book` 응답 확인
 - `GET /api/v1/testnet/klines` 응답 확인
 - `POST /api/v1/testnet/orders` 응답이 run 중심인지 확인
 - `POST /api/v1/testnet/orders/resume` 응답이 run 중심인지 확인
 - `GET /api/v1/testnet/orders/status` 응답 확인
+- `GET /api/v1/testnet/orders/report` 응답 확인
 - `DELETE /api/v1/testnet/orders` 응답 확인
 - `GET /api/v1/testnet/stream/status` 응답 확인
 
@@ -85,6 +89,7 @@
 - `decision_trace_history` 는 이전 trace 스냅샷을 저장한다.
 - 새 resume 후 현재 `decision_trace` 는 재계산된 값으로 바뀔 수 있다.
 - 새 resume 후 현재 `verificationChecks` 도 재계산 결과로 overwrite 될 수 있다.
+- 같은 로컬 run store 파일을 유지하는 한 프로세스 재시작 이후에도 non-agentic run resume 가 가능한지 확인한다.
 
 이 부분은 문서와 구현이 어긋나기 쉬운 지점이므로 반드시 명시적으로 검증한다.
 
@@ -98,11 +103,11 @@
 ### Reports
 
 - 현재 mock 기반 페이지임을 확인
-- live report API 연동 완료 상태로 발표하지 않도록 확인
+- BE report API 존재와 FE live 연동 상태를 구분해서 발표하도록 확인
 
 ### Settings
 
-- config 조회용 endpoint가 아직 없음을 확인
+- BE config endpoint 존재와 FE 미연동 상태를 구분해서 확인
 - placeholder 문구가 현재 상태를 숨기지 않는지 확인
 
 ## 7. 데모 메시지 기준
@@ -113,13 +118,15 @@
 - AI는 실행 권한자가 아니다.
 - `POST /orders` 는 run 응답을 반환한다.
 - `POST /orders/resume` 는 hold run을 이어가기 위한 public endpoint다.
+- `GET /config` 와 `GET /orders/report` 는 BE에 존재하지만, FE의 Settings/Reports 연동 상태와 동일한 말이 아니다.
 - Reports는 현재 mock 기반이다.
-- Settings config API는 아직 pending 이다.
+- Settings 화면 연동은 아직 pending 이다.
 
 ## 8. 합격 기준
 
 - 루트 문서 간 상태명과 필드명이 일치한다.
 - 생성 API가 raw Binance 응답 계약으로 서술되지 않는다.
 - resume endpoint가 빠지지 않는다.
+- config endpoint와 run report endpoint 상태가 문서 간 일치한다.
 - FE, BE, AI 권한 경계가 흔들리지 않는다.
 - 현재 미구현 영역이 구현 완료처럼 보이지 않는다.

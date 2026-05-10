@@ -32,12 +32,14 @@
 
 - `GET /health`
 - `GET /api/v1/testnet/account`
+- `GET /api/v1/testnet/config`
 - `GET /api/v1/testnet/ticker/price`
 - `GET /api/v1/testnet/ticker/book`
 - `GET /api/v1/testnet/klines`
 - `POST /api/v1/testnet/orders`
 - `POST /api/v1/testnet/orders/resume`
 - `GET /api/v1/testnet/orders/status`
+- `GET /api/v1/testnet/orders/report`
 - `DELETE /api/v1/testnet/orders`
 - `GET /api/v1/testnet/stream/status`
 
@@ -47,7 +49,7 @@
 - `POST /runs/resume`
 - `POST /runs/complete`
 
-AI 서비스는 독립 HTTP 서비스이며, 현재 구현은 in-memory run 저장소를 사용한다.
+AI 서비스는 독립 HTTP 서비스이며, 현재 구현은 로컬 JSON 파일 기반 run 저장소를 사용한다.
 
 ## 주문 생성 계약의 canonical 기준
 
@@ -80,10 +82,11 @@ AI 서비스는 독립 HTTP 서비스이며, 현재 구현은 in-memory run 저�
 
 - FE 주문 생성은 이미 run 중심 payload를 기대하는 방향으로 설계되어 있다.
 - FE 주문 상태 조회와 주문 취소는 별도 API 흐름으로 분리되어 있다.
-- FE Reports 페이지는 현재 mock 데이터 기반이다.
-- FE Settings 페이지의 Testnet config 조회는 placeholder 상태이며, 설정 조회용 공개 API는 아직 미구현이다.
+- FE Reports 페이지는 현재 mock 데이터 기반이다. 다만 BE에는 `GET /api/v1/testnet/orders/report` 공개 API가 이미 존재한다.
+- FE Settings 페이지는 현재 placeholder 상태다. 다만 BE에는 `GET /api/v1/testnet/config` 공개 API가 이미 존재한다.
 - FE에서 `POST /api/v1/testnet/orders/resume` 연동은 canonical 계약에는 포함되지만, 현재 UI는 아직 완전하게 연결되지 않았다.
 - AI resume는 이전 이력과 이전 trace 스냅샷을 보존하지만, 재개 후 현재 stage trace와 현재 verification 결과는 새로 계산되어 overwrite된다.
+- AI run 상태는 로컬 JSON 파일에 저장되므로 같은 저장소 파일을 유지하는 한 프로세스 재시작 이후에도 non-agentic run resume를 이어갈 수 있다.
 
 ## 응답 명명 규칙
 

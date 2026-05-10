@@ -12,10 +12,10 @@ FE는 입력, 조회, 시각화, 상태 분기 UX를 담당한다. FE는 Binance
 
 | 페이지 | 목적 | 현재 상태 |
 |---|---|---|
-| Settings | Testnet 환경과 서버 연결 상태 표시 | config 조회 endpoint 미구현, placeholder 표시 |
+| Settings | Testnet 환경과 서버 연결 상태 표시 | BE config endpoint는 존재하지만, 현재 FE는 placeholder 중심 read-only 표시 |
 | Dashboard | 잔고, 현재가, 호가, 캔들, stream 상태 표시 | live 연동 대상 |
 | Orders | 주문 생성, 상태 조회, 취소 | 주문 생성은 run 계약 대상, 상태/취소는 separate API |
-| Reports | run 리포트와 cadence 표시 | 현재 mock 데이터 기반 |
+| Reports | run 리포트와 cadence 표시 | 현재 mock 데이터 기반, BE report endpoint는 아직 미연동 |
 
 ## 3. FE가 호출해야 하는 API
 
@@ -78,16 +78,18 @@ FE는 `POST /api/v1/testnet/orders` 를 호출한 뒤 아래 중 하나를 처�
 - 현재 FE 코드는 `placeOrder()` 에서 여전히 raw order response 타입 이름을 일부 사용한다.
 - 하지만 BE 실제 응답과 제품 계약은 run 중심 payload다.
 - 따라서 문서 기준은 구현 의도와 BE 계약을 따라 run 중심으로 고정한다.
+- 현재 FE는 `HOLD` 상태에 대해서만 dedicated resume CTA를 제공한다.
+- `NO_ORDER`, `BE_REJECTED`, `REPORT_READY` 는 현재 주로 session order log를 통해 확인한다.
 
 ### Reports
 
 - Reports 페이지는 현재 mock 리포트와 mock cadence 데이터를 사용한다.
-- live report 조회 API가 연결된 상태로 문서화하면 안 된다.
+- BE의 `GET /api/v1/testnet/orders/report` 가 존재하더라도, FE에서 live report 조회 API가 연결된 상태로 문서화하면 안 된다.
 
 ### Settings
 
 - Settings 페이지는 현재 Backend API base URL 과 설명성 placeholder만 보여준다.
-- Testnet config 조회 endpoint는 pending 또는 미구현 상태다.
+- BE의 `GET /api/v1/testnet/config` 는 존재하지만, FE는 현재 그 endpoint를 호출해 실제 값을 렌더링하지 않는다.
 
 ## 8. UI 문구 원칙
 
