@@ -36,7 +36,7 @@ def get_latest_testnet_config(db: Session) -> TestnetConfig | None:
     return db.scalars(select(TestnetConfig).order_by(TestnetConfig.created_at.desc())).first()
 
 
-def save_balance_snapshot(db: Session, snapshot_json: dict, config_id: str | None = None) -> BalanceSnapshot:
+def save_balance_snapshot(db: Session, snapshot_json: dict[str, object], config_id: str | None = None) -> BalanceSnapshot:
     snapshot = BalanceSnapshot(snapshot_json=snapshot_json, config_id=config_id)
     db.add(snapshot)
     db.commit()
@@ -44,7 +44,7 @@ def save_balance_snapshot(db: Session, snapshot_json: dict, config_id: str | Non
     return snapshot
 
 
-def save_price_snapshot(db: Session, symbol: str, snapshot_json: dict, config_id: str | None = None) -> PriceSnapshot:
+def save_price_snapshot(db: Session, symbol: str, snapshot_json: dict[str, object], config_id: str | None = None) -> PriceSnapshot:
     snapshot = PriceSnapshot(symbol=symbol, snapshot_json=snapshot_json, config_id=config_id)
     db.add(snapshot)
     db.commit()
@@ -55,8 +55,8 @@ def save_price_snapshot(db: Session, symbol: str, snapshot_json: dict, config_id
 def save_spot_order(
     db: Session,
     symbol: str,
-    request_json: dict,
-    response_json: dict | None = None,
+    request_json: dict[str, object],
+    response_json: dict[str, object] | None = None,
     binance_order_id: str | None = None,
     status: str = "PENDING",
     config_id: str | None = None,
@@ -81,7 +81,12 @@ def get_spot_order_by_binance_id(db: Session, binance_order_id: str) -> SpotOrde
     ).first()
 
 
-def update_spot_order_status(db: Session, order_id: str, status: str, response_json: dict | None = None) -> SpotOrder | None:
+def update_spot_order_status(
+    db: Session,
+    order_id: str,
+    status: str,
+    response_json: dict[str, object] | None = None,
+) -> SpotOrder | None:
     order = db.get(SpotOrder, order_id)
     if not order:
         return None
@@ -93,7 +98,7 @@ def update_spot_order_status(db: Session, order_id: str, status: str, response_j
     return order
 
 
-def save_order_status_log(db: Session, order_id: str, status_json: dict) -> OrderStatusLog:
+def save_order_status_log(db: Session, order_id: str, status_json: dict[str, object]) -> OrderStatusLog:
     log = OrderStatusLog(order_id=order_id, status_json=status_json)
     db.add(log)
     db.commit()
@@ -101,7 +106,7 @@ def save_order_status_log(db: Session, order_id: str, status_json: dict) -> Orde
     return log
 
 
-def save_cancel_log(db: Session, order_id: str, cancel_json: dict) -> CancelLog:
+def save_cancel_log(db: Session, order_id: str, cancel_json: dict[str, object]) -> CancelLog:
     log = CancelLog(order_id=order_id, cancel_json=cancel_json)
     db.add(log)
     db.commit()
@@ -109,7 +114,7 @@ def save_cancel_log(db: Session, order_id: str, cancel_json: dict) -> CancelLog:
     return log
 
 
-def save_stream_event(db: Session, stream_name: str, event_json: dict, config_id: str | None = None) -> StreamEvent:
+def save_stream_event(db: Session, stream_name: str, event_json: dict[str, object], config_id: str | None = None) -> StreamEvent:
     event = StreamEvent(stream_name=stream_name, event_json=event_json, config_id=config_id)
     db.add(event)
     db.commit()
@@ -117,12 +122,30 @@ def save_stream_event(db: Session, stream_name: str, event_json: dict, config_id
     return event
 
 
-def save_report(db: Session, report_json: dict, order_id: str | None = None) -> Report:
-    report = Report(report_json=report_json, order_id=order_id)
+def save_or_update_report(
+    db: Session,
+    run_id: str,
+    report_json: dict[str, object],
+    order_id: str | None = None,
+) -> Report:
+    report = db.scalars(select(Report).where(Report.run_id == run_id)).first()
+    if report:
+        report.report_json = report_json
+        if order_id is not None:
+            report.order_id = order_id
+        db.commit()
+        db.refresh(report)
+        return report
+
+    report = Report(run_id=run_id, report_json=report_json, order_id=order_id)
     db.add(report)
     db.commit()
     db.refresh(report)
     return report
+
+
+def get_report_by_run_id(db: Session, run_id: str) -> Report | None:
+    return db.scalars(select(Report).where(Report.run_id == run_id)).first()
 
 
 def save_or_update_checkpoint(
@@ -130,7 +153,7 @@ def save_or_update_checkpoint(
     run_id: str,
     lifecycle_status: str,
     hold_reason: str | None,
-    state_json: dict,
+    state_json: dict[str, object],
     schema_version: str = "1.0",
     ttl_minutes: int = 60,
 ) -> AgentRunCheckpoint:
