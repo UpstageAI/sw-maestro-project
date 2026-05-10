@@ -1,0 +1,24 @@
+{
+	"name": "review-insighter",
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"compatibility_date": "2026-05-07",
+	"compatibility_flags": ["nodejs_compat"],
+	"workers_dev": false,
+	"routes": [
+		{
+			"pattern": "review-insighter.jiyu.land",
+			"custom_domain": true
+		}
+	],
+	"assets": {
+		"directory": ".svelte-kit/cloudflare",
+		"binding": "ASSETS"
+	},
+	"observability": {
+		"enabled": true
+	},
+	"vars": {
+		"UPSTAGE_MODEL": "solar-pro3",
+		"UPSTAGE_BASE_URL": "https://api.upstage.ai/v1/solar"
+	}
+}
