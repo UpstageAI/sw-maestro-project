@@ -1,11 +1,40 @@
 from __future__ import annotations
 
+from unittest.mock import patch
+
+import autocoin_ai.tools.account_tools  # register tools
+import autocoin_ai.tools.market_tools
+import autocoin_ai.tools.policy_tools
 from fastapi.testclient import TestClient
 
 from autocoin_ai.constants import LIFECYCLE_HOLD, LIFECYCLE_READY_FOR_BE, LIFECYCLE_REPORT_READY
 from autocoin_ai.http_api import app, create_app
+from autocoin_ai.llm import StepResult
 from autocoin_ai.run_store import JsonFileRunStore
 from tests.fixtures import allowed_request, execution_result, request_with_user_input
+
+
+_NOOP_STEP = StepResult(is_final=True, function_calls=[], text="", candidate_content=None)
+_AGENTIC_EVAL_RESP = {
+    "summary": "BTC 매수 평가 완료.",
+    "user_message": "매수 주문이 승인되었습니다. 주문 실행 준비가 되었습니다.",
+    "reason_codes": ["RISK_GATE_PASSED"],
+    "schema_warnings": [],
+}
+
+
+def _start_agentic_run(client: TestClient, payload: dict | None = None):
+    strategy_resp = {
+        "action": "BUY",
+        "size_usd": "50",
+        "conviction": 0.80,
+        "rationale": "원칙에 맞는 진입입니다.",
+        "matched_principle_titles": [],
+    }
+    with patch("autocoin_ai.nodes.strategy.gemini_generate", return_value=strategy_resp), patch(
+        "autocoin_ai.nodes.risk_agent.gemini_step_with_tools", return_value=_NOOP_STEP
+    ), patch("autocoin_ai.nodes.evaluator.gemini_generate", return_value=_AGENTIC_EVAL_RESP):
+        return client.post("/runs/agentic/start", json=payload or allowed_request())
 
 
 def test_start_endpoint_returns_canonical_agent_state():
@@ -17,6 +46,20 @@ def test_start_endpoint_returns_canonical_agent_state():
     assert payload["run_id"] == "airun_test_001"
     assert payload["lifecycle_status"] == LIFECYCLE_READY_FOR_BE
     assert set(("policy", "risk", "evaluator", "execution", "run_summary")).issubset(payload["decision_trace"].keys())
+
+
+def test_start_agentic_endpoint_returns_canonical_agent_state():
+    with TestClient(app) as client:
+        response = _start_agentic_run(client)
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["run_id"] == "airun_test_001"
+    assert payload["trader_id"] == "wonyotti"
+    assert payload["lifecycle_status"] == LIFECYCLE_READY_FOR_BE
+    assert set(("intake", "policy", "strategy", "risk", "evaluator", "execution", "run_summary")).issubset(
+        payload["decision_trace"].keys()
+    )
 
 
 def test_resume_endpoint_resumes_hold_run():
@@ -55,6 +98,21 @@ def test_complete_endpoint_accepts_execution_result():
     payload = response.json()
     assert payload["lifecycle_status"] == LIFECYCLE_REPORT_READY
     assert payload["decision_trace"]["run_summary"]["final_action"] == LIFECYCLE_REPORT_READY
+
+
+def test_agentic_run_can_complete_via_existing_complete_endpoint():
+    with TestClient(app) as client:
+        start = _start_agentic_run(client)
+        response = client.post(
+            "/runs/complete",
+            json={"run_id": "airun_test_001", "completion_payload": execution_result()},
+        )
+
+    assert start.status_code == 200
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["lifecycle_status"] == LIFECYCLE_REPORT_READY
+    assert payload["decision_trace"]["execution"]["final_action"] == LIFECYCLE_REPORT_READY
 
 
 def test_start_endpoint_rejects_missing_run_id():
@@ -102,6 +160,23 @@ def test_resume_endpoint_returns_not_found_for_unknown_run():
 
     assert response.status_code == 404
     assert response.json() == {"detail": "unknown run_id: airun_missing"}
+
+
+def test_resume_endpoint_rejects_agentic_run():
+    with TestClient(app) as client:
+        start = _start_agentic_run(client)
+        response = client.post(
+            "/runs/resume",
+            json={
+                "run_id": "airun_test_001",
+                "resume_reason": "MARKET_DATA_SUPPLIED",
+                "patch_fields": {"supplemental_user_input": {"market_snapshot_fresh": True}},
+            },
+        )
+
+    assert start.status_code == 200
+    assert response.status_code == 400
+    assert response.json() == {"detail": "resume not supported for agentic runs in MVP"}
 
 
 def test_resume_endpoint_rejects_non_hold_run():
@@ -160,6 +235,70 @@ def test_complete_endpoint_returns_not_found_for_unknown_run():
             "/runs/complete",
             json={"run_id": "airun_missing", "completion_payload": execution_result()},
         )
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "unknown run_id: airun_missing"}
+
+
+def test_order_checkpoint_endpoint_returns_evidence_for_standard_run():
+    with TestClient(app) as client:
+        start = client.post("/runs/start", json=allowed_request())
+        response = client.get("/runs/airun_test_001/checkpoints/order")
+
+    assert start.status_code == 200
+    assert response.status_code == 200
+    assert response.json()["final_snapshot_lifecycle_status"] == LIFECYCLE_READY_FOR_BE
+    assert response.json()["history_snapshot_count"] > 0
+
+
+def test_order_checkpoint_endpoint_returns_evidence_for_agentic_run():
+    with TestClient(app) as client:
+        start = _start_agentic_run(client)
+        response = client.get("/runs/airun_test_001/checkpoints/order")
+
+    assert start.status_code == 200
+    assert response.status_code == 200
+    assert response.json()["final_snapshot_lifecycle_status"] == LIFECYCLE_READY_FOR_BE
+    assert response.json()["history_snapshot_count"] > 0
+
+
+def test_order_checkpoint_endpoint_returns_not_found_for_unknown_run():
+    with TestClient(app) as client:
+        response = client.get("/runs/airun_missing/checkpoints/order")
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "unknown run_id: airun_missing"}
+
+
+def test_completion_checkpoint_endpoint_requires_completed_run():
+    with TestClient(app) as client:
+        start = client.post("/runs/start", json=allowed_request())
+        response = client.get("/runs/airun_test_001/checkpoints/completion")
+
+    assert start.status_code == 200
+    assert response.status_code == 400
+    assert response.json() == {"detail": "completion checkpoint not available before completion has executed"}
+
+
+def test_completion_checkpoint_endpoint_returns_evidence_after_completion():
+    with TestClient(app) as client:
+        start = _start_agentic_run(client)
+        complete = client.post(
+            "/runs/complete",
+            json={"run_id": "airun_test_001", "completion_payload": execution_result()},
+        )
+        response = client.get("/runs/airun_test_001/checkpoints/completion")
+
+    assert start.status_code == 200
+    assert complete.status_code == 200
+    assert response.status_code == 200
+    assert response.json()["final_snapshot_lifecycle_status"] == LIFECYCLE_REPORT_READY
+    assert response.json()["history_snapshot_count"] > 0
+
+
+def test_completion_checkpoint_endpoint_returns_not_found_for_unknown_run():
+    with TestClient(app) as client:
+        response = client.get("/runs/airun_missing/checkpoints/completion")
 
     assert response.status_code == 404
     assert response.json() == {"detail": "unknown run_id: airun_missing"}
