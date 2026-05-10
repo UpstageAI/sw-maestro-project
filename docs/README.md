@@ -91,3 +91,15 @@
 ## 이 문서 세트의 초점
 
 이 문서 세트는 AI 중심 저장소에 맞춰 작성한다. 다만 end-to-end 구현과 리뷰가 가능하도록 FE와 BE는 새 기능 명세가 아니라 boundary-only 계약 문서로 포함한다. 이 문서 세트만 읽어도 FE->BE->AI 책임 경계, 상태 vocabulary, acceptance 기준을 해석할 수 있어야 한다.
+
+## 작업 사이클 문서 (별도 폴더)
+
+이번 Agentic Upgrade 작업의 산출물은 `plan/` 폴더에 있다 (팀 합의 사양이 아니라 작업 계획).
+- `plan/MASTER_PLAN.md` — 비전 + Decision Log + 인덱스
+- `plan/CONTRACTS.md` — 노드 입출력 schema, 라우팅, dataclass
+- `plan/PHASES.md` — ralph 단일 루프 작업 단위
+- `plan/FIXTURES.md` — 테스트 픽스처
+- `plan/DOWNSTREAM.md` — autocoin-api / autocoin-web 영향
+- `plan/history/` — 이전 사이클 문서
+
+`docs/`는 캐노니컬 사양만 유지한다.

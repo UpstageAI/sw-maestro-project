@@ -27,6 +27,11 @@ autocoin-ai = "autocoin_ai.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.pytest.ini_options]
+markers = [
+  "live: requires GEMINI_API_KEY — skipped in CI by default",
+]
+
 [tool.basedpyright]
 typeCheckingMode = "basic"
 reportMissingTypeStubs = false

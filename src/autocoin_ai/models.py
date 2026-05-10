@@ -47,6 +47,14 @@ class AgentState(TypedDict):
     report: JsonDict
     resume_history: List[JsonDict]
     decision_trace_history: List[DecisionTraceHistoryEntry]
+    trader_id: str
+    inferred_persona: str
+    persona_override_reason: Optional[str]
+    trader_principles: List[JsonDict]
+    llm_proposal: JsonDict
+    risk_assessment: JsonDict
+    risk_tool_calls: List[JsonDict]
+    evaluator_review: JsonDict
 
 
 def empty_trace_entry() -> TraceEntry:
@@ -73,7 +81,15 @@ def ensure_state_shape(state: Mapping[str, Any]) -> AgentState:
     next_state.setdefault("report", {})
     next_state.setdefault("resume_history", [])
     next_state.setdefault("decision_trace_history", [])
-    return cast(AgentState, cast(object, next_state))
+    next_state.setdefault("trader_id", "")
+    next_state.setdefault("inferred_persona", "")
+    next_state.setdefault("persona_override_reason", None)
+    next_state.setdefault("trader_principles", [])
+    next_state.setdefault("llm_proposal", {})
+    next_state.setdefault("risk_assessment", {})
+    next_state.setdefault("risk_tool_calls", [])
+    next_state.setdefault("evaluator_review", {})
+    return cast(AgentState, next_state)
 
 
 def append_check(state: AgentState, name: str, stage: str, result: str, evidence_refs: List[str]) -> None:
@@ -120,4 +136,4 @@ def set_trace(
 
 
 def state_copy(state: Mapping[str, Any]) -> AgentState:
-    return cast(AgentState, cast(object, deepcopy(state)))
+    return cast(AgentState, deepcopy(state))

@@ -29,16 +29,18 @@ Coin Agent의 최소 구조는 FE, BE, AI, 저장소, Binance Spot Testnet으로
 
 ## 3. canonical 흐름
 
-1. FE가 주문 테스트 요청을 BE에 전달한다.
-2. BE가 정책 artifact를 조회해 `policy_context`를 구성한다.
-3. BE가 같은 `run_id`로 AI run을 시작한다.
-4. AI는 policy, risk, evaluation 단계를 거쳐 proposal 또는 보류 결과를 만든다.
-5. Risk/Evaluator 단계가 proposal을 유지하면 lifecycle은 `READY_FOR_BE`로 정리된다.
-6. `PASS`는 trace 또는 gate 의미이고, `READY_FOR_BE`는 lifecycle handoff 상태다.
-7. BE는 `READY_FOR_BE` 이후 deterministic 재검증을 다시 수행한다.
-8. BE가 승인하면 Binance Spot Testnet 제출로 이어진다.
-9. BE가 차단하면 상태는 `BE_REJECTED`로 남는다.
-10. AI는 resume, `execution_result`, 또는 `be_rejection_evidence`를 받아 최종 설명을 정리하고 reporting 상태를 완성한다.
+1. FE가 자연어 또는 구조화 입력을 담은 주문 테스트 요청을 BE에 전달한다.
+2. BE가 `run_id`를 부여하고 AI run을 시작한다.
+3. **Intake**: `user_input.raw_text`가 있으면 LLM 파싱 모드로 주문 의도와 `trader_id`, `inferred_persona`를 결정한다. 모호도 초과 시 `HOLD_INPUT_AMBIGUOUS`로 조기 종료.
+4. **Policy**: `policy_context`와 `persona_bounds`를 설정하고 `trader_principles`를 RAG retrieval한다.
+5. **Strategy**: `trader_principles`와 `persona_bounds`를 참고해 `llm_proposal`을 생성한다.
+6. **Risk Gate**: 결정론 7단계 검증을 수행하고 `risk_assessment`와 `risk_tool_calls`를 기록한다. 통과 시 lifecycle은 `READY_FOR_BE`로 정리된다.
+7. **Evaluator**: `FAILED`를 제외한 모든 lifecycle에서 항상 실행해 `evaluator_review.user_message`를 생성한다.
+8. `PASS`는 trace 또는 gate 의미이고, `READY_FOR_BE`는 lifecycle handoff 상태다.
+9. BE는 `READY_FOR_BE` 이후 deterministic 재검증을 다시 수행한다.
+10. BE가 승인하면 Binance Spot Testnet 제출로 이어진다.
+11. BE가 차단하면 상태는 `BE_REJECTED`로 남는다.
+12. AI는 resume, `execution_result`, 또는 `be_rejection_evidence`를 받아 최종 설명을 정리하고 reporting 상태를 완성한다.
 
 ## 4. 상태 경계 요약
 
@@ -51,7 +53,7 @@ AI 문맥에서 중요하게 유지할 상태는 다음과 같다.
 - `FAILED`
 - `REPORT_READY`
 
-`HOLD`의 원인은 별도 필드 `hold_reason`으로 관리하며, 최소 집합은 `HOLD_REVIEW_REQUIRED`, `HOLD_DATA_INSUFFICIENT`다. `READY_FOR_BE`는 AI 통과 후 BE 재검증 전 handoff 상태이고, `FAILED`는 schema mismatch 또는 복구 불가 기술 실패 축이다. 세부 상태 해석은 `AI.md`, 데이터 표기는 `DATA.md`를 따른다.
+`HOLD`의 원인은 별도 필드 `hold_reason`으로 관리하며, 전체 집합은 `HOLD_INPUT_AMBIGUOUS`, `HOLD_LOW_CONVICTION`, `HOLD_RISK_AGENT_FLAGGED`, `HOLD_DATA_INSUFFICIENT`, `HOLD_REVIEW_REQUIRED`다. `READY_FOR_BE`는 AI 통과 후 BE 재검증 전 handoff 상태이고, `FAILED`는 schema mismatch 또는 복구 불가 기술 실패 축이다. 세부 상태 해석은 `AI.md`, 데이터 표기는 `DATA.md`를 따른다.
 
 ## 5. report cadence 요약
 

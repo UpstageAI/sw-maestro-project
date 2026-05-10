@@ -1,0 +1,18 @@
+{
+  "run_id": "e2e_livermore_buy_001",
+  "request_context": {
+    "request_id": "req_e2e_lb",
+    "request_type": "PLACE_ORDER_TEST",
+    "requested_at": "2026-05-10T10:00:00+09:00",
+    "user_input": {
+      "symbol": "BTCUSDT",
+      "side": "BUY",
+      "type": "MARKET",
+      "quoteOrderQty": "100",
+      "trader_id": "livermore"
+    }
+  },
+  "policy_context": {
+    "policy_refs": ["policy.spot_testnet_only"]
+  }
+}

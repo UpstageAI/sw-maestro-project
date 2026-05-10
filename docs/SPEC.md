@@ -69,6 +69,13 @@
 | AI-FR-08 | FE와 BE가 같은 필드명과 상태명을 쓸 수 있도록 `DATA.md` 기준 계약을 따라야 한다. |
 | AI-FR-09 | FE 입력 boundary와 BE 실행 boundary는 각각 `FE.md`, `BE.md`에서 정의한 로컬 계약과 충돌하면 안 된다. |
 | AI-FR-10 | BE가 AI에 되돌려 주는 completion payload는 `execution_result` 또는 `be_rejection_evidence`를 포함한 최소 계약으로 정의되어야 한다. |
+| AI-FR-11 | AI는 사용자의 자연어 입력(`user_input.raw_text`)을 구조화된 주문 의도(`normalized_order_intent`)로 파싱하는 `intake` 노드를 가져야 한다. |
+| AI-FR-12 | AI는 `trader_id` × `persona` 결정 행렬을 통해 트레이더 스타일과 페르소나를 결정해야 하며, 발화에서 명시 단어가 감지되면 `persona_override_reason`을 기록해야 한다. |
+| AI-FR-13 | AI는 `knowledge/{trader_id}/principles.md`를 키워드 매칭 방식으로 검색해 관련 트레이더 원칙(`trader_principles`)을 `policy` 노드에서 retrieval해야 한다. |
+| AI-FR-14 | AI는 `trader_principles`와 `persona_bounds`를 참고해 `llm_proposal`을 생성하는 `strategy` 노드를 가져야 한다. |
+| AI-FR-15 | `risk_gate` 노드는 결정론 7단계 검증(conviction, size, symbol, balance, volatility, concentration)을 위→아래 단락 방식으로 수행해야 하며, 각 도구 호출을 `risk_tool_calls`에 기록해야 한다. |
+| AI-FR-16 | `evaluator` 노드는 `FAILED`를 제외한 모든 lifecycle에서 항상 실행되어야 하며, `evaluator_review.user_message`와 `schema_warnings`를 포함한 최종 사용자 리포트를 생성해야 한다. |
+| AI-FR-17 | `hold_reason` 최소 집합은 기존 `HOLD_REVIEW_REQUIRED`, `HOLD_DATA_INSUFFICIENT`에 더해 `HOLD_INPUT_AMBIGUOUS`, `HOLD_LOW_CONVICTION`, `HOLD_RISK_AGENT_FLAGGED`를 포함해야 한다. |
 
 ## 7. 비기능 요구사항
 
@@ -88,7 +95,9 @@
 - `request_context`, `execution_result`, `be_rejection_evidence`의 최소 shape가 문서 간 충돌 없이 유지된다.
 - `decision_trace`가 stage-keyed canonical container로 일관되게 해석된다.
 - `PASS`와 `READY_FOR_BE`의 역할이 문서 간 충돌 없이 유지된다.
-- `HOLD_REVIEW_REQUIRED`, `HOLD_DATA_INSUFFICIENT`, `BE_REJECTED`, `FAILED`, `REPORT_READY`, `NO_ORDER`가 문서 간 충돌 없이 사용된다.
+- `HOLD_REVIEW_REQUIRED`, `HOLD_DATA_INSUFFICIENT`, `HOLD_INPUT_AMBIGUOUS`, `HOLD_LOW_CONVICTION`, `HOLD_RISK_AGENT_FLAGGED`, `BE_REJECTED`, `FAILED`, `REPORT_READY`, `NO_ORDER`가 문서 간 충돌 없이 사용된다.
+- `trader_id`, `inferred_persona`, `trader_principles`, `llm_proposal`, `evaluator_review`가 같은 의미로 유지된다.
+- `user_input.raw_text` 모드와 기존 dict 모드가 회귀 호환을 유지하며 공존한다.
 - Testnet 전용 범위와 FE->BE->AI 경계가 모든 문서에서 유지된다.
 
 ## 9. 문서 세트 완료 조건

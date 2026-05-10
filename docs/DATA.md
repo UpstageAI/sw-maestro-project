@@ -28,30 +28,69 @@
 | 용어 | 의미 |
 |---|---|
 | `run_id` | 하나의 주문 테스트 AI run 식별자 |
-| `policy_context` | BE가 retrieval한 정책 artifact 묶음 |
+| `policy_context` | 정책 artifact 기반 grounding 컨텍스트 |
 | `decision_trace` | 단계별 판단 근거와 final action 기록 |
 | `verification_checks` | 단계별 검증 결과를 append 하는 공통 체크 목록 |
 | `hold_reason` | `HOLD` 상태의 세부 원인 |
+| `trader_id` | 트레이더 스타일 식별자 (예: `wonyotti`, `livermore`) |
+| `inferred_persona` | intake 결정 페르소나 (`CONSERVATIVE` / `MODERATE` / `AGGRESSIVE`) |
+| `persona_override_reason` | 발화 명시 단어로 persona가 override된 사유 (선택) |
+| `trader_principles` | RAG retrieval된 트레이더 원칙 목록 |
+| `normalized_order_intent` | intake가 정규화한 주문 의도 dict |
+| `llm_proposal` | strategy 노드의 LLM 제안 |
+| `risk_assessment` | risk_gate 판정 결과 |
+| `risk_tool_calls` | risk_gate가 호출한 도구 기록 (append-only) |
+| `evaluator_review` | evaluator가 생성한 최종 사용자 리포트 |
 | `NO_ORDER` | 신규 주문 생성 없이 종료 |
 | `BE_REJECTED` | AI proposal 이후 BE 재검증에서 차단 |
 | `FAILED` | schema mismatch 또는 기술 실패로 정상 리포트 계약을 만들지 못한 상태 |
 | `REPORT_READY` | 사용자용 최종 설명이 준비된 상태 |
-| `HOLD_REVIEW_REQUIRED` | 사람 승인 또는 운영 검토가 필요한 보류 |
+| `HOLD_INPUT_AMBIGUOUS` | 자연어 입력 모호도 초과로 인한 보류 (`ambiguity_score > 0.5`) |
+| `HOLD_LOW_CONVICTION` | LLM proposal conviction 미달로 인한 보류 |
+| `HOLD_RISK_AGENT_FLAGGED` | 변동성 또는 집중 리스크 임계 초과로 인한 보류 |
 | `HOLD_DATA_INSUFFICIENT` | 데이터 부족 또는 필수 입력 부족으로 인한 보류 |
+| `HOLD_REVIEW_REQUIRED` | 사람 승인 또는 운영 검토가 필요한 보류 |
 | `READY_FOR_BE` | AI proposal이 BE deterministic revalidation으로 handoff 된 lifecycle 상태 |
 
 ## 3. lifecycle_status 최소 집합
 
 | 값 | 의미 |
 |---|---|
-| `HOLD` | 사람 검토 또는 데이터 보완 대기 |
+| `HOLD` | 사람 검토 또는 데이터 보완 대기. `hold_reason`으로 세분화 |
 | `READY_FOR_BE` | AI->BE handoff 완료 |
 | `NO_ORDER` | 신규 주문 없음 |
 | `BE_REJECTED` | BE 재검증 차단 |
 | `FAILED` | schema mismatch 또는 복구 불가 기술 실패 |
 | `REPORT_READY` | 최종 사용자 보고 준비 완료 |
 
+`HOLD`의 `hold_reason` 값:
+
+| 값 | 발생 시점 |
+|---|---|
+| `HOLD_INPUT_AMBIGUOUS` | intake — `ambiguity_score > 0.5` |
+| `HOLD_LOW_CONVICTION` | risk_gate — LLM proposal conviction 미달 |
+| `HOLD_RISK_AGENT_FLAGGED` | risk_gate — 변동성/집중 리스크 임계 초과 |
+| `HOLD_DATA_INSUFFICIENT` | risk_gate — 잔고 부족 또는 데이터 누락 |
+| `HOLD_REVIEW_REQUIRED` | BE 또는 정책 — 수동 운영 검토 필요 |
+
 ## 4. 최초 요청 계약
+
+Agentic MVP (자연어 모드):
+
+```json
+{
+  "request_context": {
+    "request_id": "req_001",
+    "request_type": "PLACE_ORDER_TEST",
+    "requested_at": "2026-05-10T10:00:00+09:00",
+    "user_input": {
+      "raw_text": "공격적으로 비트코인 5만원어치 사줘"
+    }
+  }
+}
+```
+
+기존 dict 모드 (회귀 호환):
 
 ```json
 {
@@ -69,7 +108,7 @@
 }
 ```
 
-`request_context`는 immutable envelope로 취급한다.
+`request_context`는 immutable envelope로 취급한다. `user_input.raw_text`가 있으면 intake 노드가 LLM 파싱 모드로 처리한다. 없으면 기존 dict 모드를 유지한다.
 
 ## 5. 최소 상태 예시
 
@@ -144,7 +183,8 @@
 
 - `verification_checks`는 append-only로 누적한다.
 - 각 stage는 자기 stage의 entry만 추가한다.
-- 최소 stage 집합은 `policy`, `risk`, `evaluator`, `execution`, `be_revalidation`이다.
+- 전체 stage 집합은 `intake`, `policy`, `strategy`, `risk`, `evaluator`, `execution`, `be_revalidation`이다.
+- 기존 테스트 회귀 보호를 위해 `intake`와 `strategy`는 optional이며 기존 24개 테스트는 영향 없다.
 
 ## 8. 최소 resume payload
 
