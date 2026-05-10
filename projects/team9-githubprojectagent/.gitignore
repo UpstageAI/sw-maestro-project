@@ -1,0 +1,19 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.cache/
+*.log
+.DS_Store
+.idea/
+.vscode/
+output/
+# 테스트 빌드 산출물 (CI 아티팩트로 관리)
+test_results.xml
+coverage.json
+coverage.xml
+.coverage
+htmlcov/
+qa_report.html
