@@ -2,27 +2,16 @@ import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { Badge } from '../common';
 import { DecisionTraceSteps } from './DecisionTraceSteps';
-import type { ReportPayload, GateDecisionType, FinalAction } from '../../types/agent';
+import type { PublishedRunLifecycleStatus, PublishedRunReport } from '../../types/api';
 import styles from './RunReportCard.module.css';
 
 interface RunReportCardProps {
-  report: ReportPayload;
+  runId: string;
+  report: PublishedRunReport;
 }
 
-function getGateVariant(decision: GateDecisionType) {
-  switch (decision) {
-    case 'PASS':
-      return 'success' as const;
-    case 'HOLD':
-      return 'warning' as const;
-    case 'REJECT':
-      return 'danger' as const;
-  }
-}
-
-function getFinalActionVariant(action: FinalAction) {
-  switch (action) {
-    case 'READY_FOR_BE':
+function getLifecycleVariant(status: PublishedRunLifecycleStatus) {
+  switch (status) {
     case 'REPORT_READY':
       return 'success' as const;
     case 'HOLD':
@@ -34,7 +23,7 @@ function getFinalActionVariant(action: FinalAction) {
   }
 }
 
-export function RunReportCard({ report }: RunReportCardProps) {
+export function RunReportCard({ runId, report }: RunReportCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -51,10 +40,13 @@ export function RunReportCard({ report }: RunReportCardProps) {
           }
         }}
       >
-        <span className={styles.runId}>{report.run_id}</span>
+        <span className={styles.runId}>{runId}</span>
         <div className={styles.badges}>
-          <Badge label={report.final_action} variant={getFinalActionVariant(report.final_action)} />
-          <Badge label={report.gate_decision} variant={getGateVariant(report.gate_decision)} />
+          <Badge
+            label={report.lifecycleStatus}
+            variant={getLifecycleVariant(report.lifecycleStatus)}
+          />
+          {report.holdReason && <Badge label={report.holdReason} variant="warning" />}
         </div>
         <ChevronDown
           size={18}
@@ -63,16 +55,18 @@ export function RunReportCard({ report }: RunReportCardProps) {
       </div>
 
       <div className={styles.summary}>
-        {report.user_summary}
+        {report.userSummary}
       </div>
 
       {expanded && (
         <div className={styles.expandedContent}>
-          <div className={styles.traceSection}>
-            <DecisionTraceSteps trace={report.decision_trace} />
-          </div>
+          {report.decisionTrace && (
+            <div className={styles.traceSection}>
+              <DecisionTraceSteps trace={report.decisionTrace} />
+            </div>
+          )}
           <div className={styles.debugArea}>
-            run_id: {report.run_id}
+            run_id: {runId}
           </div>
         </div>
       )}

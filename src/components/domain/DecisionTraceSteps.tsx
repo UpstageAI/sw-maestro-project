@@ -1,14 +1,15 @@
 import { Shield, AlertTriangle, CheckCircle, Cpu, FileText } from 'lucide-react';
 import { Badge } from '../common';
-import type { DecisionTrace, AgentDecisionTrace, FinalAction } from '../../types/agent';
+import type { PublishedRunDecisionTrace, RunDecisionTraceStage } from '../../types/api';
 import styles from './DecisionTraceSteps.module.css';
 
 interface DecisionTraceStepsProps {
-  trace: DecisionTrace;
+  trace: PublishedRunDecisionTrace;
 }
 
-function getFinalActionVariant(action: FinalAction) {
+function getFinalActionVariant(action: string | null) {
   switch (action) {
+    case 'PASS':
     case 'READY_FOR_BE':
     case 'REPORT_READY':
       return 'success' as const;
@@ -29,7 +30,7 @@ function TraceStepCard({
 }: {
   label: string;
   icon: React.ReactNode;
-  trace: AgentDecisionTrace;
+  trace: RunDecisionTraceStage;
   showPassPending?: boolean;
 }) {
   return (
@@ -42,23 +43,23 @@ function TraceStepCard({
             <Badge label="PASS" variant="success" />
             <span className={styles.pendingLabel}>BE 재검증 대기</span>
           </div>
-        ) : (
-          <Badge label={trace.final_action} variant={getFinalActionVariant(trace.final_action)} />
-        )}
+        ) : trace.finalAction ? (
+          <Badge label={trace.finalAction} variant={getFinalActionVariant(trace.finalAction)} />
+        ) : null}
       </div>
       {trace.notes && <p className={styles.notes}>{trace.notes}</p>}
-      {trace.reason_codes.length > 0 && (
+      {trace.reasonCodes.length > 0 && (
         <div className={styles.reasonCodes}>
-          {trace.reason_codes.map((code) => (
+          {trace.reasonCodes.map((code) => (
             <span key={code} className={styles.reasonCode}>
               {code}
             </span>
           ))}
         </div>
       )}
-      {trace.evidence_refs && trace.evidence_refs.length > 0 && (
+      {trace.evidenceRefs.length > 0 && (
         <div className={styles.evidenceRefs}>
-          {trace.evidence_refs.map((ref) => (
+          {trace.evidenceRefs.map((ref) => (
             <span key={ref} className={styles.evidenceRef}>
               {ref}
             </span>
@@ -84,7 +85,7 @@ export function DecisionTraceSteps({ trace }: DecisionTraceStepsProps) {
           label="Risk 검증"
           icon={<AlertTriangle size={16} />}
           trace={trace.risk}
-          showPassPending={trace.risk.final_action === 'READY_FOR_BE'}
+          showPassPending={trace.risk.finalAction === 'PASS'}
         />
       )}
       {trace.evaluator && (
@@ -101,22 +102,12 @@ export function DecisionTraceSteps({ trace }: DecisionTraceStepsProps) {
           trace={trace.execution}
         />
       )}
-      {trace.run_summary && (
-        <div className={styles.step}>
-          <div className={styles.stepHeader}>
-            <span className={styles.stepIcon}><FileText size={16} /></span>
-            <span className={styles.stepLabel}>Run Summary</span>
-          </div>
-          <div className={styles.finalActionRow}>
-            <Badge
-              label={trace.run_summary.final_action}
-              variant={getFinalActionVariant(trace.run_summary.final_action)}
-            />
-            {trace.run_summary.be_override && (
-              <span className={styles.beOverrideTag}>BE Override</span>
-            )}
-          </div>
-        </div>
+      {trace.runSummary && (
+        <TraceStepCard
+          label="Run Summary"
+          icon={<FileText size={16} />}
+          trace={trace.runSummary}
+        />
       )}
     </div>
   );
