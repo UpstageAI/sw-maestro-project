@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
@@ -92,15 +92,48 @@ class OrderRunResponse(_CamelModel):
     reason_codes: list[str] = []
 
 
+class DecisionTraceStageResponse(_CamelModel):
+    reason_codes: list[str] = []
+    evidence_refs: list[str] = []
+    final_action: str | None = None
+    notes: str | None = None
+
+
+class DecisionTraceResponse(_CamelModel):
+    policy: DecisionTraceStageResponse | None = None
+    risk: DecisionTraceStageResponse | None = None
+    evaluator: DecisionTraceStageResponse | None = None
+    execution: DecisionTraceStageResponse | None = None
+    run_summary: DecisionTraceStageResponse | None = None
+
+
+class PublishedOrderOutcome(_CamelModel):
+    order_id: int | None = None
+    symbol: str | None = None
+    status: _OrderStatus | None = None
+    type: str | None = None
+    side: str | None = None
+    client_order_id: str | None = None
+
+
+class PublishedRunReport(_CamelModel):
+    lifecycle_status: str
+    hold_reason: str | None = None
+    reason_codes: list[str] = []
+    user_summary: str | None = None
+    decision_trace: DecisionTraceResponse | None = None
+    order: PublishedOrderOutcome | None = None
+
+
 class RunReportResponse(_CamelModel):
     run_id: str
-    report: dict[str, Any]
+    report: PublishedRunReport
 
 
 class StreamStatusResponse(_CamelModel):
     connected: bool
     stream_name: str | None = None
-    last_event: dict[str, Any] | None = None
+    last_event: dict[str, object] | None = None
 
 
 class TestnetConfigResponse(_CamelModel):
