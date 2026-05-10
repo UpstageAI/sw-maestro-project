@@ -1,4 +1,4 @@
-import type { HoldReason } from './agent';
+import type { HoldReason, ReportPayload } from './agent';
 
 export interface Balance {
   asset: string;
@@ -88,6 +88,11 @@ export interface OrderRunResponse {
   type?: OrderType | null;
   side?: OrderSide | null;
   reasonCodes: string[];
+}
+
+export interface RunReportResponse {
+  runId: string;
+  report: ReportPayload;
 }
 
 export interface ResumeCommandPayload {
