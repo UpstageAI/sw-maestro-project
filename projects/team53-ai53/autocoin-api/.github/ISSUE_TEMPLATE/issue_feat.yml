@@ -1,0 +1,24 @@
+name: "✨ Feat"
+description: "새로운 기능 또는 일반 작업 추가"
+labels: ["feat"]
+body:
+  - type: textarea
+    attributes:
+      label: 📄 설명
+      description: 어떤 기능이나 작업을 왜 추가하는지, 어떤 문제를 해결하는지 작성해주세요.
+      placeholder: 배경과 목적을 함께 적어주세요.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: ✅ 작업할 내용
+      description: 할 일을 체크박스 형태로 작성해주세요. 관련 문서/자동화 설정 반영이 필요하면 함께 포함해주세요.
+      placeholder: |
+        - [ ] 작업 1
+        - [ ] 작업 2
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 🙋🏻 참고 자료
+      description: 참고 문서, 관련 링크, 논의가 필요한 사항이 있다면 작성해주세요.

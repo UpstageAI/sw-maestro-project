@@ -1,0 +1,94 @@
+﻿{
+  "be_rejection_evidence": {},
+  "completion_payload": {},
+  "decision_trace": {
+    "evaluator": {
+      "evidence_refs": [],
+      "final_action": "",
+      "reason_codes": []
+    },
+    "execution": {
+      "evidence_refs": [],
+      "final_action": "",
+      "reason_codes": []
+    },
+    "policy": {
+      "evidence_refs": [
+        "policy_context.policy_refs[0]"
+      ],
+      "final_action": "PASS",
+      "reason_codes": [
+        "ORDER_INTENT_NORMALIZED"
+      ]
+    },
+    "risk": {
+      "evidence_refs": [
+        "verification_checks[-1]"
+      ],
+      "final_action": "NO_ORDER",
+      "reason_codes": [
+        "ORDER_AMOUNT_INVALID"
+      ]
+    },
+    "run_summary": {
+      "evidence_refs": [],
+      "final_action": "",
+      "reason_codes": []
+    }
+  },
+  "execution_result": {},
+  "hold_reason": null,
+  "lifecycle_status": "NO_ORDER",
+  "normalized_order_intent": {
+    "quoteOrderQty": "0",
+    "side": "BUY",
+    "symbol": "BTCUSDT",
+    "type": "MARKET"
+  },
+  "policy_context": {
+    "policy_refs": [
+      "policy.symbol_allowlist",
+      "policy.spot_testnet_only"
+    ]
+  },
+  "report": {},
+  "request_context": {
+    "request_id": "req_c03_001",
+    "request_type": "PLACE_ORDER_TEST",
+    "requested_at": "2026-05-08T10:00:00+09:00",
+    "user_input": {
+      "quoteOrderQty": "0",
+      "side": "BUY",
+      "symbol": "BTCUSDT",
+      "type": "MARKET"
+    }
+  },
+  "resume_history": [],
+  "run_id": "qa-c-03-no-order-001",
+  "verification_checks": [
+    {
+      "evidence_refs": [
+        "request_context"
+      ],
+      "name": "initial_request_contract",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "evidence_refs": [
+        "policy_context.policy_refs[0]"
+      ],
+      "name": "policy_context_available",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "evidence_refs": [
+        "normalized_order_intent"
+      ],
+      "name": "order_amount_positive",
+      "result": "fail",
+      "stage": "risk"
+    }
+  ]
+}
