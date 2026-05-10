@@ -1,0 +1,181 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 1.25rem;
+
+  --background: #ffffff;
+  --foreground: #191F28;
+
+  --card: #ffffff;
+  --card-foreground: #191F28;
+
+  --popover: #ffffff;
+  --popover-foreground: #191F28;
+
+  --primary: #3182F6;
+  --primary-foreground: #ffffff;
+
+  --secondary: #F2F4F6;
+  --secondary-foreground: #191F28;
+
+  --muted: #F7F8FA;
+  --muted-foreground: #4E5968;
+
+  --accent: #E8F2FE;
+  --accent-foreground: #1B64DA;
+
+  --destructive: #F04452;
+  --destructive-foreground: #ffffff;
+
+  --border: #E5E8EB;
+  --input: #F2F4F6;
+  --ring: #3182F6;
+
+  --brand-blue: #3182F6;
+  --brand-blue-strong: #1B64DA;
+  --brand-blue-soft: #E8F2FE;
+  --brand-coral: #FF6B5B;
+  --brand-mint: #2BC8A0;
+  --brand-cream: #FFF7EC;
+  --brand-navy: #191F28;
+  --brand-ink: #333D4B;
+  --brand-gray-1: #F2F4F6;
+  --brand-gray-2: #E5E8EB;
+  --brand-gray-3: #B0B8C1;
+  --brand-gray-4: #6B7684;
+}
+
+.dark {
+  --background: #0E1014;
+  --foreground: #F2F4F6;
+  --card: #161A20;
+  --card-foreground: #F2F4F6;
+  --popover: #161A20;
+  --popover-foreground: #F2F4F6;
+  --primary: #4D8DFB;
+  --primary-foreground: #0E1014;
+  --secondary: #1F242C;
+  --secondary-foreground: #F2F4F6;
+  --muted: #1A1F26;
+  --muted-foreground: #B0B8C1;
+  --accent: #1B2C49;
+  --accent-foreground: #A9CBFF;
+  --destructive: #F04452;
+  --destructive-foreground: #F2F4F6;
+  --border: #242A33;
+  --input: #1F242C;
+  --ring: #4D8DFB;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-blue-strong: var(--brand-blue-strong);
+  --color-brand-blue-soft: var(--brand-blue-soft);
+  --color-brand-coral: var(--brand-coral);
+  --color-brand-mint: var(--brand-mint);
+  --color-brand-cream: var(--brand-cream);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-gray-1: var(--brand-gray-1);
+  --color-brand-gray-2: var(--brand-gray-2);
+  --color-brand-gray-3: var(--brand-gray-3);
+  --color-brand-gray-4: var(--brand-gray-4);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 0.25rem);
+  --radius-sm: calc(var(--radius) - 0.5rem);
+  --radius-xl: calc(var(--radius) + 0.5rem);
+
+  --font-sans: var(--font-pretendard), var(--font-geist-sans), ui-sans-serif, system-ui;
+  --font-display: var(--font-pretendard), var(--font-geist-sans), ui-sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scrollbar-gutter: stable;
+  }
+
+  html, body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+    word-break: keep-all;
+  }
+
+  body {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="combobox"]:not([aria-disabled="true"]),
+  [role="menuitem"]:not([aria-disabled="true"]),
+  [role="option"]:not([aria-disabled="true"]),
+  [role="tab"]:not([aria-disabled="true"]),
+  summary {
+    cursor: pointer;
+  }
+
+  ::selection {
+    background: color-mix(in oklch, var(--brand-blue) 35%, transparent);
+    color: var(--brand-navy);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hidden {
+    scrollbar-width: none;
+  }
+
+  .toss-shadow {
+    box-shadow:
+      0 1px 3px rgba(20, 24, 32, 0.04),
+      0 8px 24px -8px rgba(20, 24, 32, 0.08);
+  }
+
+  .toss-shadow-lg {
+    box-shadow:
+      0 1px 3px rgba(20, 24, 32, 0.05),
+      0 24px 56px -16px rgba(20, 24, 32, 0.18);
+  }
+
+  .grain {
+    background-image: radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+    background-size: 4px 4px;
+  }
+}
