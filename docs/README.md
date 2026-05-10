@@ -64,7 +64,7 @@
 
 ### 권장 서비스 구성
 
-- FE: Next.js
+- FE: Vite + React
 - BE: FastAPI
 - AI: LangGraph 실행 서비스
 - DB: SQLite
@@ -80,14 +80,14 @@
 | `BINANCE_TESTNET_WS_STREAM_URL` | 기본값 `wss://stream.testnet.binance.vision/ws` | 예 |
 | `BINANCE_TESTNET_WS_API_URL` | 기본값 `wss://ws-api.testnet.binance.vision/ws-api/v3` | 예 |
 | `DATABASE_URL` | SQLite 연결 문자열 | 예 |
-| `NEXT_PUBLIC_API_BASE_URL` | FE에서 호출할 BE 기본 URL | 예 |
+| `VITE_API_BASE_URL` | FE에서 호출할 BE 기본 URL | 예 |
 | `AI_SERVICE_HTTP_URL` | BE가 호출하는 AI HTTP 엔드포인트 | 예 |
 | `APP_ENV` | `local`, `demo`, `testnet` 중 하나 | 예 |
 | `LOG_LEVEL` | 애플리케이션 로그 레벨 | 예 |
 
 ### 로컬 개발 기준
 
-1. FE는 `.env.local`에 `NEXT_PUBLIC_API_BASE_URL`을 설정한다.
+1. FE는 `.env` 또는 `.env.local`에 `VITE_API_BASE_URL`을 설정한다.
 2. BE는 `.env`에 Binance Testnet Key, Secret, REST/WS base URL, `DATABASE_URL`을 설정한다.
 3. AI 서비스는 BE와 동일 네트워크에서 HTTP 인터페이스만 제공한다.
 4. DB는 SQLite를 사용한다.
@@ -98,7 +98,7 @@
 1. SQLite DB 준비
 2. FastAPI 실행
 3. LangGraph AI 서비스 실행
-4. Next.js 실행
+4. Vite 프론트엔드 실행
 5. Binance Spot Testnet API Key 설정 확인
 6. 잔고 조회 → 시세 조회 → 모의 주문 → 주문 상태 조회 → 취소 흐름 테스트 진행
 
