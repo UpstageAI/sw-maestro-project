@@ -1,0 +1,52 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/deploy-frontend.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-frontend
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/deploy.pem
+          chmod 600 ~/.ssh/deploy.pem
+          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Sync frontend source
+        run: |
+          rsync -az --delete \
+            --exclude='node_modules' \
+            --exclude='.next' \
+            --exclude='.env.local' \
+            -e "ssh -i ~/.ssh/deploy.pem -o StrictHostKeyChecking=no" \
+            frontend/ \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/tail-question/frontend/
+
+      - name: Build + restart
+        # npm ci + next build run on EC2. node_modules and .next persist
+        # across deploys so steady-state runs are quick (Next caches build
+        # artifacts in .next/cache).
+        run: |
+          ssh -i ~/.ssh/deploy.pem -o StrictHostKeyChecking=no \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+            'set -e
+             cd /home/ubuntu/tail-question/frontend
+             npm ci --no-audit --no-fund --prefer-offline
+             npm run build
+             sudo systemctl restart tq-frontend
+             sleep 6
+             curl -fsS -o /dev/null -w "frontend HTTP %{http_code}\n" http://127.0.0.1:3000/'
