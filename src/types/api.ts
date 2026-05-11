@@ -82,6 +82,10 @@ export interface AutoOrderRequest {
   rawText: string;
 }
 
+export interface AutoSessionStartRequest {
+  rawText: string;
+}
+
 export type JsonPrimitive = string | number | boolean | null;
 export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
 
@@ -112,6 +116,25 @@ export interface AutoOrderRunResponse extends OrderRunResponse {
   normalizedOrderIntent?: NormalizedOrderIntent | null;
   traderId?: string | null;
   inferredPersona?: string | null;
+}
+
+export type AutoTradingSessionStatus = 'IDLE' | 'ACTIVE' | 'STOPPING' | 'STOPPED';
+
+export interface AutoTradingSessionResponse {
+  sessionId?: string | null;
+  sessionStatus: AutoTradingSessionStatus;
+  stopRequested: boolean;
+  selectedTickIntervalSeconds?: number | null;
+  rawText?: string | null;
+  selectedTraderId?: string | null;
+  tickCount: number;
+  startedAt?: string | null;
+  stoppedAt?: string | null;
+  lastTickStartedAt?: string | null;
+  lastTickCompletedAt?: string | null;
+  stopReason?: string | null;
+  latestError?: string | null;
+  latestRun?: AutoOrderRunResponse | null;
 }
 
 export type PublishedRunLifecycleStatus = OrderRunLifecycleStatus | 'FAILED';

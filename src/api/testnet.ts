@@ -2,6 +2,8 @@ import { ENDPOINTS } from '../constants/endpoints';
 import type {
   AutoOrderRequest,
   AutoOrderRunResponse,
+  AutoSessionStartRequest,
+  AutoTradingSessionResponse,
   BalanceSnapshot,
   BookTicker,
   CancelOrderResponse,
@@ -46,6 +48,20 @@ export function placeAutoOrder(
   payload: AutoOrderRequest,
 ): Promise<AutoOrderRunResponse> {
   return post<AutoOrderRunResponse>(ENDPOINTS.ordersAuto, payload);
+}
+
+export function startAutoTradingSession(
+  payload: AutoSessionStartRequest,
+): Promise<AutoTradingSessionResponse> {
+  return post<AutoTradingSessionResponse>(ENDPOINTS.ordersAutoSessionStart, payload);
+}
+
+export function stopAutoTradingSession(): Promise<AutoTradingSessionResponse> {
+  return post<AutoTradingSessionResponse>(ENDPOINTS.ordersAutoSessionStop, undefined);
+}
+
+export function fetchAutoTradingSession(): Promise<AutoTradingSessionResponse> {
+  return get<AutoTradingSessionResponse>(ENDPOINTS.ordersAutoSession);
 }
 
 export function resumeOrder(
