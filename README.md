@@ -4,7 +4,7 @@
 
 ## 문서 목적
 
-이 문서는 현재 구현 기준의 전체 제품 진입점이다. FE, BE, AI, DB, Binance Testnet, run/report/session 계약, 자연어 자동매매 흐름, 그리고 아직 남아 있는 제약을 한 번에 설명할 수 있어야 한다.
+이 문서는 현재 구현 기준의 전체 제품 진입점이다. FE, BE, AI, DB, Binance Testnet, run/report/session 계약, 자연어 자동매매 흐름, 그리고 아직 남아 있는 제약을 한 번에 설명할 수 있어야 한다. 특히 이 제품은 사용자가 자연어로 자동매매 의도를 시작하면, FE가 아니라 BE가 세션을 소유한 채 계속 재평가하고, 사용자가 중지할 수 있지만 BE 안전 규칙이 더 먼저 멈출 수도 있다는 점을 분명히 드러내야 한다.
 
 ## 핵심 원칙
 
@@ -12,6 +12,7 @@
 - FE는 Binance를 직접 호출하지 않는다.
 - AI는 Binance 요청을 직접 제출하거나 서명하지 않는다.
 - BE만 Binance 호출, 시그니처 생성, deterministic 재검증, 최종 실행 판정을 수행한다.
+- BE의 방어 규칙은 단순 보조 검사가 아니라, AI 판단 뒤에도 반드시 다시 거치는 deterministic 재검증과 defensive rule base 다.
 - 수동 주문과 자연어 자동매매 모두 run 중심 계약을 사용한다.
 
 ## 현재 구현 표면 요약
@@ -57,11 +58,15 @@
 - 수동 주문 테스트는 run 기반으로 동작한다.
 - 자연어 auto order 1회 실행이 구현되어 있다.
 - 연속 자연어 자동매매 세션 start / stop / status 가 구현되어 있다.
+- 이 연속 세션은 사용자가 자연어로 시작하고, 이후 각 tick 마다 fresh `run_id` 로 다시 판단한다.
 - 각 auto tick 은 fresh `run_id` 로 수행된다.
 - auto tick 시작 전 BE는 live account / price / book / 5분 klines snapshot 을 AI에 주입한다.
+- 자연어 입력에서는 `traderId`, `inferredPersona` 가 추론될 수 있으며, 이후 세션은 그 판단 스타일을 이어서 사용한다.
 - retryable `HOLD` 에서는 세션이 다음 tick 으로 이어질 수 있다.
+- 사용자는 세션 stop 을 요청할 수 있지만, 세션은 BE defensive rule base 결과에 따라 더 일찍 `STOPPED` 될 수 있다.
 - Reports 페이지는 `runId` 기준 단일 live report 조회다.
 - cadence/history 전용 API는 아직 없다.
+- 시간 경과에 따라 리포트가 누적되는 history/cadence UX 도 아직 구현되지 않았다.
 - Settings 페이지는 placeholder 중심이며, BE의 `/config` endpoint 를 아직 FE가 live 호출하지 않는다.
 - agentic run resume 는 현재 지원되지 않는다.
 

@@ -2,7 +2,7 @@
 
 ## 문서 목적
 
-이 문서는 현재 구현 기준에서 무엇을 검증해야 하는지 정의한다. 수동 주문 happy path 뿐 아니라 자연어 auto order, continuous session, live snapshot grounding, run/report 흐름을 모두 포함한다.
+이 문서는 현재 구현 기준에서 무엇을 검증해야 하는지 정의한다. 수동 주문 happy path 뿐 아니라 자연어 auto order, continuous session, live snapshot grounding, persona 추론, run/report 흐름을 모두 포함한다.
 
 ## 1. 테스트 원칙
 
@@ -20,12 +20,14 @@
 | T-01 | `POST /orders` | run 중심 응답 |
 | T-02 | `POST /orders/resume` | 수동 hold resume |
 | T-03 | `POST /orders/auto` | natural language auto order 응답 |
-| T-04 | `POST /orders/auto/session/start` | session start |
+| T-04 | `POST /orders/auto/session/start` | session start, user-controlled start |
 | T-05 | `POST /orders/auto/session/stop` | stop 요청 |
-| T-06 | `GET /orders/auto/session` | session status / latestRun |
+| T-06 | `GET /orders/auto/session` | session status / latestRun / stopReason |
 | T-07 | AI `/runs/agentic/start` | agentic state 생성 |
 | T-08 | AI checkpoint endpoints | order/completion checkpoint evidence |
 | T-09 | live snapshot grounding | auto tick 요청에 account/market snapshot 포함 |
+| T-10 | persona inference | `traderId`, `inferredPersona` 응답 확인 |
+| T-11 | BE defensive stop | non-retryable 상태 또는 `BE_REJECTED` 시 session stop 확인 |
 
 ## 3. 필수 API 검증 묶음
 
@@ -60,7 +62,7 @@ npm run build
 
 ### S-03 자연어 auto order 1회 실행
 
-`POST /orders/auto` 로 `normalizedOrderIntent`, `traderId`, `inferredPersona`, `lifecycleStatus` 확인
+`POST /orders/auto` 로 `normalizedOrderIntent`, `traderId`, `inferredPersona`, `lifecycleStatus` 확인. persona 필드가 있다고 해서 FE 전용 persona picker 가 이미 있는 것으로 해석하면 안 된다.
 
 ### S-04 연속 자동매매 세션
 
@@ -70,6 +72,7 @@ npm run build
 - selected trader 표시
 - latest run / latest report 표시
 - stop 요청 가능
+- user stop 이전에도 safety stop 이 날 수 있음을 확인
 
 ### S-05 live snapshot grounding 확인
 
@@ -84,4 +87,6 @@ npm run build
 - 각 tick 은 fresh `run_id` 다.
 - auto-trading path는 live account/market snapshot 을 AI에 주입한다.
 - Reports는 single-run live report 조회고 cadence/history는 placeholder다.
+- 시간 경과에 따라 리포트가 자동 축적되는 UX는 아직 구현되지 않았다.
+- 사용자는 세션을 멈출 수 있지만, BE defensive rule base 가 더 먼저 세션을 종료시킬 수 있다.
 - Settings는 현재 placeholder 중심이며 `/config` live 연동은 아직 없다.
