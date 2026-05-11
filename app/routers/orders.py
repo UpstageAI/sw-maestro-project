@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import get_db
 from app.models.ai import ResumeCommandPayload
-from app.models.requests import CancelOrderRequest, SpotOrderRequest
-from app.models.responses import CancelOrderResponse, OrderRunResponse, OrderStatusResponse, RunReportResponse
+from app.models.requests import AutoOrderRequest, CancelOrderRequest, SpotOrderRequest
+from app.models.responses import AutoOrderRunResponse, CancelOrderResponse, OrderRunResponse, OrderStatusResponse, RunReportResponse
 from app.services import order_service, report_service
 
 router = APIRouter()
@@ -17,6 +17,14 @@ async def create_order(
     db: Session = Depends(get_db),
 ) -> OrderRunResponse:
     return await order_service.create_order(db, req, settings)
+
+
+@router.post("/orders/auto", response_model=AutoOrderRunResponse, status_code=200)
+async def create_auto_order(
+    req: AutoOrderRequest,
+    db: Session = Depends(get_db),
+) -> AutoOrderRunResponse:
+    return await order_service.create_auto_order(db, req, settings)
 
 
 @router.post("/orders/resume", response_model=OrderRunResponse, status_code=200)

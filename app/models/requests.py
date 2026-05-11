@@ -35,6 +35,16 @@ class SpotOrderRequest(_CamelModel):
         return self
 
 
+class AutoOrderRequest(_CamelModel):
+    raw_text: str
+
+    @model_validator(mode="after")
+    def validate_raw_text(self) -> "AutoOrderRequest":
+        if not self.raw_text.strip():
+            raise ValueError("자연어 주문 지시문이 필요합니다.")
+        return self
+
+
 class CancelOrderRequest(_CamelModel):
     symbol: str
     order_id: int | None = None

@@ -92,6 +92,22 @@ class OrderRunResponse(_CamelModel):
     reason_codes: list[str] = []
 
 
+class NormalizedOrderIntentResponse(_CamelModel):
+    symbol: str | None = None
+    side: str | None = None
+    type: str | None = None
+    quantity: str | None = None
+    quote_order_qty: str | None = None
+    price: str | None = None
+    time_in_force: str | None = None
+
+
+class AutoOrderRunResponse(OrderRunResponse):
+    normalized_order_intent: NormalizedOrderIntentResponse | None = None
+    trader_id: str | None = None
+    inferred_persona: str | None = None
+
+
 class DecisionTraceStageResponse(_CamelModel):
     reason_codes: list[str] = []
     evidence_refs: list[str] = []
