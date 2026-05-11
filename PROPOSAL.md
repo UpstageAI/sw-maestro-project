@@ -53,6 +53,11 @@
 Coin Agent는 Binance Spot Testnet의 시세, 호가, 캔들, 잔고, 주문 상태를 조회하고, 사용자가 정의한 정책과 리스크 기준 안에서만 가상 자금 현물 주문 테스트를 수행하며, 결과를 자연어와 로그로 설명하는 투자 보조 서비스이다.
 ```
 
+현재 구현은 위 서비스 정의를 다음 두 흐름으로 구체화하고 있다.
+
+- 수동 구조화 주문 테스트 흐름
+- 자연어 기반 auto order 및 backend-owned continuous auto-trading session 흐름
+
 ### 1.3 서비스 선정 배경
 
 ```text
@@ -118,7 +123,7 @@ Coin Agent의 핵심 가치는 “실거래 없이도 전체 현물 주문 테�
 | 구분 | 작성 내용 |
 |---|---|
 | Agent가 수행하는 일 | 사용자의 테스트 정책을 구조화하고, Binance Spot Testnet 시세/잔고/주문 상태를 조회하며, 현물 주문 테스트 결과를 설명한다. |
-| Agent가 도와주는 범위 | 시세 조회, 호가 조회, 캔들 조회, 잔고 조회, 매수/매도 주문 테스트, 주문 상태 조회, 주문 취소, 리포트 생성 |
+| Agent가 도와주는 범위 | 시세 조회, 호가 조회, 캔들 조회, 잔고 조회, 수동 주문 테스트, 자연어 auto order, 연속 자동매매 세션 판단 보조, 주문 상태 조회, 주문 취소, 리포트 생성 |
 | Agent가 하지 않는 일 | 실거래 주문, 선물, 마진, 출금, 레버리지, 수익 보장 |
 | 최종 산출물 | 상태 카드, 주문 결과 카드, 잔고 요약, 주문 로그, 테스트 리포트 |
 
@@ -165,9 +170,11 @@ Coin Agent의 핵심 가치는 “실거래 없이도 전체 현물 주문 테�
 | 2 | 잔고 조회 | Testnet 계정 잔고 조회 | 없음 | 자산별 `free`, `locked` | 필수 |
 | 3 | 현재가/호가/캔들 조회 | 현재가, 호가, 캔들 데이터 조회 | `symbol`, `interval` | 시세 데이터 | 필수 |
 | 4 | 현물 매수/매도 주문 테스트 | Spot 시장가 또는 지정가 주문 전송 | `symbol`, `side`, `type`, `quantity` 등 | 주문 응답 | 필수 |
-| 5 | 주문 상태 조회 | `orderId` 또는 `origClientOrderId` 기준 상태 조회 | `symbol`, 주문 식별자 | 주문 상태 | 필수 |
-| 6 | 주문 취소 | 미체결 또는 부분 체결 주문 취소 | `symbol`, 주문 식별자 | 취소 결과 | 필수 |
-| 7 | WebSocket 시세 수신 | 실시간 ticker/bookTicker/kline 수신 | stream 이름 | 실시간 시세 이벤트 | 권장 |
+| 5 | 자연어 auto order | 자연어 지시문을 1회성 agentic run으로 해석하고 제출 후보를 평가 | `rawText` | auto order run 응답 | 필수 |
+| 6 | 연속 자동매매 세션 | 자연어 지시문 기준으로 backend-owned session을 시작/중지하고 tick 상태를 관리 | `rawText` | session 상태, latest run, latest report | 필수 |
+| 7 | 주문 상태 조회 | `orderId` 또는 `origClientOrderId` 기준 상태 조회 | `symbol`, 주문 식별자 | 주문 상태 | 필수 |
+| 8 | 주문 취소 | 미체결 또는 부분 체결 주문 취소 | `symbol`, 주문 식별자 | 취소 결과 | 필수 |
+| 9 | WebSocket 시세 수신 | 실시간 ticker 상태 수신 | stream 이름 | 실시간 시세 이벤트 | 권장 |
 
 ### 3.3 사용자 관점 워크플로우
 
