@@ -1,9 +1,0 @@
-__pycache__/
-*.py[cod]
-*.egg-info/
-.venv/
-venv/
-.env
-chroma_db/
-.DS_Store
-*.log
