@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.soma.ai13be.persona.service.PersonaServiceTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-05-08T09:32:56.209Z" hostname="MINCom" time="0.012">
+  <properties/>
+  <testcase name="rejectsDeletingUnknownPersona()" classname="com.soma.ai13be.persona.service.PersonaServiceTest" time="0.001"/>
+  <testcase name="rejectsEmptyGeneratedPrompt()" classname="com.soma.ai13be.persona.service.PersonaServiceTest" time="0.001"/>
+  <testcase name="regeneratesSystemPrompt()" classname="com.soma.ai13be.persona.service.PersonaServiceTest" time="0.001"/>
+  <testcase name="rejectsUpdateOfUnknownPersona()" classname="com.soma.ai13be.persona.service.PersonaServiceTest" time="0.001"/>
+  <testcase name="updatesSystemPrompt()" classname="com.soma.ai13be.persona.service.PersonaServiceTest" time="0.0"/>
+  <testcase name="createsPersonaWithGeneratedSystemPrompt()" classname="com.soma.ai13be.persona.service.PersonaServiceTest" time="0.002"/>
+  <testcase name="throwsExceptionWhenRegeneratedPromptIsEmpty()" classname="com.soma.ai13be.persona.service.PersonaServiceTest" time="0.001"/>
+  <testcase name="rejectsUpdateWithBlankSystemPrompt()" classname="com.soma.ai13be.persona.service.PersonaServiceTest" time="0.0"/>
+  <testcase name="rejectsDuplicateDomainName()" classname="com.soma.ai13be.persona.service.PersonaServiceTest" time="0.001"/>
+  <testcase name="rejectsDeletingBuiltInPersona()" classname="com.soma.ai13be.persona.service.PersonaServiceTest" time="0.001"/>
+  <testcase name="rejectsBlankDomainName()" classname="com.soma.ai13be.persona.service.PersonaServiceTest" time="0.0"/>
+  <testcase name="deletesPersona()" classname="com.soma.ai13be.persona.service.PersonaServiceTest" time="0.001"/>
+  <testcase name="rejectsRegenerateOfUnknownPersona()" classname="com.soma.ai13be.persona.service.PersonaServiceTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
