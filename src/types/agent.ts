@@ -12,7 +12,9 @@ export type LifecycleStatus =
   | 'NO_ORDER'
   | 'FAILED';
 
-export type HoldReason = 'HOLD_REVIEW_REQUIRED' | 'HOLD_DATA_INSUFFICIENT';
+export type KnownHoldReason = 'HOLD_REVIEW_REQUIRED' | 'HOLD_DATA_INSUFFICIENT';
+
+export type HoldReason = KnownHoldReason | (string & {});
 
 export type GateDecisionType = 'PASS' | 'REJECT' | 'HOLD';
 
