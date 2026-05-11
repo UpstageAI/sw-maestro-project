@@ -2,13 +2,13 @@
 
 ## 문서 목적
 
-이 문서는 Coin Agent의 canonical 구조와 현재 구현 경계를 설명한다. 기준은 Binance Spot Testnet 전용, FE 입력과 시각화, BE 실행 권한, AI 판단 보조의 분리다.
+이 문서는 현재 구현 기준의 canonical 구조를 설명한다. 핵심은 FE 입력/표시, BE 실행 권한, AI 판단 보조, Binance Testnet 실제 연결, run/report/session 경계를 흔들리지 않게 유지하는 것이다.
 
 ## 1. 시스템 구성
 
-1. React Frontend
-2. FastAPI Backend
-3. Standalone HTTP AI Service
+1. React Frontend (`autocoin-web`)
+2. FastAPI Backend (`autocoin-api`)
+3. Standalone HTTP AI Service (`autocoin-ai`)
 4. SQLite 저장소
 5. Binance Spot Testnet REST / WebSocket
 
@@ -16,15 +16,13 @@
 
 | 계층 | 책임 | 금지 사항 |
 |---|---|---|
-| FE | 입력 수집, 결과 표시, 상태 분기 UI | Binance 직접 호출, 시그니처 생성 |
-| BE | 공개 API, Binance 호출, 시그니처 생성, deterministic 재검증, checkpoint 저장 | AI 판단만 믿고 무검증 제출 |
-| AI | 주문 의도 정규화, 리스크 판단, trace 생성, completion 보고 | Binance 직접 제출, Binance 서명, 정책 임의 완화 |
-| DB | checkpoint, 주문 로그, 상태 로그, 리포트 저장 | 거래소 권한 판단 |
+| FE | 입력 수집, 상태 polling, 결과 표시 | Binance 직접 호출, 로컬 auto-trading loop 소유 |
+| BE | 공개 API, AI 호출, Binance 호출, 재검증, 세션 loop, 보고 저장 | AI 판단만 믿고 무검증 제출 |
+| AI | 자연어 해석, 정책 grounding, 전략/리스크 판단, trace 생성, completion 해석 | Binance 직접 제출, 서명, 최종 실행 확정 |
+| DB | checkpoint, 주문 로그, report 저장 | 실행 권한 결정 |
 | Binance | 시장 데이터와 Testnet 주문 처리 | 내부 정책 해석 |
 
-핵심 경계는 단순하다. FE는 Binance를 호출하지 않는다. AI는 Binance 요청을 제출하거나 서명하지 않는다. BE만 실행 권한을 가진다.
-
-## 3. 공개 인터페이스 구조
+## 3. 공개 인터페이스
 
 ### FE → BE
 
@@ -36,6 +34,10 @@
 - `GET /api/v1/testnet/klines`
 - `POST /api/v1/testnet/orders`
 - `POST /api/v1/testnet/orders/resume`
+- `POST /api/v1/testnet/orders/auto`
+- `POST /api/v1/testnet/orders/auto/session/start`
+- `POST /api/v1/testnet/orders/auto/session/stop`
+- `GET /api/v1/testnet/orders/auto/session`
 - `GET /api/v1/testnet/orders/status`
 - `GET /api/v1/testnet/orders/report`
 - `DELETE /api/v1/testnet/orders`
@@ -44,8 +46,11 @@
 ### BE → AI
 
 - `POST /runs/start`
+- `POST /runs/agentic/start`
 - `POST /runs/resume`
 - `POST /runs/complete`
+- `GET /runs/{run_id}/checkpoints/order`
+- `GET /runs/{run_id}/checkpoints/completion`
 
 ### BE → Binance
 
@@ -59,76 +64,64 @@
 - `GET /v3/order`
 - `DELETE /v3/order`
 
-## 4. 주문 생성의 canonical 흐름
+## 4. 수동 주문 run 흐름
 
-1. FE가 `POST /api/v1/testnet/orders` 를 호출한다.
-2. BE가 `runId` 를 생성하고 `request_context`, `policy_context` 를 만든다.
-3. BE가 AI `/runs/start` 를 호출한다.
-4. AI가 `HOLD`, `NO_ORDER`, `READY_FOR_BE` 중 하나를 반환한다.
-5. `READY_FOR_BE` 인 경우에만 BE가 deterministic 재검증을 수행한다.
-6. 재검증을 통과하면 BE가 Binance 주문을 제출한다.
-7. 제출 결과 또는 차단 근거를 BE가 AI `/runs/complete` 로 주입한다.
-8. BE가 최종 run 결과를 저장하고 FE에 run 중심 응답을 반환한다.
+1. FE가 `POST /orders` 호출
+2. BE가 `run_id`, `request_context`, `policy_context` 생성
+3. AI `/runs/start` 호출
+4. AI가 `HOLD`, `NO_ORDER`, `READY_FOR_BE` 반환
+5. `READY_FOR_BE` 일 때만 BE가 deterministic 재검증 수행
+6. 통과하면 Binance 제출
+7. 제출 결과 또는 차단 근거를 AI `/runs/complete` 로 주입
+8. BE가 최종 run/report/checkpoint 저장 후 FE에 run 중심 응답 반환
 
-중요한 점은 `POST /api/v1/testnet/orders` 의 public contract가 run 결과라는 것이다. Binance 원본 주문 응답은 내부 실행 결과와 로그의 일부일 뿐이다.
+## 5. 자연어 auto order 1회 실행 흐름
 
-## 5. resume의 canonical 흐름
+1. FE가 `POST /orders/auto` 호출
+2. BE가 `rawText` 기반 요청을 받음
+3. BE가 live account/price/book/5분 klines snapshot 을 수집
+4. snapshot 을 포함한 `request_context.user_input` 로 AI `/runs/agentic/start` 호출
+5. AI agentic graph가 `intake -> policy -> strategy -> risk_agent -> risk_gate -> evaluator` 수행
+6. `READY_FOR_BE` 이면 BE가 `normalized_order_intent` 를 실제 주문 요청으로 변환
+7. BE가 재검증 후 Binance 제출 또는 `BE_REJECTED`
+8. AI `/runs/complete` 호출 및 report/checkpoint 저장
 
-1. AI 또는 BE가 `HOLD` 상태를 만든다.
-2. BE는 checkpoint 를 `runId` 기준으로 저장한다.
-3. FE 또는 외부 클라이언트가 `POST /api/v1/testnet/orders/resume` 를 호출한다.
-4. BE는 checkpoint 존재 여부, 만료 여부, 현재 상태가 `HOLD` 인지 확인한다.
-5. BE는 AI `/runs/resume` 로 `resumeReason`, `patchFields` 를 전달한다.
-6. AI가 같은 `runId` 아래에서 새 상태를 계산한다.
-7. 결과가 `READY_FOR_BE` 면 BE가 재검증과 실행을 이어간다.
-8. 결과가 여전히 `HOLD` 또는 `NO_ORDER` 면 해당 run 상태를 그대로 반환한다.
+## 6. 연속 자연어 자동매매 세션 흐름
 
-`POST /api/v1/testnet/orders/resume` 는 보조 기능이 아니라 public API의 1급 엔드포인트다. 현재 구현에서는 BE checkpoint 와 AI 로컬 JSON run 저장소를 함께 사용하므로, 같은 저장소 파일이 유지되는 한 AI 프로세스 재시작 이후에도 non-agentic run resume 를 이어갈 수 있다. 다만 저장소 파일이 유실되거나 교체되면 BE checkpoint 만으로 동일 run 복구가 완전하게 보장되지는 않는다.
+1. FE가 `POST /orders/auto/session/start` 호출
+2. BE가 session 상태를 `ACTIVE` 로 만들고 tick interval(180/300/600초)을 결정
+3. 각 tick 마다 BE가 fresh `run_id` 로 `create_auto_order()` 를 호출
+4. tick 결과가 `REPORT_READY`, `NO_ORDER`, 일부 retryable `HOLD` 이면 다음 tick 대기
+5. tick 결과가 non-retryable `HOLD`, `BE_REJECTED`, `FAILED` 이면 세션 `STOPPED`
+6. FE는 `GET /orders/auto/session` polling 으로 상태를 본다
 
-## 6. AI 서비스의 현재 구현 특성
+현재 retryable HOLD:
 
-- AI는 BE 내부 모듈이 아니라 별도 HTTP 서비스다.
-- 현재 기본 run 저장소는 로컬 JSON 파일 기반이다.
-- `start()` 는 run 상태를 메모리에 저장한다.
-- `resume()` 는 기존 run을 읽어 이력을 추가한 뒤 다시 graph를 실행한다.
-- `complete()` 는 `READY_FOR_BE` run에 completion payload를 주입한다.
-- 현재 구현에는 `/runs/agentic/start` 도 존재하지만, 공통 FE→BE→AI 주문 흐름의 canonical 경로는 여전히 `/runs/start` 다.
+- `HOLD_INPUT_AMBIGUOUS`
+- `HOLD_LOW_CONVICTION`
+- `HOLD_RISK_AGENT_FLAGGED`
 
-현재 resume 의미는 다음과 같다.
+현재 non-retryable HOLD 예시:
 
-- 이전 `request_context` 와 `policy_context` 는 유지된다.
-- `resume_history` 는 누적된다.
-- `decision_trace_history` 는 재개 직전 trace 스냅샷을 보존한다.
-- 새 resume 실행 후 현재 `decision_trace` 와 현재 `verification_checks` 는 재계산되어 overwrite될 수 있다.
+- `HOLD_DATA_INSUFFICIENT`
 
-즉, 이력은 보존되지만 현재 stage 결과는 append-only가 아니다.
+## 7. 현재 구현 제약
 
-## 7. 저장 경계
+- agentic run resume 는 현재 지원되지 않는다.
+- Reports 페이지는 single-run `runId` 조회만 지원한다.
+- FE Settings는 `/config` endpoint를 아직 실제 호출하지 않는다.
+- stream status는 고정 `btcusdt@ticker` 기준 background task 이다.
+
+## 8. 저장 경계
 
 ### BE 저장
 
-- checkpoint
-- 주문 로그
-- 주문 상태 조회 로그
-- 주문 취소 로그
+- `agent_run_checkpoints`
+- 주문 로그 / 상태 로그 / 취소 로그
 - run report
 
 ### AI 저장
 
-- 현재 구현에서는 로컬 JSON 파일에 run 상태를 저장
+- 로컬 JSON run store
 
-이 차이 때문에 AI 보존성은 순수 in-memory 수준은 아니지만, BE SQLite checkpoint와 완전히 같은 durability 계층도 아니다.
-
-## 8. 현재 FE 성숙도 위치
-
-- Orders 플로우는 run 중심 응답을 받아야 하는 구조로 가고 있다.
-- Reports 페이지는 현재 mock 기반이다. 다만 BE의 `GET /api/v1/testnet/orders/report` 는 이미 존재한다.
-- Settings 페이지는 현재 placeholder를 표시한다. 다만 BE의 `GET /api/v1/testnet/config` 는 이미 존재한다.
-- resume API는 canonical 구조에 포함되지만, 현재 FE 연결은 완전하지 않다.
-
-## 9. 응답 명명 정책
-
-- 성공 응답은 camelCase
-- 현재 오류 응답은 snake_case
-
-이 정책은 FE, BE, AI 설명 문서 전반에서 동일하게 유지한다.
+AI run 저장소와 BE checkpoint는 서로 다른 durability 계층이므로 동일한 durability로 간주하면 안 된다.
