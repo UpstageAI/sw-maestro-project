@@ -14,12 +14,17 @@ import type {
   ResumeCommandPayload,
   SpotOrderRequest,
   StreamStatus,
+  TestnetConfig,
   TickerPrice,
 } from '../types/api';
 import { del, get, post } from './client';
 
 export function fetchAccount(): Promise<BalanceSnapshot> {
   return get<BalanceSnapshot>(ENDPOINTS.account);
+}
+
+export function fetchTestnetConfig(): Promise<TestnetConfig> {
+  return get<TestnetConfig>(ENDPOINTS.config);
 }
 
 export function fetchTickerPrice(symbol: string): Promise<TickerPrice> {

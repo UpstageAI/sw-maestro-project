@@ -8,6 +8,7 @@ export const API_BASE_URL =
 
 export const ENDPOINTS = {
   account: '/api/v1/testnet/account',
+  config: '/api/v1/testnet/config',
   tickerPrice: '/api/v1/testnet/ticker/price',
   tickerBook: '/api/v1/testnet/ticker/book',
   klines: '/api/v1/testnet/klines',
