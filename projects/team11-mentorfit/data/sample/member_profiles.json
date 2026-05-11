@@ -1,0 +1,116 @@
+[
+  {
+    "scenario_id": "scenario_a",
+    "scenario_name": "창업 및 투자 유치 목표",
+    "members": [
+      {
+        "name": "김서연",
+        "skills": ["React", "TypeScript", "Figma"],
+        "role": "FE/기획 리드",
+        "goals": "스타트업 창업 경험과 실제 서비스 런칭",
+        "mentoring_needs": "프로덕트 기획과 UX 디자인 피드백",
+        "project_experience": "대학교 해커톤 2회 참여, 교내 서비스 개발",
+        "personality": "아침형, 오프라인 선호",
+        "background": "컴퓨터공학 4학년, 동아리 기획팀장"
+      },
+      {
+        "name": "이정훈",
+        "skills": ["Node.js", "Express", "MongoDB"],
+        "role": "BE",
+        "goals": "실무급 백엔드 개발 역량 확보와 창업",
+        "mentoring_needs": "API 설계와 데이터베이스 모델링 실무 조언",
+        "project_experience": "교내 동아리 웹 서비스 백엔드 개발",
+        "personality": "야간 집중, 온라인 선호",
+        "background": "소프트웨어학과 3학년, 졸업 예정"
+      },
+      {
+        "name": "박채원",
+        "skills": ["AWS", "Docker", "CI/CD"],
+        "role": "DevOps/BE",
+        "goals": "클라우드 인프라 실무 역량과 시드 투자 경험",
+        "mentoring_needs": "인프라 비용 최적화와 스타트업 인프라 구축 노하우",
+        "project_experience": "개인 프로젝트 AWS 배포 경험",
+        "personality": "유연, 온/오프라인 모두 가능",
+        "background": "컴퓨터공학 4학년, 클라우드 동아리 활동"
+      }
+    ],
+    "project_plan": "생성형 AI를 활용한 개인 맞춤형 법률 문서 요약 서비스",
+    "fit_conditions": "스타트업 창업가 출신이나 VC 네트워크가 있으신 분"
+  },
+  {
+    "scenario_id": "scenario_b",
+    "scenario_name": "기술적 완성도 & 인증 목표",
+    "members": [
+      {
+        "name": "최민수",
+        "skills": ["Java", "Spring Boot", "Kafka"],
+        "role": "BE/Infra 리더",
+        "goals": "대규모 시스템 아키텍처 설계 역량 확보와 소마 인증",
+        "mentoring_needs": "분산 시스템에서의 데이터 정합성과 고가용성 아키텍처 리뷰",
+        "project_experience": "학교 수강신청 서버 개발, Kafka 기반 이벤트 파이프라인 구축",
+        "personality": "체계적, 오프라인 선호",
+        "background": "소프트웨어학과 4학년, 학점 18학점 수강 중"
+      },
+      {
+        "name": "정다은",
+        "skills": ["MySQL", "Redis", "Spring Boot"],
+        "role": "BE/DB",
+        "goals": "데이터베이스 설계와 튜닝 전문성 확보, 소마 최종 인증",
+        "mentoring_needs": "대규모 트래픽 환경에서의 DB 성능 최적화 실무 노하우",
+        "project_experience": "교내 프로젝트에서 샤딩 및 레플리케이션 적용 경험",
+        "personality": "꼼꼼한 편, 온라인 선호",
+        "background": "컴퓨터공학 3학년, 데이터베이스 연구실 소속"
+      },
+      {
+        "name": "한지우",
+        "skills": ["React", "TypeScript", "TailwindCSS"],
+        "role": "FE/Design",
+        "goals": "프론트엔드 아키텍처와 성능 최적화 역량, 인증 획득",
+        "mentoring_needs": "실시간 데이터 시각화와 프론트엔드 성능 최적화 가이드",
+        "project_experience": "실시간 대시보드 프로젝트 프론트엔드 개발",
+        "personality": "협업 중시, 온/오프라인 모두 가능",
+        "background": "디지털미디어학과 4학년, 졸업 프로젝트 진행 중"
+      }
+    ],
+    "project_plan": "대규모 트래픽을 견디는 실시간 티켓 예매 시스템 아키텍처 구축",
+    "fit_conditions": "대형 IT 기업의 시니어 백엔드 엔지니어 혹은 아키텍트 선호"
+  },
+  {
+    "scenario_id": "scenario_c",
+    "scenario_name": "취업 준비 & AI 연구",
+    "members": [
+      {
+        "name": "윤서진",
+        "skills": ["Python", "PyTorch", "ONNX"],
+        "role": "ML Research",
+        "goals": "빅테크 AI 조합 취업과 실무급 ML 모델 개발 역량",
+        "mentoring_needs": "최신 논문 구현 기술과 모델 경량화(Pruning/Quantization) 실무 노하우",
+        "project_experience": "ViT 기반 이미지 분류 모델 연구, 논문 1편 작성 중",
+        "personality": "독립적, 온라인 위주",
+        "background": "인공지능학과 석사 1학기, ML 연구실 소속"
+      },
+      {
+        "name": "강도현",
+        "skills": ["Python", "FastAPI", "Docker", "MLflow"],
+        "role": "MLOps",
+        "goals": "MLOps 파이프라인 구축 실무 역량과 빅테크 취업",
+        "mentoring_needs": "모델 서빙 파이프라인과 A/B 테스트 자동화 실무 경험 공유",
+        "project_experience": "학교 연구실 ML 실험 관리 시스템 구축",
+        "personality": "체계적, 오프라인 선호",
+        "background": "컴퓨터공학 4학년, MLOps 동아리 운영진"
+      },
+      {
+        "name": "임하늘",
+        "skills": ["React", "TypeScript", "WebRTC"],
+        "role": "FE",
+        "goals": "AI 프로덕트 프론트엔드 개발자로 취업",
+        "mentoring_needs": "AI 모델 결과를 사용자 친화적으로 시각화하는 UX/UI 설계 조언",
+        "project_experience": "실시간 영상 처리 웹앱 프론트엔드 개발",
+        "personality": "소통 중시, 온/오프라인 모두 가능",
+        "background": "소프트웨어학과 3학년, 웹 개발 동아리"
+      }
+    ],
+    "project_plan": "경량화된 온디바이스 비전 모델 개발 및 서비스화",
+    "fit_conditions": "AI 연구원 출신이거나 실제 AI 모델을 서비스에 태워본 경험이 있으신 분"
+  }
+]
