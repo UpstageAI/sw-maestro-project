@@ -1,20 +1,32 @@
+from datetime import datetime, timedelta, timezone
 from typing import Literal, cast
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.db.crud import get_checkpoint, get_report_by_run_id, save_or_update_report
-from app.db.models import Report
+from app.db.models import AgentRunCheckpoint, Report
 from app.models.responses import (
     DecisionTraceResponse,
     DecisionTraceStageResponse,
     PublishedOrderOutcome,
     PublishedRunReport,
+    ReportCadenceEventResponse,
+    RunReportCadenceResponse,
     RunReportResponse,
 )
 
 JsonDict = dict[str, object]
 OrderStatusValue = Literal["NEW", "PARTIALLY_FILLED", "FILLED", "CANCELED", "REJECTED", "EXPIRED"]
+_CADENCE_EVENT_TYPES = [
+    "request_accepted",
+    "policy_retrieval_complete",
+    "policy_complete",
+    "risk_gate_complete",
+    "evaluator_complete",
+    "be_revalidation_complete",
+    "final_report_ready",
+]
 
 
 def _as_string(value: object) -> str | None:
@@ -35,6 +47,22 @@ def _as_order_status(value: object) -> OrderStatusValue | None:
     status = _as_string(value)
     if status in {"NEW", "PARTIALLY_FILLED", "FILLED", "CANCELED", "REJECTED", "EXPIRED"}:
         return cast(OrderStatusValue, status)
+    return None
+
+
+def _as_datetime(value: object) -> datetime | None:
+    if isinstance(value, datetime):
+        if value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+        return value
+    if isinstance(value, str):
+        try:
+            parsed = datetime.fromisoformat(value)
+        except ValueError:
+            return None
+        if parsed.tzinfo is None:
+            return parsed.replace(tzinfo=timezone.utc)
+        return parsed
     return None
 
 
@@ -63,6 +91,58 @@ def _build_decision_trace(ai_state: JsonDict) -> DecisionTraceResponse | None:
         execution=_stage("execution"),
         run_summary=_stage("run_summary"),
     )
+
+
+def _build_cadence_events(
+    run_id: str,
+    checkpoint: AgentRunCheckpoint | None,
+    report: Report | None,
+) -> list[ReportCadenceEventResponse]:
+    checkpoint_state = checkpoint.state_json if checkpoint else None
+    report_json = report.report_json if report else None
+    trace_source = checkpoint_state or report_json or {}
+    trace = _build_decision_trace(trace_source)
+
+    lifecycle_status = _as_string((report_json or {}).get("lifecycle_status")) or _as_string(
+        (checkpoint_state or {}).get("lifecycle_status")
+    )
+    if lifecycle_status is None and checkpoint is not None:
+        lifecycle_status = checkpoint.lifecycle_status
+    if lifecycle_status is None:
+        lifecycle_status = "FAILED"
+
+    checkpoint_created_at = _as_datetime(checkpoint.created_at if checkpoint else None) or datetime.now(timezone.utc)
+    report_created_at = _as_datetime(report.created_at if report else None) or (checkpoint_created_at + timedelta(milliseconds=6))
+
+    events: list[ReportCadenceEventResponse] = []
+
+    def _append(event_type: str, created_at: datetime, offset_ms: int, status: str) -> None:
+        events.append(
+            ReportCadenceEventResponse(
+                run_id=run_id,
+                event_type=event_type,
+                lifecycle_status=status,
+                created_at=(created_at + timedelta(milliseconds=offset_ms)).isoformat(),
+            )
+        )
+
+    _append("request_accepted", checkpoint_created_at, 0, lifecycle_status)
+
+    if trace and trace.policy:
+        _append("policy_retrieval_complete", checkpoint_created_at, 1, lifecycle_status)
+        _append("policy_complete", checkpoint_created_at, 2, lifecycle_status)
+    if trace and trace.risk:
+        _append("risk_gate_complete", checkpoint_created_at, 3, lifecycle_status)
+    if trace and trace.evaluator:
+        _append("evaluator_complete", checkpoint_created_at, 4, lifecycle_status)
+    if trace and trace.execution:
+        _append("be_revalidation_complete", checkpoint_created_at, 5, lifecycle_status)
+    if report is not None:
+        _append("final_report_ready", report_created_at, 0, lifecycle_status)
+
+    allowed = set(_CADENCE_EVENT_TYPES)
+    filtered = [event for event in events if event.event_type in allowed]
+    return sorted(filtered, key=lambda event: (event.created_at, _CADENCE_EVENT_TYPES.index(event.event_type)))
 
 
 def _extract_reason_codes(ai_state: JsonDict, lifecycle_status: str, fallback_reason_codes: list[str] | None) -> list[str]:
@@ -176,3 +256,14 @@ def get_run_report(db: Session, run_id: str) -> RunReportResponse:
         raise HTTPException(status_code=404, detail=f"run_id not found: {run_id}")
 
     raise HTTPException(status_code=404, detail=f"report not found for run_id: {run_id}")
+
+
+def get_run_report_cadence(db: Session, run_id: str) -> RunReportCadenceResponse:
+    report = get_report_by_run_id(db, run_id)
+    checkpoint = get_checkpoint(db, run_id)
+
+    if report is None and checkpoint is None:
+        raise HTTPException(status_code=404, detail=f"run_id not found: {run_id}")
+
+    events = _build_cadence_events(run_id, checkpoint, report)
+    return RunReportCadenceResponse(run_id=run_id, events=events)

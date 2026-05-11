@@ -5,7 +5,7 @@ from app.config import settings
 from app.database import get_db
 from app.models.ai import ResumeCommandPayload
 from app.models.requests import AutoOrderRequest, AutoSessionStartRequest, CancelOrderRequest, SpotOrderRequest
-from app.models.responses import AutoOrderRunResponse, AutoTradingSessionResponse, CancelOrderResponse, OrderRunResponse, OrderStatusResponse, RunReportResponse
+from app.models.responses import AutoOrderRunResponse, AutoTradingSessionResponse, CancelOrderResponse, OrderRunResponse, OrderStatusResponse, RunReportCadenceResponse, RunReportResponse
 from app.services import auto_session_service, order_service, report_service
 
 router = APIRouter()
@@ -81,3 +81,11 @@ async def get_order_report(
     db: Session = Depends(get_db),
 ) -> RunReportResponse:
     return report_service.get_run_report(db, run_id)
+
+
+@router.get("/orders/report/cadence", response_model=RunReportCadenceResponse, status_code=200)
+async def get_order_report_cadence(
+    run_id: str = Query(alias="runId"),
+    db: Session = Depends(get_db),
+) -> RunReportCadenceResponse:
+    return report_service.get_run_report_cadence(db, run_id)

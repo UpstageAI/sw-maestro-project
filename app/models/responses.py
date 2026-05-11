@@ -165,6 +165,18 @@ class RunReportResponse(_CamelModel):
     report: PublishedRunReport
 
 
+class ReportCadenceEventResponse(_CamelModel):
+    run_id: str
+    event_type: str
+    lifecycle_status: str
+    created_at: str
+
+
+class RunReportCadenceResponse(_CamelModel):
+    run_id: str
+    events: list[ReportCadenceEventResponse]
+
+
 class StreamStatusResponse(_CamelModel):
     connected: bool
     stream_name: str | None = None
