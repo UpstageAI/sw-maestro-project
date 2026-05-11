@@ -60,13 +60,17 @@ def _build_request_context(run_id: str, req: SpotOrderRequest) -> dict[str, Any]
 
 
 def _build_auto_request_context(run_id: str, req: AutoOrderRequest) -> dict[str, Any]:
+    user_input: dict[str, Any] = {
+        "raw_text": req.raw_text,
+    }
+    if req.trader_id:
+        user_input["trader_id"] = req.trader_id
+
     return {
         "request_id": run_id,
         "request_type": "PLACE_ORDER_TEST",
         "requested_at": datetime.now(timezone.utc).isoformat(),
-        "user_input": {
-            "raw_text": req.raw_text,
-        },
+        "user_input": user_input,
     }
 
 

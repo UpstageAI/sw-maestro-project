@@ -108,6 +108,26 @@ class AutoOrderRunResponse(OrderRunResponse):
     inferred_persona: str | None = None
 
 
+_AutoSessionStatus = Literal["IDLE", "ACTIVE", "STOPPING", "STOPPED"]
+
+
+class AutoTradingSessionResponse(_CamelModel):
+    session_id: str | None = None
+    session_status: _AutoSessionStatus
+    stop_requested: bool = False
+    selected_tick_interval_seconds: int | None = None
+    raw_text: str | None = None
+    selected_trader_id: str | None = None
+    tick_count: int = 0
+    started_at: str | None = None
+    stopped_at: str | None = None
+    last_tick_started_at: str | None = None
+    last_tick_completed_at: str | None = None
+    stop_reason: str | None = None
+    latest_error: str | None = None
+    latest_run: AutoOrderRunResponse | None = None
+
+
 class DecisionTraceStageResponse(_CamelModel):
     reason_codes: list[str] = []
     evidence_refs: list[str] = []
