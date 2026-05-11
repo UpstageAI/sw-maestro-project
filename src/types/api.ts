@@ -10,6 +10,12 @@ export interface BalanceSnapshot {
   balances: Balance[];
 }
 
+export interface TestnetConfig {
+  restBaseUrl: string;
+  wsStreamUrl: string;
+  wsApiUrl: string;
+}
+
 export interface TickerPrice {
   symbol: string;
   price: string;

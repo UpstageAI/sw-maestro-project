@@ -1,5 +1,8 @@
+import { useQuery } from '@tanstack/react-query';
 import { Card, Banner, Spinner } from '../../components/common';
+import { fetchTestnetConfig } from '../../api/testnet';
 import { API_BASE_URL } from '../../constants';
+import type { TestnetConfig } from '../../types/api';
 import styles from './SettingsPage.module.css';
 
 /**
@@ -8,23 +11,26 @@ import styles from './SettingsPage.module.css';
  * BE 미구현 시 "BE 연결 후 표시" placeholder를 보여준다.
  */
 
-interface TestnetConfig {
-  rest_base_url: string;
-  ws_stream_url: string;
-  ws_api_url: string;
-}
-
 function useTestnetConfig(): {
   config: TestnetConfig | null;
   isLoading: boolean;
   error: string | null;
 } {
-  // TODO: BE 구현 후 GET /api/v1/testnet/config 등으로 교체
-  return { config: null, isLoading: false, error: null };
+  const query = useQuery({
+    queryKey: ['testnetConfig'],
+    queryFn: fetchTestnetConfig,
+    staleTime: 60_000,
+  });
+
+  return {
+    config: query.data ?? null,
+    isLoading: query.isLoading,
+    error: query.error instanceof Error ? query.error.message : null,
+  };
 }
 
 export function SettingsPage() {
-  const { config, isLoading } = useTestnetConfig();
+  const { config, isLoading, error } = useTestnetConfig();
 
   return (
     <div className={styles.page}>
@@ -51,11 +57,13 @@ export function SettingsPage() {
       >
         {isLoading ? (
           <Spinner size="sm" />
+        ) : error ? (
+          <p className={styles.hint}>설정 정보를 불러오지 못했습니다: {error}</p>
         ) : config ? (
           <div className={styles.configList}>
-            <ConfigRow label="REST Base URL" value={config.rest_base_url} />
-            <ConfigRow label="WebSocket Streams" value={config.ws_stream_url} />
-            <ConfigRow label="WebSocket API" value={config.ws_api_url} />
+            <ConfigRow label="REST Base URL" value={config.restBaseUrl} />
+            <ConfigRow label="WebSocket Streams" value={config.wsStreamUrl} />
+            <ConfigRow label="WebSocket API" value={config.wsApiUrl} />
           </div>
         ) : (
           <p className={styles.hint}>
