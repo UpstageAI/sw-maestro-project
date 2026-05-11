@@ -64,7 +64,27 @@ def _build_policy_context(symbol: str) -> dict[str, Any]:
 
 
 def _extract_reason_codes(ai_state: dict[str, Any], stage: str) -> list[str]:
-    return ai_state.get("decision_trace", {}).get(stage, {}).get("reason_codes", [])
+    trace = ai_state.get("decision_trace", {})
+    if not isinstance(trace, dict):
+        return []
+
+    preferred_stages = [stage]
+    if stage in {"risk", "hold"}:
+        preferred_stages = ["risk", "evaluator", "policy", "run_summary"]
+    elif stage in {"execution", "report"}:
+        preferred_stages = ["execution", "run_summary", "evaluator"]
+
+    for preferred_stage in preferred_stages:
+        stage_trace = trace.get(preferred_stage)
+        if not isinstance(stage_trace, dict):
+            continue
+        reason_codes = stage_trace.get("reason_codes", [])
+        if isinstance(reason_codes, list):
+            filtered_codes = [code for code in reason_codes if isinstance(code, str)]
+            if filtered_codes:
+                return filtered_codes
+
+    return []
 
 
 def _user_input_to_request(user_input: dict[str, Any]) -> SpotOrderRequest:
@@ -313,6 +333,7 @@ async def _process_lifecycle(
             run_id=run_id,
             lifecycle_status="HOLD",
             hold_reason=ai_state.get("hold_reason"),
+            reason_codes=_extract_reason_codes(ai_state, "hold"),
         )
     if lifecycle == "NO_ORDER":
         save_run_report(db, run_id=run_id, ai_state=ai_state)

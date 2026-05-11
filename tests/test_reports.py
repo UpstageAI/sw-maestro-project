@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm import sessionmaker
 
 from app.db.crud import save_or_update_report
+from app.services.report_service import save_run_report
 from app.db.models import AgentRunCheckpoint
 from app.database import create_tables
 
@@ -105,6 +106,41 @@ def test_get_run_report_missing_report_returns_404(client: TestClient, db_sessio
 
     assert resp.status_code == 404
     assert resp.json()["error_code"] == "REQUEST_FAILED"
+
+
+def test_get_run_report_uses_non_risk_reason_codes_for_hold(client: TestClient, db_session: Session):
+    save_run_report(
+        db_session,
+        run_id="run_hold_policy_001",
+        ai_state={
+            "run_id": "run_hold_policy_001",
+            "lifecycle_status": "HOLD",
+            "hold_reason": "HOLD_REVIEW_REQUIRED",
+            "decision_trace": {
+                "policy": {
+                    "reason_codes": ["INPUT_REQUIRES_CONFIRMATION"],
+                    "evidence_refs": ["request_context.user_input"],
+                    "final_action": "HOLD",
+                    "notes": "confirmation required",
+                },
+                "risk": {
+                    "reason_codes": [],
+                    "evidence_refs": [],
+                    "final_action": "",
+                    "notes": None,
+                },
+            },
+            "evaluator_review": {"user_summary": "awaiting confirmation"},
+        },
+    )
+
+    resp = client.get("/api/v1/testnet/orders/report?runId=run_hold_policy_001")
+
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["report"]["lifecycleStatus"] == "HOLD"
+    assert data["report"]["reasonCodes"] == ["INPUT_REQUIRES_CONFIRMATION"]
+    assert data["report"]["userSummary"] == "awaiting confirmation"
 
 
 def test_create_tables_upgrades_legacy_reports_schema(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
