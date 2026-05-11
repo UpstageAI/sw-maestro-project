@@ -71,13 +71,25 @@ def _extract_reason_codes(ai_state: JsonDict, lifecycle_status: str, fallback_re
 
     trace = _build_decision_trace(ai_state)
     if lifecycle_status in {"HOLD", "NO_ORDER"}:
-        stage = trace.risk if trace else None
-        return stage.reason_codes if stage else []
+        candidate_stages = [
+            trace.risk if trace else None,
+            trace.evaluator if trace else None,
+            trace.policy if trace else None,
+            trace.run_summary if trace else None,
+        ]
+        for stage in candidate_stages:
+            if stage and stage.reason_codes:
+                return stage.reason_codes
+        return []
     if lifecycle_status in {"BE_REJECTED", "REPORT_READY"}:
-        if trace and trace.execution and trace.execution.reason_codes:
-            return trace.execution.reason_codes
-        if trace and trace.run_summary and trace.run_summary.reason_codes:
-            return trace.run_summary.reason_codes
+        candidate_stages = [
+            trace.execution if trace else None,
+            trace.run_summary if trace else None,
+            trace.evaluator if trace else None,
+        ]
+        for stage in candidate_stages:
+            if stage and stage.reason_codes:
+                return stage.reason_codes
     return []
 
 
