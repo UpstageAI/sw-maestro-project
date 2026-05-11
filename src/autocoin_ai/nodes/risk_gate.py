@@ -33,6 +33,8 @@ def risk_gate_node(state: AgentState) -> AgentState:
     persona = next_state.get("inferred_persona", "MODERATE")
     tool_calls: list = list(next_state.get("risk_tool_calls", []))
     step = len(tool_calls) + 1
+    request_context = next_state.get("request_context", {})
+    user_input = request_context.get("user_input", {}) if isinstance(request_context, dict) else {}
 
     action = str(proposal.get("action", ""))
     try:
@@ -68,7 +70,7 @@ def risk_gate_node(state: AgentState) -> AgentState:
         return _no_order(next_state, tool_calls, "SYMBOL_NOT_ALLOWED")
 
     # Check 5: balance check
-    bal_result = dispatch("get_balance", {"asset": quote_asset})
+    bal_result = _live_balance_from_user_input(user_input, quote_asset) or dispatch("get_balance", {"asset": quote_asset})
     tool_calls.append({"step": step, "thought": "", "tool": "get_balance", "args": {"asset": quote_asset}, "result": bal_result})
     step += 1
     try:
@@ -79,7 +81,7 @@ def risk_gate_node(state: AgentState) -> AgentState:
         return _hold(next_state, tool_calls, "INSUFFICIENT_BALANCE", HOLD_DATA_INSUFFICIENT)
 
     # Check 6: volatility check
-    vol_result = dispatch("get_volatility", {"symbol": symbol, "days": 7})
+    vol_result = _live_volatility_from_user_input(user_input, symbol) or dispatch("get_volatility", {"symbol": symbol, "days": 7})
     tool_calls.append({"step": step, "thought": "", "tool": "get_volatility", "args": {"symbol": symbol, "days": 7}, "result": vol_result})
     step += 1
     try:
@@ -130,3 +132,43 @@ def _no_order(state: AgentState, tool_calls: list, reason: str) -> AgentState:
     append_check(state, "risk_gate_verdict", "risk", "fail", ["risk_assessment"])
     set_trace(state, "risk", [reason], ["risk_assessment"], LIFECYCLE_NO_ORDER)
     return state
+
+
+def _live_balance_from_user_input(user_input: dict, asset: str) -> dict | None:
+    account_balance = user_input.get("account_balance") if isinstance(user_input, dict) else None
+    if not isinstance(account_balance, dict):
+        return None
+    balances = account_balance.get("balances", [])
+    if not isinstance(balances, list):
+        return None
+    for balance in balances:
+        if isinstance(balance, dict) and str(balance.get("asset", "")).upper() == asset.upper():
+            return {
+                "asset": asset.upper(),
+                "free": str(balance.get("free", "0")),
+                "locked": str(balance.get("locked", "0")),
+            }
+    return {"asset": asset.upper(), "free": "0", "locked": "0"}
+
+
+def _live_volatility_from_user_input(user_input: dict, symbol: str) -> dict | None:
+    market_snapshot = user_input.get("market_snapshot") if isinstance(user_input, dict) else None
+    if not isinstance(market_snapshot, dict):
+        return None
+    klines = market_snapshot.get("klines", {})
+    items = klines.get("items", []) if isinstance(klines, dict) else []
+    if not isinstance(items, list) or len(items) < 2:
+        return None
+    closes: list[float] = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        try:
+            closes.append(float(item.get("close", 0)))
+        except (TypeError, ValueError):
+            continue
+    if len(closes) < 2 or closes[0] <= 0:
+        return None
+    atr_pct = abs(max(closes) - min(closes)) / closes[0]
+    verdict = "high" if atr_pct > float(VOLATILITY_HIGH_THRESHOLD) else "normal"
+    return {"symbol": symbol.upper(), "atr_pct": atr_pct, "days": 1, "verdict": verdict}
