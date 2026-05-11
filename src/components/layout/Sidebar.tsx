@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom';
 import {
   Settings,
   LayoutDashboard,
+  Bot,
   ShoppingCart,
   FileText,
 } from 'lucide-react';
@@ -10,6 +11,7 @@ import styles from './Sidebar.module.css';
 const NAV_ITEMS = [
   { to: '/settings', label: '환경 설정', icon: Settings },
   { to: '/dashboard', label: '대시보드', icon: LayoutDashboard },
+  { to: '/auto-trading', label: '자연어 자동매매', icon: Bot },
   { to: '/orders', label: '주문 테스트', icon: ShoppingCart },
   { to: '/reports', label: '리포트', icon: FileText },
 ] as const;
