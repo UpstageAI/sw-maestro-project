@@ -9,6 +9,7 @@ import type {
   CancelOrderResponse,
   KlineResponse,
   OrderRunResponse,
+  RunReportCadenceResponse,
   RunReportResponse,
   OrderStatusResponse,
   ResumeCommandPayload,
@@ -72,6 +73,12 @@ export function resumeOrder(
 
 export function fetchRunReport(runId: string): Promise<RunReportResponse> {
   return get<RunReportResponse>(ENDPOINTS.ordersReport, { runId });
+}
+
+export function fetchRunReportCadence(
+  runId: string,
+): Promise<RunReportCadenceResponse> {
+  return get<RunReportCadenceResponse>(ENDPOINTS.ordersReportCadence, { runId });
 }
 
 export function fetchOrderStatus(

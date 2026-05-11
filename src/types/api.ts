@@ -176,6 +176,18 @@ export interface RunReportResponse {
   report: PublishedRunReport;
 }
 
+export interface ReportCadenceEventResponse {
+  runId: string;
+  eventType: string;
+  lifecycleStatus: PublishedRunLifecycleStatus;
+  createdAt: string;
+}
+
+export interface RunReportCadenceResponse {
+  runId: string;
+  events: ReportCadenceEventResponse[];
+}
+
 export interface ResumeCommandPayload {
   runId: string;
   resumeReason: string;
