@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.models import Report
+from app.models.responses import BalanceItem, BalanceResponse, BookDepth, BookResponse, KlineItem, KlinesResponse, PriceResponse
 
 
 _AUTO_ORDER_BODY = {
@@ -129,3 +130,38 @@ def test_create_auto_order_invalid_normalized_intent_be_rejected(client: TestCli
 def test_create_auto_order_validation_error_missing_raw_text(client: TestClient):
     resp = client.post("/api/v1/testnet/orders/auto", json={"rawText": "   "})
     assert resp.status_code == 422
+
+
+def test_create_auto_order_includes_live_snapshots_in_ai_request(client: TestClient):
+    with patch("app.services.order_service.ai_gateway_service.start_agentic_run", new_callable=AsyncMock) as mock_start, \
+         patch("app.services.order_service.get_account", new_callable=AsyncMock) as mock_account, \
+         patch("app.services.order_service.get_price", new_callable=AsyncMock) as mock_price, \
+         patch("app.services.order_service.get_book", new_callable=AsyncMock) as mock_book, \
+         patch("app.services.order_service.get_klines", new_callable=AsyncMock) as mock_klines:
+
+        mock_start.return_value = {**_AI_AGENTIC_READY, "lifecycle_status": "NO_ORDER"}
+        mock_account.return_value = BalanceResponse(balances=[BalanceItem(asset="USDT", free="500", locked="0")])
+        mock_price.return_value = PriceResponse(symbol="BTCUSDT", price="68000")
+        mock_book.return_value = BookResponse(
+            symbol="BTCUSDT",
+            bid_price="67990",
+            bid_qty="0.1",
+            ask_price="68010",
+            ask_qty="0.2",
+            depth=BookDepth(last_update_id=1, bids=[("67990", "0.1")], asks=[("68010", "0.2")]),
+        )
+        mock_klines.return_value = KlinesResponse(
+            symbol="BTCUSDT",
+            interval="5m",
+            items=[KlineItem(open_time=1, open="67000", high="68100", low="66900", close="68000", volume="12")],
+        )
+
+        resp = client.post("/api/v1/testnet/orders/auto", json=_AUTO_ORDER_BODY)
+
+    assert resp.status_code == 200
+    request_context = mock_start.await_args_list[0].args[1]
+    user_input = request_context["user_input"]
+    assert user_input["market_snapshot_fresh"] is True
+    assert user_input["symbol_hint"] == "BTCUSDT"
+    assert user_input["market_snapshot"]["price"]["price"] == "68000"
+    assert user_input["account_balance"]["balances"][0]["asset"] == "USDT"

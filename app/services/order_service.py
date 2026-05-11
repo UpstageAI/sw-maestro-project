@@ -28,7 +28,9 @@ from app.models.responses import (
     OrderStatusResponse,
 )
 from app.services import ai_gateway_service
+from app.services.account_service import get_account
 from app.services.binance_auth_service import build_signed_params
+from app.services.market_service import get_book, get_klines, get_price
 from app.services.report_service import save_run_report
 
 logger = logging.getLogger(__name__)
@@ -59,19 +61,63 @@ def _build_request_context(run_id: str, req: SpotOrderRequest) -> dict[str, Any]
     }
 
 
-def _build_auto_request_context(run_id: str, req: AutoOrderRequest) -> dict[str, Any]:
-    user_input: dict[str, Any] = {
-        "raw_text": req.raw_text,
-    }
-    if req.trader_id:
-        user_input["trader_id"] = req.trader_id
-
+def _build_auto_request_context(run_id: str, user_input: dict[str, Any]) -> dict[str, Any]:
     return {
         "request_id": run_id,
         "request_type": "PLACE_ORDER_TEST",
         "requested_at": datetime.now(timezone.utc).isoformat(),
         "user_input": user_input,
     }
+
+
+def _extract_symbol_from_raw_text(raw_text: str) -> str | None:
+    normalized_text = raw_text.upper()
+    if "BTCUSDT" in normalized_text or "BTC" in normalized_text or "비트코인" in raw_text:
+        return "BTCUSDT"
+    if "ETHUSDT" in normalized_text or "ETH" in normalized_text or "이더리움" in raw_text:
+        return "ETHUSDT"
+    return None
+
+
+async def _build_auto_user_input(
+    db: Session,
+    req: AutoOrderRequest,
+    settings: Settings,
+) -> dict[str, Any]:
+    user_input: dict[str, Any] = {
+        "raw_text": req.raw_text,
+        "market_snapshot_fresh": False,
+    }
+    if req.trader_id:
+        user_input["trader_id"] = req.trader_id
+
+    symbol = _extract_symbol_from_raw_text(req.raw_text)
+    if symbol:
+        user_input["symbol_hint"] = symbol
+
+    try:
+        account = await get_account(db, settings)
+        user_input["account_balance"] = account.model_dump(by_alias=True)
+    except Exception:
+        logger.exception("Account snapshot fetch failed for auto order request")
+
+    if symbol:
+        try:
+            price = await get_price(db, symbol, settings)
+            book = await get_book(db, symbol, settings)
+            klines = await get_klines(db, symbol, interval="5m", limit=12, settings=settings)
+            user_input["market_snapshot"] = {
+                "symbol": symbol,
+                "capturedAt": datetime.now(timezone.utc).isoformat(),
+                "price": price.model_dump(by_alias=True),
+                "book": book.model_dump(by_alias=True),
+                "klines": klines.model_dump(by_alias=True),
+            }
+            user_input["market_snapshot_fresh"] = True
+        except Exception:
+            logger.exception("Market snapshot fetch failed for auto order request")
+
+    return user_input
 
 
 def _build_policy_context(symbol: str) -> dict[str, Any]:
@@ -443,7 +489,8 @@ async def create_auto_order(
     settings: Settings,
 ) -> AutoOrderRunResponse:
     run_id = f"run_{uuid.uuid4().hex}"
-    request_context = _build_auto_request_context(run_id, req)
+    user_input = await _build_auto_user_input(db, req, settings)
+    request_context = _build_auto_request_context(run_id, user_input)
     policy_context = _build_policy_context("BTCUSDT")
 
     try:
