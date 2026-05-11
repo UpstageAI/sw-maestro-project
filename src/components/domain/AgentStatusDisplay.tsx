@@ -26,6 +26,8 @@ export function AgentStatusDisplay({
   onViewDetails,
   onRefetch,
 }: AgentStatusDisplayProps) {
+  const holdReasonLabel = state.hold_reason ?? 'HOLD';
+
   if (state.lifecycle_status === 'NO_ORDER') {
     return (
       <div className={`${styles.container} ${styles.noOrder}`}>
@@ -111,6 +113,37 @@ export function AgentStatusDisplay({
             재조회/재입력
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  if (state.lifecycle_status === 'HOLD') {
+    return (
+      <div className={`${styles.container} ${styles.holdFallback}`}>
+        <div className={styles.header}>
+          <span className={`${styles.statusIcon} ${styles.iconWarning}`}>
+            <AlertTriangle size={20} />
+          </span>
+          <span className={styles.title}>추가 확인 대기</span>
+          <Badge label={holdReasonLabel} variant="warning" />
+        </div>
+        <p className={styles.description}>
+          {description ?? 'AI 에이전트가 추가 확인을 위해 실행을 보류했습니다. 상세 리포트를 확인해도 최종 주문 실행 권한은 백엔드에 있습니다.'}
+        </p>
+        {reasonCodes.length > 0 && (
+          <div className={styles.reasonCodes}>
+            {reasonCodes.map((code) => (
+              <span key={code} className={styles.reasonCode}>{code}</span>
+            ))}
+          </div>
+        )}
+        {onViewDetails && (
+          <div className={styles.actions}>
+            <Button variant="secondary" size="sm" onClick={onViewDetails}>
+              상세 보기
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
