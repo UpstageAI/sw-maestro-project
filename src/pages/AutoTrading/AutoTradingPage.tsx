@@ -1,15 +1,19 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { ApiError } from '../../api/client';
-import { placeAutoOrder } from '../../api/testnet';
+import {
+  startAutoTradingSession,
+  stopAutoTradingSession,
+} from '../../api/testnet';
 import { Banner, Badge, Button, Card, Skeleton } from '../../components/common';
 import { AgentStatusDisplay } from '../../components/domain/AgentStatusDisplay';
 import { RunReportCard } from '../../components/domain/RunReportCard';
-import { useRunReport } from '../../hooks';
+import { useAutoTradingSession, useRunReport } from '../../hooks';
 import type { AgentRunState } from '../../types/agent';
 import type {
   AutoOrderRunResponse,
+  AutoTradingSessionStatus,
   JsonValue,
   NormalizedOrderIntent,
   OrderRunLifecycleStatus,
@@ -61,6 +65,58 @@ function getSubmissionError(error: unknown): { message: string; code?: string } 
   return { message: '자연어 주문 요청에 실패했습니다.' };
 }
 
+function getSessionVariant(status: AutoTradingSessionStatus) {
+  switch (status) {
+    case 'ACTIVE':
+      return 'success' as const;
+    case 'STOPPING':
+      return 'warning' as const;
+    case 'STOPPED':
+      return 'default' as const;
+    case 'IDLE':
+      return 'info' as const;
+  }
+}
+
+function getSessionDescription(status: AutoTradingSessionStatus) {
+  switch (status) {
+    case 'ACTIVE':
+      return '백엔드가 주기 tick을 계속 실행하며 최신 run 상태를 갱신합니다.';
+    case 'STOPPING':
+      return '중지 요청이 전달되었고, 백엔드가 현재 세션을 안전하게 정리 중입니다.';
+    case 'STOPPED':
+      return '직전 세션이 종료되었으며 최신 결과는 표시 전용으로 유지됩니다.';
+    case 'IDLE':
+      return '현재 실행 중인 자동매매 세션이 없습니다.';
+  }
+}
+
+function formatTickInterval(seconds?: number | null) {
+  if (!seconds) {
+    return '미선택';
+  }
+
+  if (seconds % 60 === 0) {
+    return `${seconds / 60}분 (${seconds}초)`;
+  }
+
+  return `${seconds}초`;
+}
+
+function formatTimestamp(value?: string | null) {
+  if (!value) {
+    return '—';
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleString('ko-KR');
+}
+
 function toAgentRunState(response: AutoOrderRunResponse): AgentRunState {
   return {
     run_id: response.runId,
@@ -106,21 +162,39 @@ function formatIntentValue(value: JsonValue): string {
 
 export function AutoTradingPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [rawText, setRawText] = useState('');
-  const [latestRun, setLatestRun] = useState<AutoOrderRunResponse | null>(null);
+  const sessionQuery = useAutoTradingSession();
+  const session = sessionQuery.session;
+  const latestRun = session?.latestRun ?? null;
   const latestReportQuery = useRunReport(latestRun?.runId ?? '');
 
-  const autoOrderMutation = useMutation({
-    mutationFn: placeAutoOrder,
+  const startSessionMutation = useMutation({
+    mutationFn: startAutoTradingSession,
+    onSuccess: (response, variables) => {
+      queryClient.setQueryData(['autoTradingSession'], response);
+      setRawText(response.rawText ?? variables.rawText.trim());
+    },
+  });
+
+  const stopSessionMutation = useMutation({
+    mutationFn: stopAutoTradingSession,
     onSuccess: (response) => {
-      setLatestRun(response);
+      queryClient.setQueryData(['autoTradingSession'], response);
     },
   });
 
   const intentEntries = toIntentEntries(latestRun?.normalizedOrderIntent);
-  const submissionError = autoOrderMutation.isError
-    ? getSubmissionError(autoOrderMutation.error)
-    : null;
+  const mutationError = startSessionMutation.isError
+    ? getSubmissionError(startSessionMutation.error)
+    : stopSessionMutation.isError
+      ? getSubmissionError(stopSessionMutation.error)
+      : null;
+  const isSessionRunning = session?.sessionStatus === 'ACTIVE' || session?.sessionStatus === 'STOPPING';
+  const sessionStatus = session?.sessionStatus ?? 'IDLE';
+  const sessionSubtitle = session?.sessionId
+    ? `sessionId: ${session.sessionId}`
+    : '백엔드 세션 상태 폴링';
 
   function handleSubmit() {
     const trimmedRawText = rawText.trim();
@@ -129,7 +203,11 @@ export function AutoTradingPage() {
       return;
     }
 
-    autoOrderMutation.mutate({ rawText: trimmedRawText });
+    startSessionMutation.mutate({ rawText: trimmedRawText });
+  }
+
+  function handleStop() {
+    stopSessionMutation.mutate();
   }
 
   function handleOpenReport(runId: string) {
@@ -145,19 +223,19 @@ export function AutoTradingPage() {
         <div className={styles.headerText}>
           <h1 className={styles.heading}>자연어 자동매매</h1>
           <p className={styles.description}>
-            자연어 지시를 AI 주문 해석 엔드포인트로 전달하고, 백엔드가 정규화한 의도와
-            실행 결과를 확인합니다.
+            자연어 지시문으로 백엔드 연속 자동매매 세션을 시작·중지하고, 최신 run 및
+            리포트 상태를 폴링으로 확인합니다.
           </p>
         </div>
       </div>
 
       <Banner variant="warning">
-        AI 해석 결과는 참고 정보입니다. 최종 주문 실행과 재검증 권한은 항상 백엔드에
-        있으며, 이 화면은 Binance Spot Testnet 전용입니다.
+        AI 해석과 리포트는 참고 정보입니다. 최종 주문 실행과 재검증 권한은 항상 백엔드에
+        있으며, 이 화면은 Binance Spot Testnet 세션 제어 전용입니다.
       </Banner>
 
       <div className={styles.contentGrid}>
-        <Card title="자연어 주문 요청" subtitle="단건 실행 지시문 입력">
+        <Card title="자동매매 세션 시작" subtitle="클라이언트는 로컬 루프를 소유하지 않습니다">
           <div className={styles.form}>
             <div className={styles.fieldGroup}>
               <label className={styles.label} htmlFor="auto-trading-raw-text">
@@ -168,127 +246,245 @@ export function AutoTradingPage() {
                 className={styles.textarea}
                 value={rawText}
                 onChange={(event) => setRawText(event.target.value)}
-                placeholder="예: BTCUSDT를 68000 아래에서 0.002 BTC만큼 분할 매수하되, 조건이 불분명하면 주문하지 마."
+                placeholder="예: BTC를 계속 관찰하면서 5분 간격으로 상황을 평가하고, 조건이 불명확하면 주문하지 말아줘."
                 rows={8}
               />
               <p className={styles.inputHint}>
-                스트리밍이나 대화 이력 없이 현재 텍스트 한 건만 백엔드에 전달합니다.
+                현재 텍스트만 백엔드 세션 시작 요청으로 전달되며, 이후 tick 루프와 최종
+                실행 판단은 모두 백엔드가 소유합니다.
               </p>
             </div>
 
-            {submissionError && (
+            {mutationError && (
               <Banner variant="danger">
                 <div className={styles.errorContent}>
-                  <span>{submissionError.message}</span>
-                  {submissionError.code && (
-                    <code className={styles.errorCode}>Error code: {submissionError.code}</code>
+                  <span>{mutationError.message}</span>
+                  {mutationError.code && (
+                    <code className={styles.errorCode}>Error code: {mutationError.code}</code>
                   )}
                 </div>
               </Banner>
             )}
 
-            <Button
-              type="button"
-              variant="primary"
-              size="lg"
-              loading={autoOrderMutation.isPending}
-              disabled={rawText.trim().length === 0}
-              onClick={handleSubmit}
-            >
-              자연어 주문 실행 요청 보내기
-            </Button>
+            <div className={styles.actionRow}>
+              <Button
+                type="button"
+                variant="primary"
+                size="lg"
+                loading={startSessionMutation.isPending}
+                disabled={rawText.trim().length === 0 || isSessionRunning}
+                onClick={handleSubmit}
+              >
+                연속 세션 시작
+              </Button>
+
+              <Button
+                type="button"
+                variant="danger"
+                size="lg"
+                loading={stopSessionMutation.isPending}
+                disabled={!isSessionRunning}
+                onClick={handleStop}
+              >
+                세션 중지 요청
+              </Button>
+            </div>
           </div>
         </Card>
 
-        <Card
-          title="최신 실행 결과"
-          subtitle={latestRun ? `runId: ${latestRun.runId}` : '응답 대기'}
-        >
-          {!latestRun && (
-            <p className={styles.placeholder}>
-              자연어 주문 요청을 제출하면 여기에서 lifecycle 상태, 정규화된 주문 의도,
-              최신 실행 리포트를 확인할 수 있습니다.
-            </p>
+        <Card title="현재 세션 상태" subtitle={sessionSubtitle}>
+          {sessionQuery.isLoading && (
+            <div className={styles.reportLoading}>
+              <Skeleton height="20px" width="220px" />
+              <Skeleton height="16px" />
+              <Skeleton height="16px" width="88%" />
+              <Skeleton height="16px" width="72%" />
+            </div>
           )}
 
-          {latestRun && (
+          {sessionQuery.isError && (
+            <Banner variant="danger">
+              {getErrorMessage(sessionQuery.error)}
+            </Banner>
+          )}
+
+          {session && !sessionQuery.isLoading && !sessionQuery.isError && (
             <div className={styles.resultStack}>
-              <div className={styles.summaryGrid}>
+              <div className={styles.summaryGridFour}>
                 <div className={styles.summaryItem}>
-                  <span className={styles.summaryLabel}>Lifecycle</span>
+                  <span className={styles.summaryLabel}>Session</span>
                   <div className={styles.summaryBadges}>
-                    <Badge
-                      label={latestRun.lifecycleStatus}
-                      variant={getLifecycleVariant(latestRun.lifecycleStatus)}
-                    />
-                    {latestRun.holdReason && (
-                      <Badge label={latestRun.holdReason} variant="warning" />
+                    <Badge label={sessionStatus} variant={getSessionVariant(sessionStatus)} />
+                    {session.stopRequested && (
+                      <Badge label="STOP_REQUESTED" variant="warning" />
+                    )}
+                  </div>
+                  <span className={styles.summaryMeta}>{getSessionDescription(sessionStatus)}</span>
+                </div>
+
+                <div className={styles.summaryItem}>
+                  <span className={styles.summaryLabel}>Tick Interval</span>
+                  <span className={styles.summaryValue}>
+                    {formatTickInterval(session.selectedTickIntervalSeconds)}
+                  </span>
+                </div>
+
+                <div className={styles.summaryItem}>
+                  <span className={styles.summaryLabel}>Tick Count</span>
+                  <span className={styles.summaryValue}>{session.tickCount}</span>
+                </div>
+
+                <div className={styles.summaryItem}>
+                  <span className={styles.summaryLabel}>Selected Trader ID</span>
+                  <span className={styles.summaryValue}>{session.selectedTraderId ?? '미선택'}</span>
+                </div>
+              </div>
+
+              <div className={styles.section}>
+                <h2 className={styles.sectionTitle}>현재 세션 지시문</h2>
+                <div className={styles.rawTextPanel}>
+                  {session.rawText?.trim() ? (
+                    <p className={styles.rawTextValue}>{session.rawText}</p>
+                  ) : (
+                    <p className={styles.placeholder}>
+                      백엔드에 등록된 자동매매 지시문이 아직 없습니다.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className={styles.section}>
+                <h2 className={styles.sectionTitle}>세션 타임라인</h2>
+                <div className={styles.metaGrid}>
+                  <div className={styles.metaItem}>
+                    <span className={styles.summaryLabel}>Started At</span>
+                    <span className={styles.summaryValue}>{formatTimestamp(session.startedAt)}</span>
+                  </div>
+                  <div className={styles.metaItem}>
+                    <span className={styles.summaryLabel}>Stopped At</span>
+                    <span className={styles.summaryValue}>{formatTimestamp(session.stoppedAt)}</span>
+                  </div>
+                  <div className={styles.metaItem}>
+                    <span className={styles.summaryLabel}>Last Tick Started</span>
+                    <span className={styles.summaryValue}>{formatTimestamp(session.lastTickStartedAt)}</span>
+                  </div>
+                  <div className={styles.metaItem}>
+                    <span className={styles.summaryLabel}>Last Tick Completed</span>
+                    <span className={styles.summaryValue}>{formatTimestamp(session.lastTickCompletedAt)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {(session.stopReason || session.latestError) && (
+                <div className={styles.section}>
+                  <h2 className={styles.sectionTitle}>중지 / 오류 정보</h2>
+                  <div className={styles.feedbackStack}>
+                    {session.stopReason && (
+                      <Banner variant="warning">
+                        <div className={styles.errorContent}>
+                          <span>Stop reason: {session.stopReason}</span>
+                        </div>
+                      </Banner>
+                    )}
+                    {session.latestError && (
+                      <Banner variant="danger">
+                        <div className={styles.errorContent}>
+                          <span>{session.latestError}</span>
+                        </div>
+                      </Banner>
                     )}
                   </div>
                 </div>
-
-                <div className={styles.summaryItem}>
-                  <span className={styles.summaryLabel}>Trader ID</span>
-                  <span className={styles.summaryValue}>
-                    {latestRun.traderId ?? '미제공'}
-                  </span>
-                </div>
-
-                <div className={styles.summaryItem}>
-                  <span className={styles.summaryLabel}>추론 Persona</span>
-                  <span className={styles.summaryValue}>
-                    {latestRun.inferredPersona ?? '미제공'}
-                  </span>
-                </div>
-              </div>
+              )}
 
               <div className={styles.section}>
-                <h2 className={styles.sectionTitle}>Reason Codes</h2>
-                {latestRun.reasonCodes.length > 0 ? (
-                  <div className={styles.reasonCodes}>
-                    {latestRun.reasonCodes.map((code) => (
-                      <Badge key={code} label={code} variant="default" />
-                    ))}
-                  </div>
-                ) : (
-                  <p className={styles.placeholder}>현재 응답에 reason code가 없습니다.</p>
-                )}
-              </div>
-
-              <div className={styles.section}>
-                <h2 className={styles.sectionTitle}>정규화된 주문 의도</h2>
-                {intentEntries.length > 0 ? (
-                  <div className={styles.intentGrid}>
-                    {intentEntries.map(({ key, value }) => (
-                      <div key={key} className={styles.intentItem}>
-                        <span className={styles.intentLabel}>{formatIntentLabel(key)}</span>
-                        <code className={styles.intentValue}>{formatIntentValue(value)}</code>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
+                <h2 className={styles.sectionTitle}>최신 실행 정보</h2>
+                {!latestRun && (
                   <p className={styles.placeholder}>
-                    백엔드가 정규화된 주문 의도를 아직 반환하지 않았습니다.
+                    세션이 tick을 실행하면 여기에서 lifecycle 상태, 정규화된 주문 의도,
+                    최신 run 정보를 확인할 수 있습니다.
                   </p>
                 )}
-              </div>
 
-              {latestRun.lifecycleStatus !== 'REPORT_READY' && (
-                <div className={styles.section}>
-                  <h2 className={styles.sectionTitle}>현재 상태</h2>
-                  <AgentStatusDisplay
-                    state={toAgentRunState(latestRun)}
-                    reasonCodes={latestRun.reasonCodes}
-                    description="AI 판단 결과는 참고용이며, 최종 주문 실행 권한은 백엔드에 있습니다."
-                  />
-                </div>
-              )}
+                {latestRun && (
+                  <div className={styles.resultStack}>
+                    <div className={styles.summaryGrid}>
+                      <div className={styles.summaryItem}>
+                        <span className={styles.summaryLabel}>Lifecycle</span>
+                        <div className={styles.summaryBadges}>
+                          <Badge
+                            label={latestRun.lifecycleStatus}
+                            variant={getLifecycleVariant(latestRun.lifecycleStatus)}
+                          />
+                          {latestRun.holdReason && (
+                            <Badge label={latestRun.holdReason} variant="warning" />
+                          )}
+                        </div>
+                      </div>
+
+                      <div className={styles.summaryItem}>
+                        <span className={styles.summaryLabel}>Run ID</span>
+                        <span className={styles.summaryValue}>{latestRun.runId}</span>
+                      </div>
+
+                      <div className={styles.summaryItem}>
+                        <span className={styles.summaryLabel}>Trader ID</span>
+                        <span className={styles.summaryValue}>
+                          {latestRun.traderId ?? '미제공'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={styles.section}>
+                      <h2 className={styles.sectionTitle}>Reason Codes</h2>
+                      {latestRun.reasonCodes.length > 0 ? (
+                        <div className={styles.reasonCodes}>
+                          {latestRun.reasonCodes.map((code) => (
+                            <Badge key={code} label={code} variant="default" />
+                          ))}
+                        </div>
+                      ) : (
+                        <p className={styles.placeholder}>현재 응답에 reason code가 없습니다.</p>
+                      )}
+                    </div>
+
+                    <div className={styles.section}>
+                      <h2 className={styles.sectionTitle}>정규화된 주문 의도</h2>
+                      {intentEntries.length > 0 ? (
+                        <div className={styles.intentGrid}>
+                          {intentEntries.map(({ key, value }) => (
+                            <div key={key} className={styles.intentItem}>
+                              <span className={styles.intentLabel}>{formatIntentLabel(key)}</span>
+                              <code className={styles.intentValue}>{formatIntentValue(value)}</code>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className={styles.placeholder}>
+                          백엔드가 정규화된 주문 의도를 아직 반환하지 않았습니다.
+                        </p>
+                      )}
+                    </div>
+
+                    {latestRun.lifecycleStatus !== 'REPORT_READY' && (
+                      <div className={styles.section}>
+                        <h2 className={styles.sectionTitle}>현재 상태</h2>
+                        <AgentStatusDisplay
+                          state={toAgentRunState(latestRun)}
+                          reasonCodes={latestRun.reasonCodes}
+                          description="AI 판단 결과는 참고용이며, 최종 주문 실행 권한은 백엔드에 있습니다."
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </Card>
       </div>
 
-      {latestRun && (
+      {latestRun?.runId && (
         <div className={styles.reportSection}>
           <Card
             title="최신 AI 실행 리포트"
