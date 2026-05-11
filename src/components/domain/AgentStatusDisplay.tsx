@@ -47,11 +47,13 @@ export function AgentStatusDisplay({
             ))}
           </div>
         )}
-        <div className={styles.actions}>
-          <Button variant="secondary" size="sm" onClick={onEditInput}>
-            입력 수정
-          </Button>
-        </div>
+        {onEditInput && (
+          <div className={styles.actions}>
+            <Button variant="secondary" size="sm" onClick={onEditInput}>
+              입력 수정
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
@@ -76,14 +78,20 @@ export function AgentStatusDisplay({
             ))}
           </div>
         )}
-        <div className={styles.actions}>
-          <Button variant="primary" size="sm" onClick={onApprove}>
-            승인
-          </Button>
-          <Button variant="danger" size="sm" onClick={onReject}>
-            거부
-          </Button>
-        </div>
+        {(onApprove || onReject) && (
+          <div className={styles.actions}>
+            {onApprove && (
+              <Button variant="primary" size="sm" onClick={onApprove}>
+                승인
+              </Button>
+            )}
+            {onReject && (
+              <Button variant="danger" size="sm" onClick={onReject}>
+                거부
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     );
   }
@@ -108,11 +116,13 @@ export function AgentStatusDisplay({
             ))}
           </div>
         )}
-        <div className={styles.actions}>
-          <Button variant="secondary" size="sm" onClick={onRefetch}>
-            재조회/재입력
-          </Button>
-        </div>
+        {onRefetch && (
+          <div className={styles.actions}>
+            <Button variant="secondary" size="sm" onClick={onRefetch}>
+              재조회/재입력
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
@@ -161,11 +171,13 @@ export function AgentStatusDisplay({
         <p className={styles.description}>
           {description ?? 'AI 에이전트는 통과 판단을 내렸으나, 백엔드 재검증에서 거부되었습니다.'}
         </p>
-        <div className={styles.actions}>
-          <button className={styles.detailLink} onClick={onViewDetails}>
-            상세 사유 보기
-          </button>
-        </div>
+        {onViewDetails && (
+          <div className={styles.actions}>
+            <button className={styles.detailLink} onClick={onViewDetails}>
+              상세 사유 보기
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -186,11 +198,13 @@ export function AgentStatusDisplay({
         <div className={styles.failedMeta}>
           run_id: {state.run_id}
         </div>
-        <div className={styles.actions}>
-          <Button variant="secondary" size="sm" onClick={onRetry}>
-            재시도
-          </Button>
-        </div>
+        {onRetry && (
+          <div className={styles.actions}>
+            <Button variant="secondary" size="sm" onClick={onRetry}>
+              재시도
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
