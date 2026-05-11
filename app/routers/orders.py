@@ -4,9 +4,9 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import get_db
 from app.models.ai import ResumeCommandPayload
-from app.models.requests import AutoOrderRequest, CancelOrderRequest, SpotOrderRequest
-from app.models.responses import AutoOrderRunResponse, CancelOrderResponse, OrderRunResponse, OrderStatusResponse, RunReportResponse
-from app.services import order_service, report_service
+from app.models.requests import AutoOrderRequest, AutoSessionStartRequest, CancelOrderRequest, SpotOrderRequest
+from app.models.responses import AutoOrderRunResponse, AutoTradingSessionResponse, CancelOrderResponse, OrderRunResponse, OrderStatusResponse, RunReportResponse
+from app.services import auto_session_service, order_service, report_service
 
 router = APIRouter()
 
@@ -25,6 +25,26 @@ async def create_auto_order(
     db: Session = Depends(get_db),
 ) -> AutoOrderRunResponse:
     return await order_service.create_auto_order(db, req, settings)
+
+
+@router.post("/orders/auto/session/start", response_model=AutoTradingSessionResponse, status_code=200)
+async def start_auto_session(payload: AutoSessionStartRequest) -> AutoTradingSessionResponse:
+    try:
+        return await auto_session_service.start_auto_session(payload, settings)
+    except ValueError as exc:
+        if str(exc) == "ACTIVE_AUTO_SESSION_EXISTS":
+            raise HTTPException(status_code=409, detail="이미 실행 중인 자연어 자동매매 세션이 있습니다.") from exc
+        raise
+
+
+@router.post("/orders/auto/session/stop", response_model=AutoTradingSessionResponse, status_code=200)
+async def stop_auto_session() -> AutoTradingSessionResponse:
+    return await auto_session_service.stop_auto_session()
+
+
+@router.get("/orders/auto/session", response_model=AutoTradingSessionResponse, status_code=200)
+async def get_auto_session() -> AutoTradingSessionResponse:
+    return auto_session_service.get_auto_session_status()
 
 
 @router.post("/orders/resume", response_model=OrderRunResponse, status_code=200)
