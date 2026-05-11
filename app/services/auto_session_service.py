@@ -16,6 +16,11 @@ logger = logging.getLogger(__name__)
 _DEFAULT_TICK_INTERVAL_SECONDS = 300
 _FAST_TICK_INTERVAL_SECONDS = 180
 _SLOW_TICK_INTERVAL_SECONDS = 600
+_CONTINUABLE_HOLD_REASONS = {
+    "HOLD_INPUT_AMBIGUOUS",
+    "HOLD_LOW_CONVICTION",
+    "HOLD_RISK_AGENT_FLAGGED",
+}
 
 
 def _now_iso() -> str:
@@ -172,7 +177,7 @@ async def _run_session_loop(settings: Settings) -> None:
                 if response.trader_id and not _state.selected_trader_id:
                     _state.selected_trader_id = response.trader_id
 
-                if response.lifecycle_status not in {"REPORT_READY", "NO_ORDER"}:
+                if not _should_continue_session(response):
                     _finalize_stop(response.lifecycle_status)
                     break
 
@@ -225,6 +230,14 @@ def _finalize_stop(reason: str) -> None:
     _state.stop_requested = False
     _state.stop_reason = reason
     _state.stopped_at = _now_iso()
+
+
+def _should_continue_session(response: AutoOrderRunResponse) -> bool:
+    if response.lifecycle_status in {"REPORT_READY", "NO_ORDER"}:
+        return True
+    if response.lifecycle_status == "HOLD" and response.hold_reason in _CONTINUABLE_HOLD_REASONS:
+        return True
+    return False
 
 
 async def _reset_auto_session_state_for_tests() -> None:

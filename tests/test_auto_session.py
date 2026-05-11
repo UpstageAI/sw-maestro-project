@@ -15,6 +15,7 @@ def _run_response(run_id: str, lifecycle_status: str, trader_id: str | None = "w
     return AutoOrderRunResponse(
         run_id=run_id,
         lifecycle_status=lifecycle_status,
+        hold_reason=None,
         trader_id=trader_id,
         inferred_persona="MODERATE",
         normalized_order_intent=NormalizedOrderIntentResponse(
@@ -112,14 +113,69 @@ async def test_stop_during_inflight_tick_transitions_to_stopped():
 
 
 @pytest.mark.asyncio
-async def test_hold_stops_session():
+async def test_retryable_hold_continues_session():
     await auto_session_service._reset_auto_session_state_for_tests()
+    responses = deque(
+        [
+            AutoOrderRunResponse(
+                run_id="run_tick_001",
+                lifecycle_status="HOLD",
+                hold_reason="HOLD_INPUT_AMBIGUOUS",
+                trader_id="wonyotti",
+                inferred_persona="AGGRESSIVE",
+                normalized_order_intent=NormalizedOrderIntentResponse(symbol="BTCUSDT", side="BUY", type="MARKET"),
+                reason_codes=["INPUT_AMBIGUOUS"],
+            ),
+            _run_response("run_tick_002", "NO_ORDER"),
+        ]
+    )
+
     async def fake_run_auto_tick(raw_text: str, trader_id: str | None, current_settings):
-        return _run_response("run_tick_001", "HOLD")
+        return responses.popleft()
+
+    wait_calls = 0
+
+    async def fake_wait_for_next_tick(interval_seconds: int) -> bool:
+        nonlocal wait_calls
+        wait_calls += 1
+        return wait_calls > 1
+
+    with patch("app.services.auto_session_service._run_auto_tick", side_effect=fake_run_auto_tick), patch(
+        "app.services.auto_session_service._wait_for_next_tick", side_effect=fake_wait_for_next_tick
+    ):
+        await auto_session_service.start_auto_session(
+            AutoSessionStartRequest(raw_text="적당히 알아서 사줘"),
+            settings,
+        )
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+
+        status = auto_session_service.get_auto_session_status()
+        assert status.session_status == "STOPPED"
+        assert status.stop_reason == "USER_STOPPED"
+        assert status.tick_count == 2
+        assert status.selected_trader_id == "wonyotti"
+    await auto_session_service._reset_auto_session_state_for_tests()
+
+
+@pytest.mark.asyncio
+async def test_non_retryable_hold_still_stops_session():
+    await auto_session_service._reset_auto_session_state_for_tests()
+
+    async def fake_run_auto_tick(raw_text: str, trader_id: str | None, current_settings):
+        return AutoOrderRunResponse(
+            run_id="run_tick_001",
+            lifecycle_status="HOLD",
+            hold_reason="HOLD_DATA_INSUFFICIENT",
+            trader_id="wonyotti",
+            inferred_persona="MODERATE",
+            normalized_order_intent=NormalizedOrderIntentResponse(symbol="BTCUSDT", side="BUY", type="MARKET"),
+            reason_codes=["INSUFFICIENT_BALANCE"],
+        )
 
     with patch("app.services.auto_session_service._run_auto_tick", side_effect=fake_run_auto_tick):
         await auto_session_service.start_auto_session(
-            AutoSessionStartRequest(raw_text="적당히 알아서 사줘"),
+            AutoSessionStartRequest(raw_text="BTC를 계속 매수해줘"),
             settings,
         )
         await asyncio.sleep(0)
