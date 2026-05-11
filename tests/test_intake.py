@@ -11,7 +11,7 @@ from autocoin_ai.constants import (
     LIFECYCLE_FAILED,
     LIFECYCLE_HOLD,
 )
-from autocoin_ai.models import ensure_state_shape
+from autocoin_ai.models import AgentState, ensure_state_shape
 from autocoin_ai.nodes.intake import intake_node
 
 BASE_REQUEST_CONTEXT = {
@@ -29,7 +29,7 @@ BASE_REQUEST_CONTEXT = {
 POLICY_CONTEXT = {"policy_refs": ["policy.spot_testnet_only"]}
 
 
-def _make_state(user_input: dict) -> dict:
+def _make_state(user_input: dict[str, str]) -> AgentState:
     return ensure_state_shape({
         "run_id": "test_run",
         "request_context": {
@@ -82,6 +82,8 @@ def test_intake_text_ambiguous():
         result = intake_node(state)
     assert result["lifecycle_status"] == LIFECYCLE_HOLD
     assert result["hold_reason"] == HOLD_INPUT_AMBIGUOUS
+    assert result["trader_id"] == "wonyotti"
+    assert result["inferred_persona"] == "MODERATE"
 
 
 def test_intake_text_buy():
@@ -103,3 +105,47 @@ def test_intake_text_buy():
     assert result["normalized_order_intent"]["symbol"] == "BTCUSDT"
     assert result["normalized_order_intent"]["side"] == "BUY"
     assert result["trader_id"] == "wonyotti"
+
+
+def test_intake_uses_heuristic_fallback_when_llm_errors():
+    state = _make_state({"text": "BTC 50 USDT 매수해줘"})
+    with patch("autocoin_ai.nodes.intake.gemini_generate", side_effect=RuntimeError("gemini unavailable")):
+        result = intake_node(state)
+
+    assert result["lifecycle_status"] != LIFECYCLE_FAILED
+    assert result["lifecycle_status"] != LIFECYCLE_HOLD
+    assert result["normalized_order_intent"]["symbol"] == "BTCUSDT"
+    assert result["normalized_order_intent"]["side"] == "BUY"
+    assert result["normalized_order_intent"]["quoteOrderQty"] == "50"
+    assert result["trader_id"] == "wonyotti"
+
+
+def test_intake_llm_error_without_amount_becomes_hold_with_trader_defaults():
+    state = _make_state({"text": "빠르게 BTC를 추적하고 필요하면 매수해줘"})
+    with patch("autocoin_ai.nodes.intake.gemini_generate", side_effect=RuntimeError("gemini unavailable")):
+        result = intake_node(state)
+
+    assert result["lifecycle_status"] == LIFECYCLE_HOLD
+    assert result["hold_reason"] == HOLD_INPUT_AMBIGUOUS
+    assert result["trader_id"] == "wonyotti"
+    assert result["inferred_persona"] == "AGGRESSIVE"
+
+
+def test_intake_uses_heuristic_fallback_when_llm_marks_text_ambiguous():
+    mock_response = {
+        "symbol": "",
+        "side": "BUY",
+        "type": "MARKET",
+        "size_usd": "0",
+        "trader_id": "",
+        "inferred_persona": "MODERATE",
+        "persona_override_reason": "",
+        "ambiguity_score": 0.9,
+    }
+    state = _make_state({"text": "ETH 30 USDT 매수해줘"})
+    with patch("autocoin_ai.nodes.intake.gemini_generate", return_value=mock_response):
+        result = intake_node(state)
+
+    assert result["lifecycle_status"] != LIFECYCLE_HOLD
+    assert result["normalized_order_intent"]["symbol"] == "ETHUSDT"
+    assert result["normalized_order_intent"]["quoteOrderQty"] == "30"
