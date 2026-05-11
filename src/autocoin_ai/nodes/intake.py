@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from autocoin_ai.constants import (
     DEFAULT_TRADER,
     HOLD_INPUT_AMBIGUOUS,
@@ -37,7 +39,19 @@ def _llm_mode(state: AgentState, user_input: dict, text: str) -> AgentState:
     try:
         parsed = gemini_generate(text, INTAKE_SCHEMA, INTAKE_SYSTEM_INSTRUCTION)
     except Exception:
-        _fail(state, "INTAKE_LLM_ERROR", ["request_context.user_input.text"])
+        heuristic = _heuristic_parse(user_input, text)
+        if heuristic is not None:
+            _apply_parsed(state, heuristic, heuristic["trader_id"], text)
+            set_trace(
+                state,
+                "intake",
+                ["HEURISTIC_PARSE_FALLBACK"],
+                ["request_context.user_input.text"],
+                "PASS",
+            )
+            return state
+        _set_trader_defaults_for_hold(state, user_input, text)
+        _hold_ambiguous(state, ["request_context.user_input.text"], "LLM parsing failed; more explicit symbol/side/amount is required.")
         return state
 
     required = INTAKE_SCHEMA["required"]
@@ -45,15 +59,29 @@ def _llm_mode(state: AgentState, user_input: dict, text: str) -> AgentState:
         _fail(state, "INTAKE_SCHEMA_INVALID", ["llm_response"])
         return state
 
+    trader_id = parsed.get("trader_id") or user_input.get("trader_id") or DEFAULT_TRADER
+    inferred_persona = str(parsed.get("inferred_persona") or PERSONA_MODERATE)
+    state["trader_id"] = trader_id
+    state["inferred_persona"] = inferred_persona
+    override = parsed.get("persona_override_reason")
+    state["persona_override_reason"] = override if override else None
+
     ambiguity = parsed.get("ambiguity_score", 0)
     if ambiguity > 0.5:
-        append_check(state, "intake_parse_complete", "intake", "fail", ["ambiguity_score"])
-        set_trace(state, "intake", ["INPUT_AMBIGUOUS"], ["ambiguity_score"], LIFECYCLE_HOLD)
-        state["lifecycle_status"] = LIFECYCLE_HOLD
-        state["hold_reason"] = HOLD_INPUT_AMBIGUOUS
+        heuristic = _heuristic_parse(user_input, text)
+        if heuristic is not None:
+            _apply_parsed(state, heuristic, heuristic["trader_id"], text)
+            set_trace(
+                state,
+                "intake",
+                ["HEURISTIC_PARSE_FALLBACK"],
+                ["request_context.user_input.text"],
+                "PASS",
+            )
+            return state
+        _hold_ambiguous(state, ["ambiguity_score"], "심볼, 방향, 금액 또는 진입 조건을 더 구체적으로 입력하세요.")
         return state
 
-    trader_id = parsed.get("trader_id") or user_input.get("trader_id") or DEFAULT_TRADER
     _apply_parsed(state, parsed, trader_id, text)
     return state
 
@@ -101,7 +129,89 @@ def _apply_parsed(state: AgentState, parsed: dict, trader_id: str, text: str) ->
     set_trace(state, "intake", ["NL_PARSED"], ["request_context.user_input.text"], "PASS")
 
 
+def _heuristic_parse(user_input: dict, text: str) -> dict | None:
+    normalized_text = text.upper()
+
+    symbol = ""
+    if "BTC" in normalized_text or "비트코인" in text:
+        symbol = "BTCUSDT"
+    elif "ETH" in normalized_text or "이더리움" in text:
+        symbol = "ETHUSDT"
+
+    side = ""
+    if any(token in text for token in ("매수", "사줘", "사고", "구매")):
+        side = "BUY"
+    elif any(token in text for token in ("매도", "팔아", "팔고", "정리")):
+        side = "SELL"
+
+    amount = _extract_size_usd(text)
+    if not symbol or not side or not amount:
+        return None
+
+    trader_id = _infer_trader_id(text, user_input)
+    inferred_persona = _infer_persona(text)
+
+    return {
+        "symbol": symbol,
+        "side": side,
+        "type": "MARKET",
+        "size_usd": amount,
+        "trader_id": trader_id,
+        "inferred_persona": inferred_persona,
+        "persona_override_reason": "heuristic" if inferred_persona != PERSONA_MODERATE else "",
+        "ambiguity_score": 0.1,
+    }
+
+
+def _extract_size_usd(text: str) -> str | None:
+    usdt_match = re.search(r"(\d+(?:\.\d+)?)\s*(?:USDT|USD|달러)", text, re.IGNORECASE)
+    if usdt_match:
+        return usdt_match.group(1)
+
+    krw_match = re.search(r"(\d+(?:\.\d+)?)\s*만원", text)
+    if krw_match:
+        amount_krw = float(krw_match.group(1)) * 10000
+        return str(round(amount_krw / 1350, 2))
+
+    return None
+
+
+def _infer_trader_id(text: str, user_input: dict) -> str:
+    lowered = text.lower()
+    if "워뇨띠" in text or "wonyotti" in lowered:
+        return "wonyotti"
+    if "bnf" in lowered:
+        return "bnf"
+    if "매억남" in text or "maeoaknam" in lowered:
+        return "maeoaknam"
+    if "리버모어" in text or "livermore" in lowered:
+        return "livermore"
+    return str(user_input.get("trader_id") or DEFAULT_TRADER)
+
+
+def _infer_persona(text: str) -> str:
+    lowered = text.lower()
+    if "공격적" in text or "aggressive" in lowered or "빠르게" in text:
+        return "AGGRESSIVE"
+    if "보수적" in text or "conservative" in lowered or "천천히" in text:
+        return "CONSERVATIVE"
+    return PERSONA_MODERATE
+
+
 def _fail(state: AgentState, reason: str, evidence: list) -> None:
     append_check(state, "intake_parse_complete", "intake", "fail", evidence)
     set_trace(state, "intake", [reason], evidence, LIFECYCLE_FAILED)
     state["lifecycle_status"] = LIFECYCLE_FAILED
+
+
+def _hold_ambiguous(state: AgentState, evidence: list, notes: str) -> None:
+    append_check(state, "intake_parse_complete", "intake", "fail", evidence)
+    set_trace(state, "intake", ["INPUT_AMBIGUOUS"], evidence, LIFECYCLE_HOLD, notes)
+    state["lifecycle_status"] = LIFECYCLE_HOLD
+    state["hold_reason"] = HOLD_INPUT_AMBIGUOUS
+
+
+def _set_trader_defaults_for_hold(state: AgentState, user_input: dict, text: str) -> None:
+    state["trader_id"] = _infer_trader_id(text, user_input)
+    state["inferred_persona"] = _infer_persona(text)
+    state["persona_override_reason"] = None
