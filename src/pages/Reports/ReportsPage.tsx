@@ -1,8 +1,9 @@
 import { FileText } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { Banner, Card, EmptyState, Skeleton } from '../../components/common';
+import { CadenceTimeline } from '../../components/domain/CadenceTimeline';
 import { RunReportCard } from '../../components/domain/RunReportCard';
-import { useRunReport } from '../../hooks';
+import { useRunReport, useRunReportCadence } from '../../hooks';
 import styles from './ReportsPage.module.css';
 
 function getErrorMessage(error: unknown): string {
@@ -17,6 +18,7 @@ export function ReportsPage() {
   const [searchParams] = useSearchParams();
   const runId = searchParams.get('runId')?.trim() ?? '';
   const reportQuery = useRunReport(runId);
+  const cadenceQuery = useRunReportCadence(runId);
 
   return (
     <div className={styles.page}>
@@ -65,12 +67,45 @@ export function ReportsPage() {
 
       <div className={styles.section}>
         <h2 className={styles.sectionTitle}>실행 케이던스</h2>
-        <Card title="아직 지원되지 않습니다" subtitle="Cadence event API 미연동">
-          <p className={styles.placeholderText}>
-            현재 Reports 페이지는 최종 실행 리포트만 실시간 조회합니다. 단계별 케이던스
-            타임라인은 전용 API가 준비되면 연결할 예정입니다.
-          </p>
-        </Card>
+
+        {!runId && (
+          <Card title="runId가 필요합니다" subtitle="케이던스도 같은 run 기준으로 조회됩니다.">
+            <p className={styles.placeholderText}>
+              리포트와 동일하게 <code className={styles.inlineCode}>runId</code> 를 지정해야
+              단계별 케이던스를 불러올 수 있습니다.
+            </p>
+          </Card>
+        )}
+
+        {runId && cadenceQuery.isLoading && (
+          <Card title="케이던스를 불러오는 중" subtitle={`runId: ${runId}`}>
+            <div className={styles.loadingState}>
+              <Skeleton height="16px" />
+              <Skeleton height="16px" width="92%" />
+              <Skeleton height="16px" width="84%" />
+            </div>
+          </Card>
+        )}
+
+        {runId && cadenceQuery.isError && (
+          <Card title="케이던스를 불러오지 못했습니다" subtitle={`runId: ${runId}`}>
+            <Banner variant="danger">{getErrorMessage(cadenceQuery.error)}</Banner>
+          </Card>
+        )}
+
+        {runId && !cadenceQuery.isLoading && !cadenceQuery.isError && cadenceQuery.events.length > 0 && (
+          <Card title="실행 케이던스" subtitle={`runId: ${cadenceQuery.runId}`}>
+            <CadenceTimeline events={cadenceQuery.events} />
+          </Card>
+        )}
+
+        {runId && !cadenceQuery.isLoading && !cadenceQuery.isError && cadenceQuery.events.length === 0 && (
+          <Card title="케이던스 데이터가 없습니다" subtitle={`runId: ${runId}`}>
+            <p className={styles.placeholderText}>
+              현재 run에 대해 표시할 단계별 케이던스 이벤트가 없습니다.
+            </p>
+          </Card>
+        )}
       </div>
 
       <div className={styles.section}>

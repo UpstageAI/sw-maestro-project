@@ -18,6 +18,7 @@ export const ENDPOINTS = {
   ordersAutoSessionStop: '/api/v1/testnet/orders/auto/session/stop',
   ordersAutoSession: '/api/v1/testnet/orders/auto/session',
   ordersReport: '/api/v1/testnet/orders/report',
+  ordersReportCadence: '/api/v1/testnet/orders/report/cadence',
   ordersResume: '/api/v1/testnet/orders/resume',
   orderStatus: '/api/v1/testnet/orders/status',
   streamStatus: '/api/v1/testnet/stream/status',
