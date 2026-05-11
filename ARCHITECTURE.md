@@ -2,7 +2,7 @@
 
 ## 문서 목적
 
-이 문서는 현재 구현 기준의 canonical 구조를 설명한다. 핵심은 FE 입력/표시, BE 실행 권한, AI 판단 보조, Binance Testnet 실제 연결, run/report/session 경계를 흔들리지 않게 유지하는 것이다.
+이 문서는 현재 구현 기준의 canonical 구조를 설명한다. 핵심은 FE 입력/표시, BE 실행 권한, AI 판단 보조, Binance Testnet 실제 연결, run/report/session 경계를 흔들리지 않게 유지하는 것이다. 특히 사용자가 자연어로 자동매매를 시작해도 FE가 아니라 BE가 세션을 소유하고, 사용자는 중지를 요청할 수 있지만 실제 종료는 user stop 또는 BE defensive rule base 결과로 결정된다는 점을 구조 차원에서 분명히 유지해야 한다.
 
 ## 1. 시스템 구성
 
@@ -17,8 +17,8 @@
 | 계층 | 책임 | 금지 사항 |
 |---|---|---|
 | FE | 입력 수집, 상태 polling, 결과 표시 | Binance 직접 호출, 로컬 auto-trading loop 소유 |
-| BE | 공개 API, AI 호출, Binance 호출, 재검증, 세션 loop, 보고 저장 | AI 판단만 믿고 무검증 제출 |
-| AI | 자연어 해석, 정책 grounding, 전략/리스크 판단, trace 생성, completion 해석 | Binance 직접 제출, 서명, 최종 실행 확정 |
+| BE | 공개 API, AI 호출, Binance 호출, defensive rule base 집행, deterministic 재검증, 세션 loop, 보고 저장 | AI 판단만 믿고 무검증 제출 |
+| AI | 자연어 해석, 정책 grounding, trader/persona 추론, 전략/리스크 판단, trace 생성, completion 해석 | Binance 직접 제출, 서명, 최종 실행 확정 |
 | DB | checkpoint, 주문 로그, report 저장 | 실행 권한 결정 |
 | Binance | 시장 데이터와 Testnet 주문 처리 | 내부 정책 해석 |
 
@@ -82,18 +82,22 @@
 3. BE가 live account/price/book/5분 klines snapshot 을 수집
 4. snapshot 을 포함한 `request_context.user_input` 로 AI `/runs/agentic/start` 호출
 5. AI agentic graph가 `intake -> policy -> strategy -> risk_agent -> risk_gate -> evaluator` 수행
-6. `READY_FOR_BE` 이면 BE가 `normalized_order_intent` 를 실제 주문 요청으로 변환
-7. BE가 재검증 후 Binance 제출 또는 `BE_REJECTED`
-8. AI `/runs/complete` 호출 및 report/checkpoint 저장
+6. 이 과정에서 AI는 자연어 입력에서 `traderId`, `inferredPersona` 를 추론해 이후 판단 스타일 힌트를 만든다
+7. `READY_FOR_BE` 이면 BE가 `normalized_order_intent` 를 실제 주문 요청으로 변환
+8. BE가 defensive rule base 와 deterministic 재검증 후 Binance 제출 또는 `BE_REJECTED`
+9. AI `/runs/complete` 호출 및 report/checkpoint 저장
 
 ## 6. 연속 자연어 자동매매 세션 흐름
 
 1. FE가 `POST /orders/auto/session/start` 호출
 2. BE가 session 상태를 `ACTIVE` 로 만들고 tick interval(180/300/600초)을 결정
-3. 각 tick 마다 BE가 fresh `run_id` 로 `create_auto_order()` 를 호출
-4. tick 결과가 `REPORT_READY`, `NO_ORDER`, 일부 retryable `HOLD` 이면 다음 tick 대기
-5. tick 결과가 non-retryable `HOLD`, `BE_REJECTED`, `FAILED` 이면 세션 `STOPPED`
-6. FE는 `GET /orders/auto/session` polling 으로 상태를 본다
+3. 각 tick 마다 BE가 fresh `run_id` 로 `create_auto_order()` 를 호출하고, 같은 자연어 입력 계열의 판단을 다시 평가한다
+4. 사용자는 stop 을 요청할 수 있지만, FE는 로컬 loop 를 소유하지 않고 상태만 본다
+5. tick 결과가 `REPORT_READY`, `NO_ORDER`, 일부 retryable `HOLD` 이면 다음 tick 대기
+6. tick 결과가 non-retryable `HOLD`, `BE_REJECTED`, `FAILED` 이면 세션 `STOPPED`
+7. FE는 `GET /orders/auto/session` polling 으로 상태를 본다
+
+즉 UX 관점에서는 "사용자가 멈출 때까지 계속 돌아갈 수 있는 세션" 이지만, 구현 관점에서는 BE defensive rule base 가 허용하는 동안만 계속된다.
 
 현재 retryable HOLD:
 
