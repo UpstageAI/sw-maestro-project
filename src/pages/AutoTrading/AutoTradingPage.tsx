@@ -91,6 +91,21 @@ function getSessionDescription(status: AutoTradingSessionStatus) {
   }
 }
 
+function getAmbiguityGuidance(rawText: string, holdReason?: string | null) {
+  if (holdReason !== 'HOLD_INPUT_AMBIGUOUS') {
+    return null;
+  }
+
+  return {
+    title: '입력 모호성 개선 팁',
+    message:
+      '심볼, 방향, 금액, 조건을 한 문장에 함께 넣으면 보류를 줄일 수 있습니다. 예: BTCUSDT를 50 USDT만큼 시장가 매수해줘.',
+    traderHint: rawText.includes('워뇨띠') || rawText.toLowerCase().includes('wonyotti')
+      ? '현재 지시문에는 trader 키워드가 포함되어 있습니다.'
+      : '워뇨띠 / BNF / 매억남 / 리버모어 같은 trader 이름을 명시하지 않으면 기본 trader가 사용되거나 첫 tick 전까지 미선택으로 보일 수 있습니다.',
+  };
+}
+
 function formatTickInterval(seconds?: number | null) {
   if (!seconds) {
     return '미선택';
@@ -195,6 +210,7 @@ export function AutoTradingPage() {
   const sessionSubtitle = session?.sessionId
     ? `sessionId: ${session.sessionId}`
     : '백엔드 세션 상태 폴링';
+  const ambiguityGuidance = getAmbiguityGuidance(session?.rawText ?? '', latestRun?.holdReason);
 
   function handleSubmit() {
     const trimmedRawText = rawText.trim();
@@ -397,6 +413,20 @@ export function AutoTradingPage() {
                 </div>
               )}
 
+              {ambiguityGuidance && (
+                <div className={styles.section}>
+                  <h2 className={styles.sectionTitle}>{ambiguityGuidance.title}</h2>
+                  <div className={styles.feedbackStack}>
+                    <Banner variant="info">
+                      <div className={styles.errorContent}>
+                        <span>{ambiguityGuidance.message}</span>
+                        <span>{ambiguityGuidance.traderHint}</span>
+                      </div>
+                    </Banner>
+                  </div>
+                </div>
+              )}
+
               <div className={styles.section}>
                 <h2 className={styles.sectionTitle}>최신 실행 정보</h2>
                 {!latestRun && (
@@ -431,6 +461,18 @@ export function AutoTradingPage() {
                         <span className={styles.summaryLabel}>Trader ID</span>
                         <span className={styles.summaryValue}>
                           {latestRun.traderId ?? '미제공'}
+                        </span>
+                        {!latestRun.traderId && (
+                          <span className={styles.summaryMeta}>
+                            trader 명시가 없거나 첫 tick 전이면 값이 비어 있을 수 있습니다.
+                          </span>
+                        )}
+                      </div>
+
+                      <div className={styles.summaryItem}>
+                        <span className={styles.summaryLabel}>추론 Persona</span>
+                        <span className={styles.summaryValue}>
+                          {latestRun.inferredPersona ?? '미제공'}
                         </span>
                       </div>
                     </div>
