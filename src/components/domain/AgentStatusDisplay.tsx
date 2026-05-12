@@ -8,10 +8,6 @@ interface AgentStatusDisplayProps {
   reasonCodes?: string[];
   description?: string;
   onApprove?: () => void;
-  onReject?: () => void;
-  onEditInput?: () => void;
-  onRetry?: () => void;
-  onViewDetails?: () => void;
   onRefetch?: () => void;
 }
 
@@ -20,10 +16,6 @@ export function AgentStatusDisplay({
   reasonCodes = [],
   description,
   onApprove,
-  onReject,
-  onEditInput,
-  onRetry,
-  onViewDetails,
   onRefetch,
 }: AgentStatusDisplayProps) {
   const holdReasonLabel = state.hold_reason ?? 'HOLD';
@@ -45,13 +37,6 @@ export function AgentStatusDisplay({
             {reasonCodes.map((code) => (
               <span key={code} className={styles.reasonCode}>{code}</span>
             ))}
-          </div>
-        )}
-        {onEditInput && (
-          <div className={styles.actions}>
-            <Button variant="secondary" size="sm" onClick={onEditInput}>
-              입력 수정
-            </Button>
           </div>
         )}
       </div>
@@ -78,18 +63,11 @@ export function AgentStatusDisplay({
             ))}
           </div>
         )}
-        {(onApprove || onReject) && (
+        {onApprove && (
           <div className={styles.actions}>
-            {onApprove && (
-              <Button variant="primary" size="sm" onClick={onApprove}>
-                승인
-              </Button>
-            )}
-            {onReject && (
-              <Button variant="danger" size="sm" onClick={onReject}>
-                거부
-              </Button>
-            )}
+            <Button variant="primary" size="sm" onClick={onApprove}>
+              승인
+            </Button>
           </div>
         )}
       </div>
@@ -147,13 +125,6 @@ export function AgentStatusDisplay({
             ))}
           </div>
         )}
-        {onViewDetails && (
-          <div className={styles.actions}>
-            <Button variant="secondary" size="sm" onClick={onViewDetails}>
-              상세 보기
-            </Button>
-          </div>
-        )}
       </div>
     );
   }
@@ -171,13 +142,6 @@ export function AgentStatusDisplay({
         <p className={styles.description}>
           {description ?? 'AI 에이전트는 통과 판단을 내렸으나, 백엔드 재검증에서 거부되었습니다.'}
         </p>
-        {onViewDetails && (
-          <div className={styles.actions}>
-            <button className={styles.detailLink} onClick={onViewDetails}>
-              상세 사유 보기
-            </button>
-          </div>
-        )}
       </div>
     );
   }
@@ -198,13 +162,6 @@ export function AgentStatusDisplay({
         <div className={styles.failedMeta}>
           run_id: {state.run_id}
         </div>
-        {onRetry && (
-          <div className={styles.actions}>
-            <Button variant="secondary" size="sm" onClick={onRetry}>
-              재시도
-            </Button>
-          </div>
-        )}
       </div>
     );
   }

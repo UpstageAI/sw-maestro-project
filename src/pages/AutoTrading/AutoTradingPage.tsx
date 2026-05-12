@@ -18,6 +18,7 @@ import type {
   NormalizedOrderIntent,
   OrderRunLifecycleStatus,
 } from '../../types/api';
+import { getErrorMessage } from '../../utils/error';
 import styles from './AutoTradingPage.module.css';
 
 const INTENT_LABELS: Record<string, string> = {
@@ -40,14 +41,6 @@ function getLifecycleVariant(status: OrderRunLifecycleStatus) {
     case 'BE_REJECTED':
       return 'danger' as const;
   }
-}
-
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return '리포트를 불러오는 중 알 수 없는 오류가 발생했습니다.';
 }
 
 function getSubmissionError(error: unknown): { message: string; code?: string } {
@@ -136,8 +129,6 @@ function toAgentRunState(response: AutoOrderRunResponse): AgentRunState {
   return {
     run_id: response.runId,
     lifecycle_status: response.lifecycleStatus,
-    request_type: 'AUTO_ORDER_TEST',
-    final_action: response.lifecycleStatus,
     hold_reason: response.holdReason ?? undefined,
   };
 }

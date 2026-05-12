@@ -21,11 +21,6 @@ export interface TickerPrice {
   price: string;
 }
 
-export interface DepthEntry {
-  price: string;
-  quantity: string;
-}
-
 export interface DepthSnapshot {
   lastUpdateId: number;
   bids: [string, string][];

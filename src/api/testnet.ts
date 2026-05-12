@@ -1,7 +1,5 @@
 import { ENDPOINTS } from '../constants/endpoints';
 import type {
-  AutoOrderRequest,
-  AutoOrderRunResponse,
   AutoSessionStartRequest,
   AutoTradingSessionResponse,
   BalanceSnapshot,
@@ -48,12 +46,6 @@ export function placeOrder(
   order: SpotOrderRequest,
 ): Promise<OrderRunResponse> {
   return post<OrderRunResponse>(ENDPOINTS.orders, order);
-}
-
-export function placeAutoOrder(
-  payload: AutoOrderRequest,
-): Promise<AutoOrderRunResponse> {
-  return post<AutoOrderRunResponse>(ENDPOINTS.ordersAuto, payload);
 }
 
 export function startAutoTradingSession(

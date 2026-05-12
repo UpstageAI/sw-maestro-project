@@ -13,15 +13,8 @@ import type { OrderLogEntry } from '../../components/domain/OrderLogList';
 import { useRunReport } from '../../hooks';
 import type { AgentRunState } from '../../types/agent';
 import type { ErrorResponse, OrderRunResponse, SpotOrderRequest } from '../../types/api';
+import { getErrorMessage } from '../../utils/error';
 import styles from './OrdersPage.module.css';
-
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return '리포트를 불러오는 중 알 수 없는 오류가 발생했습니다.';
-}
 
 export function OrdersPage() {
   const navigate = useNavigate();
@@ -61,8 +54,6 @@ export function OrdersPage() {
     return {
       run_id: response.runId,
       lifecycle_status: response.lifecycleStatus,
-      request_type: 'PLACE_ORDER_TEST',
-      final_action: response.lifecycleStatus,
       hold_reason: response.holdReason ?? undefined,
     };
   }

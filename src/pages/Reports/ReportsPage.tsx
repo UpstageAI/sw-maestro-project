@@ -4,15 +4,8 @@ import { Banner, Card, EmptyState, Skeleton } from '../../components/common';
 import { CadenceTimeline } from '../../components/domain/CadenceTimeline';
 import { RunReportCard } from '../../components/domain/RunReportCard';
 import { useRunReport, useRunReportCadence } from '../../hooks';
+import { getErrorMessage } from '../../utils/error';
 import styles from './ReportsPage.module.css';
-
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return '리포트를 불러오는 중 알 수 없는 오류가 발생했습니다.';
-}
 
 export function ReportsPage() {
   const [searchParams] = useSearchParams();
