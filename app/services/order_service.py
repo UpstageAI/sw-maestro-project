@@ -39,12 +39,8 @@ _ALLOWED_SYMBOLS = {"BTCUSDT", "ETHUSDT"}
 _MAX_QUOTE_ORDER_QTY = "50"
 
 
-def _build_request_context(run_id: str, req: SpotOrderRequest) -> dict[str, Any]:
-    user_input: dict[str, Any] = {
-        "symbol": req.symbol,
-        "side": req.side,
-        "type": req.type,
-    }
+def _request_to_user_input(req: SpotOrderRequest) -> dict[str, Any]:
+    user_input: dict[str, Any] = {"symbol": req.symbol, "side": req.side, "type": req.type}
     if req.quantity:
         user_input["quantity"] = req.quantity
     if req.quote_order_qty:
@@ -53,15 +49,10 @@ def _build_request_context(run_id: str, req: SpotOrderRequest) -> dict[str, Any]
         user_input["price"] = req.price
     if req.time_in_force:
         user_input["timeInForce"] = req.time_in_force
-    return {
-        "request_id": run_id,
-        "request_type": "PLACE_ORDER_TEST",
-        "requested_at": datetime.now(timezone.utc).isoformat(),
-        "user_input": user_input,
-    }
+    return user_input
 
 
-def _build_auto_request_context(run_id: str, user_input: dict[str, Any]) -> dict[str, Any]:
+def _build_request_context(run_id: str, user_input: dict[str, Any]) -> dict[str, Any]:
     return {
         "request_id": run_id,
         "request_type": "PLACE_ORDER_TEST",
@@ -338,6 +329,36 @@ async def _submit_to_binance(req: SpotOrderRequest, settings: Settings) -> dict[
         return resp.json()
 
 
+async def _finalize_rejection(
+    db: Session,
+    run_id: str,
+    ai_state: dict[str, Any],
+    rejection: dict[str, Any],
+    settings: Settings,
+    *,
+    always_save_report: bool = False,
+) -> dict[str, Any]:
+    reason_codes: list[str] = rejection["reason_codes"]
+    final_state = ai_state
+    try:
+        final_state = await ai_gateway_service.send_completion(
+            run_id, {"be_rejection_evidence": rejection}, settings
+        )
+    except Exception:
+        logger.exception("send_completion(BE_REJECTED) failed for run_id=%s", run_id)
+
+    if always_save_report or final_state.get("report") or final_state.get("lifecycle_status") == "BE_REJECTED":
+        save_run_report(db, run_id=run_id, ai_state=final_state, order_id=None, fallback_reason_codes=reason_codes)
+
+    save_or_update_checkpoint(
+        db, run_id,
+        final_state.get("lifecycle_status", "BE_REJECTED"),
+        final_state.get("hold_reason"),
+        final_state,
+    )
+    return final_state
+
+
 async def _execute_order(
     db: Session,
     run_id: str,
@@ -347,31 +368,7 @@ async def _execute_order(
 ) -> OrderRunResponse:
     rejection = await _revalidate(req, settings)
     if rejection:
-        final_state = ai_state
-        try:
-            final_state = await ai_gateway_service.send_completion(
-                run_id, {"be_rejection_evidence": rejection}, settings
-            )
-        except Exception:
-            logger.exception("send_completion(BE_REJECTED) failed for run_id=%s", run_id)
-
-        report_json = final_state.get("report", {})
-        if report_json or final_state.get("lifecycle_status") == "BE_REJECTED":
-            save_run_report(
-                db,
-                run_id=run_id,
-                ai_state=final_state,
-                order_id=None,
-                fallback_reason_codes=rejection["reason_codes"],
-            )
-
-        save_or_update_checkpoint(
-            db,
-            run_id,
-            final_state.get("lifecycle_status", "BE_REJECTED"),
-            final_state.get("hold_reason"),
-            final_state,
-        )
+        final_state = await _finalize_rejection(db, run_id, ai_state, rejection, settings)
         return OrderRunResponse(
             run_id=run_id,
             lifecycle_status=final_state.get("lifecycle_status", "BE_REJECTED"),
@@ -469,7 +466,7 @@ async def _process_lifecycle(
 
 async def create_order(db: Session, req: SpotOrderRequest, settings: Settings) -> OrderRunResponse:
     run_id = f"run_{uuid.uuid4().hex}"
-    request_context = _build_request_context(run_id, req)
+    request_context = _build_request_context(run_id, _request_to_user_input(req))
     policy_context = _build_policy_context(req.symbol)
 
     try:
@@ -490,7 +487,7 @@ async def create_auto_order(
 ) -> AutoOrderRunResponse:
     run_id = f"run_{uuid.uuid4().hex}"
     user_input = await _build_auto_user_input(db, req, settings)
-    request_context = _build_auto_request_context(run_id, user_input)
+    request_context = _build_request_context(run_id, user_input)
     policy_context = _build_policy_context("BTCUSDT")
 
     try:
@@ -511,30 +508,7 @@ async def create_auto_order(
                 "reason_codes": rejection_reason_codes,
                 "notes": "AI normalized_order_intent could not be converted into an executable Spot order.",
             }
-            final_state = ai_state
-            try:
-                final_state = await ai_gateway_service.send_completion(
-                    run_id,
-                    {"be_rejection_evidence": rejection},
-                    settings,
-                )
-            except Exception:
-                logger.exception("send_completion(NORMALIZED_INTENT_INVALID) failed for run_id=%s", run_id)
-
-            save_run_report(
-                db,
-                run_id=run_id,
-                ai_state=final_state,
-                order_id=None,
-                fallback_reason_codes=rejection_reason_codes,
-            )
-            save_or_update_checkpoint(
-                db,
-                run_id,
-                final_state.get("lifecycle_status", "BE_REJECTED"),
-                final_state.get("hold_reason"),
-                final_state,
-            )
+            final_state = await _finalize_rejection(db, run_id, ai_state, rejection, settings, always_save_report=True)
             return _to_auto_order_response(
                 OrderRunResponse(
                     run_id=run_id,
