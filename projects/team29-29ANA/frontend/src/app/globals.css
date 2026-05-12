@@ -1,0 +1,185 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css');
+
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: 'Pretendard Variable', var(--font-geist-sans), -apple-system, BlinkMacSystemFont, system-ui, 'Apple SD Gothic Neo', sans-serif;
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* ─────────────────────────────────────────────
+   Pacific Blue 디자인 시스템 (Light)
+   Primary  #1E40AF / Accent #3B82F6
+   Success  #10B981 / Warning #F59E0B
+   ───────────────────────────────────────────── */
+:root {
+  --background: oklch(1 0 0);                 /* #FFFFFF */
+  --foreground: oklch(0.197 0.043 265);       /* #0F172A */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.197 0.043 265);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.197 0.043 265);
+
+  --primary: oklch(0.397 0.171 264);          /* #1E40AF Pacific Blue */
+  --primary-foreground: oklch(1 0 0);
+
+  --secondary: oklch(0.97 0.004 250);         /* #F1F5F9 슬레이트 100 */
+  --secondary-foreground: oklch(0.279 0.046 257);
+
+  --muted: oklch(0.97 0.004 250);
+  --muted-foreground: oklch(0.498 0.024 256); /* 슬레이트 500 */
+
+  --accent: oklch(0.621 0.211 259);           /* #3B82F6 브라이트 블루 */
+  --accent-foreground: oklch(1 0 0);
+
+  --destructive: oklch(0.577 0.245 27.325);
+  --success: oklch(0.696 0.170 162);          /* #10B981 */
+  --warning: oklch(0.768 0.165 70);           /* #F59E0B */
+
+  --border: oklch(0.922 0.005 250);
+  --input: oklch(0.922 0.005 250);
+  --ring: oklch(0.621 0.211 259);             /* accent 기준 */
+
+  /* 차트 — 5개 카테고리(역량/경험/문제해결/협업/적합성)에 매칭 */
+  --chart-1: oklch(0.621 0.211 259);          /* 역량 — Blue 500 */
+  --chart-2: oklch(0.585 0.224 277);          /* 경험 — Indigo 500 */
+  --chart-3: oklch(0.715 0.146 206);          /* 문제해결 — Cyan 500 */
+  --chart-4: oklch(0.700 0.137 192);          /* 협업 — Teal 500 */
+  --chart-5: oklch(0.683 0.158 230);          /* 적합성 — Sky 500 */
+
+  --radius: 0.625rem;
+
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.197 0.043 265);
+  --sidebar-primary: oklch(0.397 0.171 264);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.97 0.004 250);
+  --sidebar-accent-foreground: oklch(0.279 0.046 257);
+  --sidebar-border: oklch(0.922 0.005 250);
+  --sidebar-ring: oklch(0.621 0.211 259);
+}
+
+/* ─────────────────────────────────────────────
+   Dark 모드 — 다크 베이스에서는 primary 를 약간 밝게(#3B82F6)
+   ───────────────────────────────────────────── */
+.dark {
+  --background: oklch(0.197 0.043 265);       /* #0F172A 슬레이트 900 */
+  --foreground: oklch(0.965 0.005 250);       /* #F1F5F9 슬레이트 100 */
+  --card: oklch(0.279 0.046 257);             /* #1E293B 슬레이트 800 */
+  --card-foreground: oklch(0.965 0.005 250);
+  --popover: oklch(0.279 0.046 257);
+  --popover-foreground: oklch(0.965 0.005 250);
+
+  --primary: oklch(0.621 0.211 259);          /* #3B82F6 (다크에선 한 단계 밝게) */
+  --primary-foreground: oklch(0.197 0.043 265);
+
+  --secondary: oklch(0.279 0.046 257);
+  --secondary-foreground: oklch(0.965 0.005 250);
+
+  --muted: oklch(0.279 0.046 257);
+  --muted-foreground: oklch(0.708 0.018 250);
+
+  --accent: oklch(0.397 0.171 264);           /* #1E40AF (다크에선 호버 액센트로) */
+  --accent-foreground: oklch(0.965 0.005 250);
+
+  --destructive: oklch(0.704 0.191 22.216);
+  --success: oklch(0.696 0.170 162);
+  --warning: oklch(0.768 0.165 70);
+
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.621 0.211 259);
+
+  --chart-1: oklch(0.621 0.211 259);
+  --chart-2: oklch(0.585 0.224 277);
+  --chart-3: oklch(0.715 0.146 206);
+  --chart-4: oklch(0.700 0.137 192);
+  --chart-5: oklch(0.683 0.158 230);
+
+  --sidebar: oklch(0.279 0.046 257);
+  --sidebar-foreground: oklch(0.965 0.005 250);
+  --sidebar-primary: oklch(0.621 0.211 259);
+  --sidebar-primary-foreground: oklch(0.197 0.043 265);
+  --sidebar-accent: oklch(0.397 0.171 264);
+  --sidebar-accent-foreground: oklch(0.965 0.005 250);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.621 0.211 259);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   배경 패턴 — 그리드 + 가장자리 페이드
+   ───────────────────────────────────────────── */
+@layer utilities {
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, oklch(0 0 0 / 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(0 0 0 / 0.06) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  .dark .bg-grid {
+    background-image:
+      linear-gradient(to right, oklch(1 0 0 / 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(1 0 0 / 0.06) 1px, transparent 1px);
+  }
+  .mask-radial-fade {
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+  }
+}

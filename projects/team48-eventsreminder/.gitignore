@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+*.db
+.env
+venv/
+_seed_fake.py
+tts/
+.DS_Store

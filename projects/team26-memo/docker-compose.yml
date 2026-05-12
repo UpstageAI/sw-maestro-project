@@ -1,0 +1,40 @@
+version: "3.9"
+
+# MeetFlow AI · 데모용 docker-compose
+# 로컬 개발 시:
+#   docker compose up --build
+# 프론트엔드만 단독으로 띄우려면 frontend/RunFront.ps1 사용 가능.
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.backend
+    container_name: meetflow-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - meetflow-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
+    container_name: meetflow-frontend
+    ports:
+      - "8501:8501"
+    environment:
+      # 컨테이너 간 통신은 service 이름으로
+      - BACKEND_URL=http://backend:8000/analyze
+    depends_on:
+      - backend
+    networks:
+      - meetflow-net
+
+networks:
+  meetflow-net:
+    driver: bridge

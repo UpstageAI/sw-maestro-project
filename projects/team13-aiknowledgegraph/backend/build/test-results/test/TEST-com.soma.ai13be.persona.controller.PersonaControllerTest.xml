@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.soma.ai13be.persona.controller.PersonaControllerTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-05-08T09:32:56.125Z" hostname="MINCom" time="0.082">
+  <properties/>
+  <testcase name="returnsBadGatewayWhenPromptGenerationFails()" classname="com.soma.ai13be.persona.controller.PersonaControllerTest" time="0.004"/>
+  <testcase name="returnsConflictWhenDeletingBuiltInPersona()" classname="com.soma.ai13be.persona.controller.PersonaControllerTest" time="0.003"/>
+  <testcase name="returnsNotFoundWhenDeletingUnknownPersona()" classname="com.soma.ai13be.persona.controller.PersonaControllerTest" time="0.003"/>
+  <testcase name="findsAllPersonas()" classname="com.soma.ai13be.persona.controller.PersonaControllerTest" time="0.004"/>
+  <testcase name="returnsConflictWhenPersonaAlreadyExists()" classname="com.soma.ai13be.persona.controller.PersonaControllerTest" time="0.003"/>
+  <testcase name="createsPersona()" classname="com.soma.ai13be.persona.controller.PersonaControllerTest" time="0.004"/>
+  <testcase name="rejectsBlankDomainName()" classname="com.soma.ai13be.persona.controller.PersonaControllerTest" time="0.003"/>
+  <testcase name="deletesPersona()" classname="com.soma.ai13be.persona.controller.PersonaControllerTest" time="0.001"/>
+  <system-out><![CDATA[2026-05-08T18:32:56.156+09:00  INFO 39196 --- [    Test worker] o.s.mock.web.MockServletContext          : Initializing Spring TestDispatcherServlet ''
+2026-05-08T18:32:56.156+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-05-08T18:32:56.157+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-05-08T18:32:56.163+09:00  INFO 39196 --- [    Test worker] o.s.mock.web.MockServletContext          : Initializing Spring TestDispatcherServlet ''
+2026-05-08T18:32:56.164+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-05-08T18:32:56.164+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+2026-05-08T18:32:56.171+09:00  INFO 39196 --- [    Test worker] o.s.mock.web.MockServletContext          : Initializing Spring TestDispatcherServlet ''
+2026-05-08T18:32:56.171+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-05-08T18:32:56.171+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+2026-05-08T18:32:56.177+09:00  INFO 39196 --- [    Test worker] o.s.mock.web.MockServletContext          : Initializing Spring TestDispatcherServlet ''
+2026-05-08T18:32:56.177+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-05-08T18:32:56.177+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+2026-05-08T18:32:56.184+09:00  INFO 39196 --- [    Test worker] o.s.mock.web.MockServletContext          : Initializing Spring TestDispatcherServlet ''
+2026-05-08T18:32:56.185+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-05-08T18:32:56.185+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+2026-05-08T18:32:56.191+09:00  INFO 39196 --- [    Test worker] o.s.mock.web.MockServletContext          : Initializing Spring TestDispatcherServlet ''
+2026-05-08T18:32:56.191+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-05-08T18:32:56.191+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+2026-05-08T18:32:56.199+09:00  INFO 39196 --- [    Test worker] o.s.mock.web.MockServletContext          : Initializing Spring TestDispatcherServlet ''
+2026-05-08T18:32:56.199+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-05-08T18:32:56.199+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+2026-05-08T18:32:56.206+09:00  INFO 39196 --- [    Test worker] o.s.mock.web.MockServletContext          : Initializing Spring TestDispatcherServlet ''
+2026-05-08T18:32:56.206+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-05-08T18:32:56.206+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

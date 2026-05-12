@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git rebase *)",
+      "Bash(python *)",
+      "Bash(grep -iE \"\\\\.env$\")",
+      "PowerShell(gh pr *)",
+      "PowerShell(git rm *)"
+    ]
+  }
+}

@@ -1,0 +1,490 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>AI Analysis Report - TailQuest AI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-secondary": "#ffffff",
+              "on-secondary-container": "#fefcff",
+              "on-primary-fixed-variant": "#3f465c",
+              "on-error-container": "#93000a",
+              "surface-variant": "#d3e4fe",
+              "tertiary-container": "#001e2f",
+              "tertiary-fixed-dim": "#89ceff",
+              "primary-fixed-dim": "#bec6e0",
+              "surface-container-lowest": "#ffffff",
+              "inverse-surface": "#213145",
+              "secondary-fixed-dim": "#b4c5ff",
+              "primary-fixed": "#dae2fd",
+              "surface-container-high": "#dce9ff",
+              "secondary-container": "#316bf3",
+              "on-surface": "#0b1c30",
+              "surface-dim": "#cbdbf5",
+              "on-tertiary-fixed": "#001e2f",
+              error: "#ba1a1a",
+              "on-primary-fixed": "#131b2e",
+              "on-tertiary-container": "#008cc7",
+              "surface-container-highest": "#d3e4fe",
+              "error-container": "#ffdad6",
+              "on-primary-container": "#7c839b",
+              "surface-container": "#e5eeff",
+              primary: "#000000",
+              "inverse-primary": "#bec6e0",
+              "outline-variant": "#c6c6cd",
+              outline: "#76777d",
+              background: "#f8f9ff",
+              "primary-container": "#131b2e",
+              tertiary: "#000000",
+              "secondary-fixed": "#dbe1ff",
+              "surface-container-low": "#eff4ff",
+              "on-secondary-fixed-variant": "#003ea8",
+              surface: "#f8f9ff",
+              "surface-bright": "#f8f9ff",
+              "on-primary": "#ffffff",
+              "on-error": "#ffffff",
+              "on-secondary-fixed": "#00174b",
+              "on-background": "#0b1c30",
+              secondary: "#0051d5",
+              "surface-tint": "#565e74",
+              "inverse-on-surface": "#eaf1ff",
+              "on-surface-variant": "#45464d",
+              "on-tertiary": "#ffffff",
+              "tertiary-fixed": "#c9e6ff",
+              "on-tertiary-fixed-variant": "#004c6e",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              xl: "80px",
+              base: "8px",
+              xs: "4px",
+              gutter: "24px",
+              margin: "32px",
+              lg: "48px",
+              md: "24px",
+              sm: "12px",
+            },
+            fontFamily: {
+              h3: ["Inter"],
+              code: ["Inter"],
+              "label-sm": ["Inter"],
+              "body-lg": ["Inter"],
+              h1: ["Inter"],
+              "body-md": ["Inter"],
+              h2: ["Inter"],
+            },
+            fontSize: {
+              h3: [
+                "24px",
+                {
+                  lineHeight: "1.3",
+                  letterSpacing: "-0.01em",
+                  fontWeight: "600",
+                },
+              ],
+              code: ["14px", { lineHeight: "1.5", fontWeight: "400" }],
+              "label-sm": [
+                "14px",
+                {
+                  lineHeight: "1.4",
+                  letterSpacing: "0.01em",
+                  fontWeight: "600",
+                },
+              ],
+              "body-lg": ["18px", { lineHeight: "1.6", fontWeight: "400" }],
+              h1: [
+                "48px",
+                {
+                  lineHeight: "1.2",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+              "body-md": ["16px", { lineHeight: "1.6", fontWeight: "400" }],
+              h2: [
+                "36px",
+                {
+                  lineHeight: "1.2",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .electric-glow {
+        box-shadow: 0 0 15px rgba(49, 107, 243, 0.15);
+      }
+    </style>
+  </head>
+  <body
+    class="bg-background text-on-background font-body-md min-h-screen flex flex-col"
+  >
+    <!-- TopNavBar -->
+    <header
+      class="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-['Inter'] text-sm font-medium border-b border-slate-200 dark:border-slate-800 shadow-sm w-full sticky top-0 z-50"
+    >
+      <div
+        class="flex items-center justify-between px-8 py-4 w-full max-w-screen-2xl mx-auto"
+      >
+        <div class="flex items-center gap-6">
+          <div
+            class="text-xl font-bold tracking-tighter text-slate-900 dark:text-white"
+          >
+            TailQuest AI
+          </div>
+          <nav class="hidden md:flex gap-6">
+            <a
+              class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 transition-all active:scale-95 duration-200"
+              href="#"
+              >Workspace</a
+            >
+            <a
+              class="text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 pb-1 hover:text-blue-600 dark:hover:text-blue-400 transition-all active:scale-95 duration-200"
+              href="#"
+              >Analysis</a
+            >
+            <a
+              class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 transition-all active:scale-95 duration-200"
+              href="#"
+              >Practice</a
+            >
+          </nav>
+        </div>
+        <div class="flex items-center gap-4">
+          <button
+            aria-label="settings"
+            class="hidden md:flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all active:scale-95 duration-200"
+          >
+            <span class="material-symbols-outlined">settings</span>
+          </button>
+          <button
+            aria-label="account_circle"
+            class="hidden md:flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all active:scale-95 duration-200"
+          >
+            <span class="material-symbols-outlined">account_circle</span>
+          </button>
+          <button
+            class="font-label-sm text-label-sm text-on-surface hover:text-secondary-container transition-colors active:scale-95 duration-200"
+          >
+            Login
+          </button>
+          <button
+            class="font-label-sm text-label-sm bg-primary text-on-primary px-4 py-2 rounded-lg hover:bg-tertiary-container transition-colors active:scale-95 duration-200"
+          >
+            Get Started
+          </button>
+        </div>
+      </div>
+    </header>
+    <div class="flex flex-1 max-w-screen-2xl w-full mx-auto">
+      <!-- Main Content -->
+      <main class="flex-1 p-margin flex flex-col gap-margin overflow-y-auto">
+        <!-- Header / Summary Section -->
+        <section
+          class="bg-surface-container-lowest rounded-xl p-md border border-outline-variant shadow-[0_4px_24px_rgba(0,30,47,0.04)] relative overflow-hidden"
+        >
+          <div
+            class="absolute top-0 left-0 w-1 h-full bg-secondary-container"
+          ></div>
+          <div
+            class="flex flex-col md:flex-row justify-between gap-gutter items-start md:items-center"
+          >
+            <div class="flex-1 space-y-sm">
+              <div class="flex items-center gap-base">
+                <span
+                  class="material-symbols-outlined text-secondary-container"
+                  style="font-variation-settings: &quot;FILL&quot; 1"
+                  >analytics</span
+                >
+                <h1 class="font-h2 text-h2 text-on-surface">Analysis Report</h1>
+              </div>
+              <p class="font-body-lg text-body-lg text-on-surface-variant">
+                System Design: Distributed Cache Implementation
+              </p>
+              <div
+                class="bg-surface-container-low p-sm rounded-lg border border-outline-variant mt-sm"
+              >
+                <p class="font-body-md text-body-md text-on-surface italic">
+                  "I would use Redis for the caching layer because it's fast.
+                  I'd set it up as a single instance first and maybe add read
+                  replicas later if traffic increases. For consistency, I'd just
+                  set a short TTL on everything so it refreshes eventually."
+                </p>
+              </div>
+            </div>
+            <!-- Score Gauge -->
+            <div
+              class="flex flex-col items-center justify-center bg-surface-container p-md rounded-xl border border-surface-variant min-w-[160px]"
+            >
+              <div
+                class="relative w-24 h-24 flex items-center justify-center rounded-full border-4 border-surface-variant"
+              >
+                <svg
+                  class="absolute top-0 left-0 w-full h-full -rotate-90"
+                  viewbox="0 0 100 100"
+                >
+                  <circle
+                    class="text-surface-variant"
+                    cx="50"
+                    cy="50"
+                    fill="none"
+                    r="46"
+                    stroke="currentColor"
+                    stroke-width="8"
+                  ></circle>
+                  <circle
+                    class="text-secondary-container"
+                    cx="50"
+                    cy="50"
+                    fill="none"
+                    r="46"
+                    stroke="currentColor"
+                    stroke-dasharray="289.026"
+                    stroke-dashoffset="101.159"
+                    stroke-width="8"
+                  ></circle>
+                </svg>
+                <span class="font-h3 text-h3 text-on-surface absolute z-10"
+                  >65%</span
+                >
+              </div>
+              <span
+                class="font-label-sm text-label-sm text-on-surface-variant mt-sm"
+                >Readiness Score</span
+              >
+            </div>
+          </div>
+        </section>
+        <!-- Grid Layout for Weak Points & Follow-ups -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+          <!-- Left Section: Weak Point Analysis -->
+          <section class="lg:col-span-7 flex flex-col gap-md">
+            <h2
+              class="font-h3 text-h3 text-on-surface flex items-center gap-base"
+            >
+              <span class="material-symbols-outlined text-outline"
+                >troubleshoot</span
+              >
+              Weak Point Analysis
+            </h2>
+            <!-- Card 1 -->
+            <div
+              class="bg-surface-container-lowest rounded-xl border-l-4 border-l-error border border-outline-variant p-md shadow-[0_4px_16px_rgba(0,30,47,0.03)] hover:shadow-[0_8px_24px_rgba(0,30,47,0.06)] transition-shadow"
+            >
+              <div
+                class="bg-error-container text-on-error-container font-code text-code p-sm rounded-lg mb-sm inline-block"
+              >
+                "...set it up as a single instance first..."
+              </div>
+              <h3 class="font-label-sm text-label-sm text-on-surface mb-xs">
+                Single Point of Failure (SPOF)
+              </h3>
+              <p class="font-body-md text-body-md text-on-surface-variant">
+                Proposing a single instance in a distributed systems interview
+                is a red flag. You must address high availability and fault
+                tolerance from the start, mentioning concepts like clustering,
+                sharding, or leader-follower setups.
+              </p>
+            </div>
+            <!-- Card 2 -->
+            <div
+              class="bg-surface-container-lowest rounded-xl border-l-4 border-l-secondary-container border border-outline-variant p-md shadow-[0_4px_16px_rgba(0,30,47,0.03)] hover:shadow-[0_8px_24px_rgba(0,30,47,0.06)] transition-shadow"
+            >
+              <div
+                class="bg-surface-variant text-on-surface font-code text-code p-sm rounded-lg mb-sm inline-block"
+              >
+                "...just set a short TTL on everything..."
+              </div>
+              <h3 class="font-label-sm text-label-sm text-on-surface mb-xs">
+                Inadequate Consistency Strategy
+              </h3>
+              <p class="font-body-md text-body-md text-on-surface-variant">
+                Relying solely on TTL for consistency is insufficient for
+                critical data. Discuss cache invalidation strategies (e.g.,
+                write-through, write-around, cache-aside) and how to handle race
+                conditions during updates.
+              </p>
+            </div>
+          </section>
+          <!-- Right Section: Generated Follow-up Questions -->
+          <section class="lg:col-span-5 flex flex-col gap-md">
+            <h2
+              class="font-h3 text-h3 text-on-surface flex items-center gap-base"
+            >
+              <span class="material-symbols-outlined text-secondary-container"
+                >psychology</span
+              >
+              Follow-up Questions
+            </h2>
+            <div
+              class="bg-surface-container-low rounded-xl border border-outline-variant p-md flex flex-col gap-sm electric-glow"
+            >
+              <p
+                class="font-body-md text-body-md text-on-surface-variant mb-xs"
+              >
+                Based on your answer, an interviewer would likely probe deeper
+                into these areas:
+              </p>
+              <!-- Question 1 -->
+              <div
+                class="bg-surface-container-lowest p-sm rounded-lg border border-outline-variant hover:border-secondary-container transition-colors cursor-pointer group"
+              >
+                <div class="flex justify-between items-start mb-xs">
+                  <span
+                    class="font-label-sm text-label-sm text-on-surface group-hover:text-secondary-container transition-colors"
+                    >How would you handle a node failure in your Redis cluster
+                    to ensure no data is lost?</span
+                  >
+                </div>
+                <div class="flex items-center gap-xs">
+                  <span
+                    class="material-symbols-outlined text-[16px] text-outline"
+                    >menu_book</span
+                  >
+                  <span class="font-code text-xs text-outline"
+                    >Source: Distributed Systems Handbook (Ch 4)</span
+                  >
+                </div>
+              </div>
+              <!-- Question 2 -->
+              <div
+                class="bg-surface-container-lowest p-sm rounded-lg border border-outline-variant hover:border-secondary-container transition-colors cursor-pointer group"
+              >
+                <div class="flex justify-between items-start mb-xs">
+                  <span
+                    class="font-label-sm text-label-sm text-on-surface group-hover:text-secondary-container transition-colors"
+                    >If two clients try to update the same cached value
+                    simultaneously, how do you prevent stale data?</span
+                  >
+                </div>
+                <div class="flex items-center gap-xs">
+                  <span
+                    class="material-symbols-outlined text-[16px] text-outline"
+                    >menu_book</span
+                  >
+                  <span class="font-code text-xs text-outline"
+                    >Source: Concurrency Patterns in Cache (Doc)</span
+                  >
+                </div>
+              </div>
+              <!-- Question 3 -->
+              <div
+                class="bg-surface-container-lowest p-sm rounded-lg border border-outline-variant hover:border-secondary-container transition-colors cursor-pointer group"
+              >
+                <div class="flex justify-between items-start mb-xs">
+                  <span
+                    class="font-label-sm text-label-sm text-on-surface group-hover:text-secondary-container transition-colors"
+                    >Explain the trade-offs between Memcached and Redis for this
+                    specific use case.</span
+                  >
+                </div>
+                <div class="flex items-center gap-xs">
+                  <span
+                    class="material-symbols-outlined text-[16px] text-outline"
+                    >menu_book</span
+                  >
+                  <span class="font-code text-xs text-outline"
+                    >Source: Internal Tech Wiki - Caching Standards</span
+                  >
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+        <!-- Actions Section -->
+        <section
+          class="flex justify-end gap-sm mt-md pt-md border-t border-outline-variant"
+        >
+          <button
+            class="font-label-sm text-label-sm px-6 py-3 rounded-lg border border-primary text-primary hover:bg-surface-container transition-colors flex items-center gap-base"
+          >
+            <span class="material-symbols-outlined">edit_note</span>
+            Refine Analysis
+          </button>
+          <button
+            class="font-label-sm text-label-sm px-6 py-3 rounded-lg bg-secondary-container text-on-secondary border border-secondary-container hover:bg-on-secondary-fixed-variant transition-colors shadow-sm flex items-center gap-base"
+          >
+            <span
+              class="material-symbols-outlined"
+              style="font-variation-settings: &quot;FILL&quot; 1"
+              >play_arrow</span
+            >
+            Start Practice
+          </button>
+        </section>
+      </main>
+    </div>
+    <!-- Footer -->
+    <footer
+      class="bg-white dark:bg-slate-950 text-slate-500 dark:text-slate-400 font-['Inter'] text-sm border-t border-slate-100 dark:border-slate-900 w-full mt-auto"
+    >
+      <div
+        class="flex flex-col md:flex-row justify-between items-center px-8 py-12 max-w-7xl mx-auto w-full"
+      >
+        <div
+          class="text-lg font-black text-slate-900 dark:text-white mb-6 md:mb-0"
+        >
+          TailQuest AI
+        </div>
+        <nav class="flex gap-6 mb-6 md:mb-0">
+          <a
+            class="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+            href="#"
+            >Product</a
+          >
+          <a
+            class="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+            href="#"
+            >Features</a
+          >
+          <a
+            class="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+            href="#"
+            >Security</a
+          >
+          <a
+            class="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+            href="#"
+            >Privacy</a
+          >
+          <a
+            class="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+            href="#"
+            >Terms</a
+          >
+        </nav>
+        <div class="text-slate-500 dark:text-slate-400">
+          © 2024 TailQuest AI. Engineering excellence in interviews.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "name": "같은 부위 3일 연속 → 회피",
+  "description": "최근 3일 연속 하체 운동(intensity 3~4). 프롬프트 규칙 '피로도 4 이상 부위는 해당 부위 운동 절대 불포함'에 따라 하체 운동을 추천하지 않고 상체/코어 등 대체 부위를 제안하는지 검증 (KPI 2).",
+  "calendar": [
+    {"start_at": "2026-05-04T09:00:00", "end_at": "2026-05-04T18:00:00", "title": "업무", "is_busy": true},
+    {"start_at": "2026-05-05T09:00:00", "end_at": "2026-05-05T18:00:00", "title": "업무", "is_busy": true},
+    {"start_at": "2026-05-06T09:00:00", "end_at": "2026-05-06T18:00:00", "title": "업무", "is_busy": true},
+    {"start_at": "2026-05-07T09:00:00", "end_at": "2026-05-07T18:00:00", "title": "업무", "is_busy": true},
+    {"start_at": "2026-05-08T09:00:00", "end_at": "2026-05-08T18:00:00", "title": "업무", "is_busy": true}
+  ],
+  "health": [
+    {"date": "2026-05-04", "sleep_hours": 7.5, "activity_minutes": 50, "resting_hr": 58},
+    {"date": "2026-05-05", "sleep_hours": 7.0, "activity_minutes": 45, "resting_hr": 60},
+    {"date": "2026-05-06", "sleep_hours": 7.2, "activity_minutes": 55, "resting_hr": 59},
+    {"date": "2026-05-07", "sleep_hours": 6.8, "activity_minutes": 40, "resting_hr": 61}
+  ],
+  "workouts": [
+    {"date": "2026-05-04", "type": "헬스", "duration_min": 60, "muscles": ["하체"], "intensity": 4},
+    {"date": "2026-05-05", "type": "러닝", "duration_min": 40, "muscles": ["하체", "코어"], "intensity": 3},
+    {"date": "2026-05-06", "type": "헬스", "duration_min": 55, "muscles": ["하체"], "intensity": 4}
+  ],
+  "expected": {
+    "fatigued_muscles": ["하체"],
+    "must_not_target": ["하체"],
+    "should_target_alternative_any_of": ["가슴", "등", "어깨", "이두", "삼두", "코어"],
+    "fatigue_score_above": 4
+  }
+}

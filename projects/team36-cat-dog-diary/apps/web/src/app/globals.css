@@ -1,0 +1,149 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* 헤더 워드마크 전용 (SiteHeader). Air 글리프(400)에 font-weight 600 적용 →
+   브라우저가 합성 medium으로 렌더 (Bold 700과 Air 400 사이의 시각 무게).
+   webfontworld jsdelivr 미러. 라이선스: 카페24 무료. */
+@font-face {
+  font-family: "Cafe24SsurroundAir";
+  src: url("https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/Cafe24SsurroundAir.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Display 폰트 — 매거진 hero typography (펫 이름·hero 카피). 폰트 파일 자체가 Bold 무게라
+   font-weight 명시하지 않음 — 어떤 weight 요청에도 이 파일이 매칭되도록. 명시하면 default
+   weight(400) 요청에 매칭 실패해 fallback(Pretendard)으로 떨어짐. */
+@font-face {
+  font-family: "Cafe24Ssurround";
+  src: url("https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/Cafe24Ssurround.woff") format("woff");
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-deep: var(--deep);
+  --color-deep-soft: var(--deep-soft);
+  --color-deep-border: var(--deep-border);
+  --font-sans: var(--font-pretendard);
+  --font-display: "Cafe24Ssurround", var(--font-pretendard), sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* 냥멍일기 톤 — Mocha Mousse(Pantone 2025) + Peach Fuzz(Pantone 2024) 어스톤.
+   v2(2026-05-05): 풀스크린 매거진 풍 — deep tone 색블록 섹션 추가, radius 1rem→0.5rem.
+   다크모드 토큰 미포함 — MVP 라이트만. */
+:root {
+  --background: #f4ece1;
+  --foreground: #2d2018;
+  --deep: #2d2018;           /* hero/풀블리드 deep section base */
+  --deep-soft: #3d2a1f;      /* 펫 row 교차 deep section (deep보다 한 톤 위) */
+  --deep-border: #5a3f2e;    /* deep section 안에서 사용할 border */
+  --card: #fffaf3;
+  --card-foreground: #2d2018;
+  --popover: #fffaf3;
+  --popover-foreground: #2d2018;
+  --primary: #946652;        /* Mocha Mousse */
+  --primary-foreground: #ffffff;
+  --secondary: #e8d9bf;
+  --secondary-foreground: #2d2018;
+  --muted: #ebe1cd;
+  --muted-foreground: #8d7866;
+  --accent: #ffbe98;         /* Peach Fuzz */
+  --accent-foreground: #2d2018;
+  --destructive: #b14430;
+  --border: #d8c5af;
+  --input: #d8c5af;
+  --ring: #946652;
+  --chart-1: #946652;
+  --chart-2: #ffbe98;
+  --chart-3: #c4a98a;
+  --chart-4: #8d7866;
+  --chart-5: #2d2018;
+  --radius: 0.5rem;
+  --sidebar: #ede2cf;
+  --sidebar-foreground: #2d2018;
+  --sidebar-primary: #946652;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #ffbe98;
+  --sidebar-accent-foreground: #2d2018;
+  --sidebar-border: #d8c5af;
+  --sidebar-ring: #946652;
+
+  /* mood 컬러 코딩 — DiaryCard mood pill의 color dot에 사용. 어스톤 팔레트와 충돌 X. */
+  --mood-happy: #f5c870;     /* 행복 — butter yellow */
+  --mood-excited: #ff9f6e;   /* 신남 — coral */
+  --mood-calm: #9bb196;      /* 평온 — sage */
+  --mood-sleepy: #b5a8c7;    /* 졸림 — soft lavender */
+  --mood-bored: #b5a89a;     /* 심심 — warm gray */
+  --mood-sad: #8c9eb5;       /* 슬픔 — dusty blue */
+  --mood-grumpy: #c47054;    /* 까칠 — rust */
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply text-foreground;
+    background: linear-gradient(
+      to bottom,
+      #efe5d4 0%,
+      #f4ece1 32%,
+      #f7f0e3 100%
+    );
+    background-attachment: fixed;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* deep tone utilities — @theme inline의 --color-deep token이 일부 환경(Tailwind v4 + Turbopack)에서
+   utility 생성에 누락되는 이슈가 있어 명시적으로 정의. font-display도 동일. */
+@layer utilities {
+  .bg-deep { background-color: var(--deep); }
+  .bg-deep-soft { background-color: var(--deep-soft); }
+  .text-deep { color: var(--deep); }
+  .border-deep-border { border-color: var(--deep-border); }
+  .font-display { font-family: var(--font-display); }
+}

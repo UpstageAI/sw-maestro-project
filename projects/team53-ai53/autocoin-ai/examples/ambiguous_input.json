@@ -1,0 +1,15 @@
+{
+  "run_id": "e2e_ambiguous_001",
+  "request_context": {
+    "request_id": "req_e2e_amb",
+    "request_type": "PLACE_ORDER_TEST",
+    "requested_at": "2026-05-10T10:00:00+09:00",
+    "user_input": {
+      "text": "비트코인 좀 사봐",
+      "trader_id": "wonyotti"
+    }
+  },
+  "policy_context": {
+    "policy_refs": ["policy.spot_testnet_only"]
+  }
+}

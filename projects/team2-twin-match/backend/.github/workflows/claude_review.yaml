@@ -1,0 +1,90 @@
+name: Claude PR Review
+
+# 트리거:
+# 1) PR 이 열릴 때 (신규 오픈 또는 draft → ready)
+# 2) PR 코멘트가 `/claude_review` 로 시작할 때 (수동 재요청 / 추가 지시)
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+  issue_comment:
+    types: [created]
+
+jobs:
+  review:
+    # PR 이벤트는 무조건 통과. 코멘트 이벤트는 PR 에 달린 코멘트이면서
+    # 본문이 `/claude_review` 로 시작할 때만.
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request != null &&
+       startsWith(github.event.comment.body, '/claude_review'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # issue_comment 이벤트는 default branch 를 체크아웃하므로
+      # PR 의 head 로 명시적으로 전환.
+      - name: Checkout PR head (issue_comment trigger only)
+        if: github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr checkout ${{ github.event.issue.number }}
+
+      - name: Run Claude review
+        id: claude_review
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: "--dangerously-skip-permissions"
+          show_full_output: "true"
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+
+            한국어로 응답해 주세요.
+
+            이 PR을 리뷰해 주세요. 레포 루트의 `AGENTS.md` 가이드라인을 우선 참고해서
+            아래 항목을 점검하고, 지적할 게 없으면 짧게 칭찬만 남기고, 있으면 구체적인
+            파일 경로와 라인을 인용해서 제안해 주세요.
+
+            **프로젝트 컨벤션 점검**
+            1. 레이어 분리: Pydantic Schema (router) ↔ DTO (service/repo) ↔ SQLAlchemy ORM (DB)
+               경계가 잘 지켜졌는지. ORM 행이 repository 밖으로 새지 않는지.
+            2. 단일 LLM 진입점: Solar/LLM 호출은 모두 `app/core/solar_client.py` 를 거치는지.
+               `openai` 패키지를 다른 곳에서 직접 import 하지 않는지.
+            3. 에러 포맷: 도메인 예외는 `app/core/errors/error.py` 의 클래스를 raise 하고,
+               응답은 `{"detail": "..."}` + 적절한 HTTP 상태 코드인지.
+            4. BackgroundTasks 안에서 새 `async_session_factory()` 세션을 여는지
+               (요청 스코프 세션 재사용 X).
+            5. 인터페이스 안정성: 골격에 잡힌 메서드 시그니처 / Pydantic 스키마 / DTO 필드명을
+               합의 없이 변경하지 않았는지. 변경했다면 그 이유가 PR 본문에 설명되어 있는지.
+            6. 명세 정합성: `docs/backend-specs/` 의 API 명세·DB 스키마와 코드가 일치하는지.
+
+            **일반 코드 품질**
+            - 가독성, 네이밍, 데드 코드, 중복.
+            - 테스트 커버리지 (특히 새 service / repository 메서드).
+            - 보안 이슈 (SQL injection, 비밀 키 노출, 입력 검증 등).
+
+            **출력 형식**
+            - PR 전체 요약 1-2 문장.
+            - 카테고리별로 그룹핑된 코멘트 (필요한 경우만).
+            - blocking 이슈와 nit 을 구분해서 표기.
+
+            **중요: 리뷰 작성이 끝나면 반드시 아래 명령어로 PR에 직접 코멘트를 달아주세요.**
+            리뷰 내용을 REVIEW_BODY 변수에 담아 gh CLI로 게시하세요:
+            ```
+            gh pr comment ${{ github.event.pull_request.number || github.event.issue.number }} \
+              --repo ${{ github.repository }} \
+              --body "$(cat <<'REVIEW_EOF'
+            [리뷰 내용]
+            REVIEW_EOF
+            )"
+            ```

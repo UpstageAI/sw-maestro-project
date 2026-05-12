@@ -1,0 +1,198 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    background: #ffffff;
+    color: #222222;
+    font-family:
+      "Airbnb Cereal VF", Circular, Inter, -apple-system, system-ui, Roboto,
+      "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    /* Inter has tighter cap height than Cereal — slightly relax line-height
+       per DESIGN.md "Note on Font Substitutes". */
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  ::selection {
+    background: #ff385c;
+    color: #ffffff;
+  }
+
+  /* Scope the keyboard-focus ring to interactive controls — buttons and links.
+     Form fields manage their own focus via container border-color so a stark
+     black outline doesn't appear inside the chat composer or onboarding inputs. */
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible {
+    outline: 2px solid #222222;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .material-symbols-outlined {
+    font-family: "Material Symbols Outlined";
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "liga";
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  }
+  .icon-filled {
+    font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+  }
+
+  /* Component primitives — match DESIGN.md component table. */
+
+  .btn-primary {
+    background: #ff385c;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.25;
+    border-radius: 8px;
+    padding: 14px 24px;
+    height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background-color 150ms;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: #e00b41;
+  }
+  .btn-primary:disabled {
+    background: #ffd1da;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background: #ffffff;
+    color: #222222;
+    border: 1px solid #222222;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.25;
+    border-radius: 8px;
+    padding: 13px 23px;
+    height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background-color 150ms;
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background: #f7f7f7;
+  }
+
+  .btn-pill-rausch {
+    background: #ff385c;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.29;
+    border-radius: 9999px;
+    padding: 10px 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 150ms;
+  }
+  .btn-pill-rausch:hover:not(:disabled) {
+    background: #e00b41;
+  }
+
+  .btn-tertiary-text {
+    background: transparent;
+    color: #222222;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  .btn-tertiary-text:hover {
+    color: #000;
+  }
+
+  .text-input {
+    background: #ffffff;
+    color: #222222;
+    font-size: 16px;
+    line-height: 1.5;
+    border: 1px solid #dddddd;
+    border-radius: 8px;
+    padding: 14px 12px;
+    height: 56px;
+    width: 100%;
+    transition: border-color 150ms, border-width 150ms;
+  }
+  .text-input::placeholder {
+    color: #929292;
+  }
+  .text-input:focus {
+    border: 2px solid #222222;
+    outline: none;
+    padding: 13px 11px; /* compensate for thicker border */
+  }
+
+  .pill {
+    border-radius: 9999px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.18;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .uppercase-tag {
+    font-size: 8px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: 0.32px;
+    text-transform: uppercase;
+  }
+}
+
+@layer utilities {
+  .shadow-airbnb {
+    box-shadow:
+      rgba(0, 0, 0, 0.02) 0 0 0 1px,
+      rgba(0, 0, 0, 0.04) 0 2px 6px 0,
+      rgba(0, 0, 0, 0.1) 0 4px 8px 0;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(34, 34, 34, 0.2);
+    border-radius: 3px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(34, 34, 34, 0.35);
+  }
+}

@@ -1,0 +1,20 @@
+# Environment
+.env
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Data 산출물 (스크립트로 생성될 변환본)
+data/personas/persona_cards.seed.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,138 @@
+﻿{
+  "be_rejection_evidence": {
+    "notes": "Deterministic revalidation blocked the order before submit.",
+    "reason_codes": [
+      "MIN_NOTIONAL_NOT_MET"
+    ]
+  },
+  "completion_payload": {
+    "be_rejection_evidence": {
+      "notes": "Deterministic revalidation blocked the order before submit.",
+      "reason_codes": [
+        "MIN_NOTIONAL_NOT_MET"
+      ]
+    }
+  },
+  "decision_trace": {
+    "evaluator": {
+      "evidence_refs": [
+        "verification_checks[-1]"
+      ],
+      "final_action": "PASS",
+      "reason_codes": [
+        "EVIDENCE_SUFFICIENT"
+      ]
+    },
+    "execution": {
+      "evidence_refs": [
+        "be_rejection_evidence"
+      ],
+      "final_action": "BE_REJECTED",
+      "reason_codes": [
+        "BE_REVALIDATION_REJECTED"
+      ]
+    },
+    "policy": {
+      "evidence_refs": [
+        "policy_context.policy_refs[0]"
+      ],
+      "final_action": "PASS",
+      "reason_codes": [
+        "ORDER_INTENT_NORMALIZED"
+      ]
+    },
+    "risk": {
+      "evidence_refs": [
+        "verification_checks[-1]"
+      ],
+      "final_action": "PASS",
+      "reason_codes": [
+        "ALL_CHECKS_PASSED"
+      ]
+    },
+    "run_summary": {
+      "evidence_refs": [
+        "decision_trace.execution"
+      ],
+      "final_action": "BE_REJECTED",
+      "reason_codes": [
+        "BE_REJECTED_REPORTED"
+      ]
+    }
+  },
+  "execution_result": {},
+  "hold_reason": null,
+  "lifecycle_status": "BE_REJECTED",
+  "normalized_order_intent": {
+    "quoteOrderQty": "50",
+    "side": "BUY",
+    "symbol": "BTCUSDT",
+    "type": "MARKET"
+  },
+  "policy_context": {
+    "policy_refs": [
+      "policy.symbol_allowlist",
+      "policy.spot_testnet_only"
+    ]
+  },
+  "report": {
+    "message": "BE deterministic revalidation blocked the proposal.",
+    "status": "BE_REJECTED"
+  },
+  "request_context": {
+    "request_id": "req_allowed_001",
+    "request_type": "PLACE_ORDER_TEST",
+    "requested_at": "2026-05-07T10:00:00+09:00",
+    "user_input": {
+      "quoteOrderQty": "50",
+      "side": "BUY",
+      "symbol": "BTCUSDT",
+      "type": "MARKET"
+    }
+  },
+  "resume_history": [],
+  "run_id": "airun_allowed_001",
+  "verification_checks": [
+    {
+      "evidence_refs": [
+        "request_context"
+      ],
+      "name": "initial_request_contract",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "evidence_refs": [
+        "policy_context.policy_refs[0]"
+      ],
+      "name": "policy_context_available",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "evidence_refs": [
+        "normalized_order_intent",
+        "policy_context.policy_refs"
+      ],
+      "name": "risk_gate_rules",
+      "result": "pass",
+      "stage": "risk"
+    },
+    {
+      "evidence_refs": [
+        "verification_checks"
+      ],
+      "name": "evidence_sufficiency",
+      "result": "pass",
+      "stage": "evaluator"
+    },
+    {
+      "evidence_refs": [
+        "be_rejection_evidence"
+      ],
+      "name": "be_revalidation_result",
+      "result": "fail",
+      "stage": "be_revalidation"
+    }
+  ]
+}

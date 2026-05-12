@@ -1,0 +1,22 @@
+이름: 이현우
+이메일: hyunwoo.lee@example.com
+연락처: 010-4567-8901
+
+[한 줄 소개]
+Python 백엔드와 SQL을 공부하며 개인 프로젝트를 진행했습니다.
+실무 경험은 없지만 작은 기능을 끝까지 구현하는 편입니다.
+
+[기술]
+Python, FastAPI, SQL, Docker, GitHub
+
+[프로젝트]
+- FastAPI 기반 메모 API를 구현했습니다.
+- SQLite로 메모 저장 기능을 만들고 Docker로 실행 환경을 정리했습니다.
+- README에 API 명세와 실행 방법을 작성했습니다.
+
+[추가 설명]
+- 최근에는 LLM API 응답을 정리해 대시보드로 보여주는 기능을 실험 중입니다.
+
+GitHub: https://github.com/this-user-should-not-exist-hireproof-demo
+포트폴리오: https://example.com/hyunwoo-api
+

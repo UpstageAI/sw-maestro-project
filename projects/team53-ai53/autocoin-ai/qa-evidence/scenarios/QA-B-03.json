@@ -1,0 +1,102 @@
+{
+  "duplicate_stage_name_pairs_count": 2,
+  "expected": {
+    "all_stages_canonical": true,
+    "initial_entry_values_intact": true,
+    "previous_entries_preserved": true
+  },
+  "initial_checks_count": 3,
+  "initial_checks_summary": [
+    {
+      "name": "initial_request_contract",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "name": "policy_context_available",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "name": "market_snapshot_freshness",
+      "result": "fail",
+      "stage": "risk"
+    }
+  ],
+  "input_payload": {
+    "initial": {
+      "policy_context": {
+        "policy_refs": [
+          "policy.symbol_allowlist",
+          "policy.spot_testnet_only"
+        ]
+      },
+      "request_context": {
+        "request_id": "req_test_001",
+        "request_type": "PLACE_ORDER_TEST",
+        "requested_at": "2026-05-07T10:00:00+09:00",
+        "user_input": {
+          "market_snapshot_fresh": false,
+          "quoteOrderQty": "50",
+          "side": "BUY",
+          "symbol": "BTCUSDT",
+          "type": "MARKET"
+        }
+      },
+      "run_id": "airun_test_001"
+    },
+    "resume_patch": {
+      "supplemental_user_input": {
+        "market_snapshot_fresh": true
+      }
+    }
+  },
+  "notes": "주의: app.resume는 deepcopy(prev) 후 self.start를 다시 invoke하므로 policy_node가 두 번째 패스에서 동일 (stage, name) entry를 다시 append한다. 이전 entry가 *원형 그대로* 살아있고(initial_entry_values_intact=True), 새 entry가 list 끝에 append되므로 strict 'append-only'에는 부합한다. 다만 동일 (stage, name) 쌍이 중복 등장하므로 후속 stage가 인덱스 기반 evidence_refs를 해석할 때 주의해야 한다 (duplicate_stage_name_pairs_count로 측정).",
+  "observed": {
+    "all_stages_canonical": true,
+    "initial_entry_values_intact": true,
+    "previous_entries_preserved": true
+  },
+  "passed": true,
+  "purpose": "stage별 verification_checks가 누적되고 덮어써지지 않는지 확인",
+  "resumed_checks_count": 7,
+  "resumed_checks_summary": [
+    {
+      "name": "initial_request_contract",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "name": "policy_context_available",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "name": "market_snapshot_freshness",
+      "result": "fail",
+      "stage": "risk"
+    },
+    {
+      "name": "initial_request_contract",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "name": "policy_context_available",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "name": "risk_gate_rules",
+      "result": "pass",
+      "stage": "risk"
+    },
+    {
+      "name": "evidence_sufficiency",
+      "result": "pass",
+      "stage": "evaluator"
+    }
+  ],
+  "reviewer": "검수자 B",
+  "scenario_id": "QA-B-03"
+}

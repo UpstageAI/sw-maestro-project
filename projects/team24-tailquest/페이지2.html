@@ -1,0 +1,424 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Interactive Interview Mode - TailQuest AI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-secondary": "#ffffff",
+              "on-secondary-container": "#fefcff",
+              "on-primary-fixed-variant": "#3f465c",
+              "on-error-container": "#93000a",
+              "surface-variant": "#d3e4fe",
+              "tertiary-container": "#001e2f",
+              "tertiary-fixed-dim": "#89ceff",
+              "primary-fixed-dim": "#bec6e0",
+              "surface-container-lowest": "#ffffff",
+              "inverse-surface": "#213145",
+              "secondary-fixed-dim": "#b4c5ff",
+              "primary-fixed": "#dae2fd",
+              "surface-container-high": "#dce9ff",
+              "secondary-container": "#316bf3",
+              "on-surface": "#0b1c30",
+              "surface-dim": "#cbdbf5",
+              "on-tertiary-fixed": "#001e2f",
+              error: "#ba1a1a",
+              "on-primary-fixed": "#131b2e",
+              "on-tertiary-container": "#008cc7",
+              "surface-container-highest": "#d3e4fe",
+              "error-container": "#ffdad6",
+              "on-primary-container": "#7c839b",
+              "surface-container": "#e5eeff",
+              primary: "#000000",
+              "inverse-primary": "#bec6e0",
+              "outline-variant": "#c6c6cd",
+              outline: "#76777d",
+              background: "#f8f9ff",
+              "primary-container": "#131b2e",
+              tertiary: "#000000",
+              "secondary-fixed": "#dbe1ff",
+              "surface-container-low": "#eff4ff",
+              "on-secondary-fixed-variant": "#003ea8",
+              surface: "#f8f9ff",
+              "surface-bright": "#f8f9ff",
+              "on-primary": "#ffffff",
+              "on-error": "#ffffff",
+              "on-secondary-fixed": "#00174b",
+              "on-background": "#0b1c30",
+              secondary: "#0051d5",
+              "surface-tint": "#565e74",
+              "inverse-on-surface": "#eaf1ff",
+              "on-surface-variant": "#45464d",
+              "on-tertiary": "#ffffff",
+              "tertiary-fixed": "#c9e6ff",
+              "on-tertiary-fixed-variant": "#004c6e",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              xl: "80px",
+              base: "8px",
+              xs: "4px",
+              gutter: "24px",
+              margin: "32px",
+              lg: "48px",
+              md: "24px",
+              sm: "12px",
+            },
+            fontFamily: {
+              h3: ["Inter"],
+              code: ["Inter"],
+              "label-sm": ["Inter"],
+              "body-lg": ["Inter"],
+              h1: ["Inter"],
+              "body-md": ["Inter"],
+              h2: ["Inter"],
+            },
+            fontSize: {
+              h3: [
+                "24px",
+                {
+                  lineHeight: "1.3",
+                  letterSpacing: "-0.01em",
+                  fontWeight: "600",
+                },
+              ],
+              code: ["14px", { lineHeight: "1.5", fontWeight: "400" }],
+              "label-sm": [
+                "14px",
+                {
+                  lineHeight: "1.4",
+                  letterSpacing: "0.01em",
+                  fontWeight: "600",
+                },
+              ],
+              "body-lg": ["18px", { lineHeight: "1.6", fontWeight: "400" }],
+              h1: [
+                "48px",
+                {
+                  lineHeight: "1.2",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+              "body-md": ["16px", { lineHeight: "1.6", fontWeight: "400" }],
+              h2: [
+                "36px",
+                {
+                  lineHeight: "1.2",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+      }
+      .ai-glow {
+        box-shadow: 0 0 15px rgba(0, 81, 213, 0.15);
+      }
+    </style>
+  </head>
+  <body
+    class="bg-background text-on-background font-body-md text-body-md h-screen flex flex-col overflow-hidden"
+  >
+    <!-- TopNavBar -->
+    <nav
+      class="bg-white border-b border-outline-variant shadow-sm w-full top-0 flex-none z-10"
+    >
+      <div
+        class="flex items-center justify-between px-8 py-4 w-full max-w-screen-2xl mx-auto"
+      >
+        <div class="flex items-center gap-gutter">
+          <span class="text-xl font-bold tracking-tighter text-primary"
+            >TailQuest AI</span
+          >
+          <div class="hidden md:flex gap-md">
+            <a
+              class="text-on-surface-variant hover:text-secondary transition-all font-['Inter'] text-sm font-medium"
+              href="#"
+              >Workspace</a
+            >
+            <a
+              class="text-on-surface-variant hover:text-secondary transition-all font-['Inter'] text-sm font-medium"
+              href="#"
+              >Analysis</a
+            >
+            <a
+              class="text-secondary border-b-2 border-secondary pb-1 font-['Inter'] text-sm font-medium"
+              href="#"
+              >Practice</a
+            >
+          </div>
+        </div>
+        <div class="flex items-center gap-md">
+          <div class="flex items-center gap-sm text-on-surface-variant">
+            <span
+              class="material-symbols-outlined cursor-pointer hover:text-secondary transition-colors"
+              data-icon="account_circle"
+              >account_circle</span
+            >
+            <span
+              class="material-symbols-outlined cursor-pointer hover:text-secondary transition-colors"
+              data-icon="settings"
+              >settings</span
+            >
+          </div>
+          <button
+            class="font-label-sm text-label-sm text-secondary border border-secondary px-sm py-xs rounded hover:bg-surface-container transition-colors"
+          >
+            Login
+          </button>
+          <button
+            class="font-label-sm text-label-sm bg-secondary text-on-secondary px-sm py-xs rounded hover:bg-secondary-fixed-variant transition-colors shadow-sm"
+          >
+            Get Started
+          </button>
+        </div>
+      </div>
+    </nav>
+    <!-- Main Content Area -->
+    <main
+      class="flex-1 flex overflow-hidden max-w-screen-2xl w-full mx-auto relative"
+    >
+      <!-- Left: Interview Canvas -->
+      <div class="flex-1 flex flex-col bg-surface relative z-0">
+        <!-- Chat Area -->
+        <div class="flex-1 overflow-y-auto p-margin flex flex-col gap-lg">
+          <!-- System Setup -->
+          <div class="flex justify-center">
+            <div
+              class="bg-surface-container-low border border-outline-variant rounded-lg p-sm text-center max-w-md"
+            >
+              <span class="font-label-sm text-label-sm text-on-surface-variant"
+                >Session Initiated: System Design (Distributed Data Store)</span
+              >
+            </div>
+          </div>
+          <!-- AI Prompt -->
+          <div class="flex gap-md max-w-3xl">
+            <div
+              class="flex-none w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-fixed-variant ai-glow"
+            >
+              <span class="material-symbols-outlined" data-icon="smart_toy"
+                >smart_toy</span
+              >
+            </div>
+            <div class="flex flex-col gap-xs">
+              <span class="font-label-sm text-label-sm text-on-surface-variant"
+                >TailQuest Interviewer</span
+              >
+              <div
+                class="bg-surface-container-lowest border-l-4 border-secondary shadow-sm p-md rounded-r-lg rounded-bl-lg"
+              >
+                <p class="font-body-lg text-body-lg text-on-surface mb-sm">
+                  Let's dive into the replication strategy. You mentioned using
+                  a leaderless replication model like DynamoDB.
+                </p>
+                <p class="font-h3 text-h3 text-primary">
+                  How would you resolve write conflicts if two nodes receive
+                  updates for the same key simultaneously in this leaderless
+                  architecture?
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Input Area -->
+        <div
+          class="p-margin bg-surface-container-lowest border-t border-outline-variant relative z-10 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]"
+        >
+          <div class="max-w-3xl mx-auto flex flex-col gap-base">
+            <div class="relative flex items-center">
+              <textarea
+                class="w-full bg-surface border border-outline-variant rounded-lg p-sm pr-xl font-body-md text-body-md text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary resize-none"
+                placeholder="Type your response or click the microphone to speak..."
+                rows="3"
+              ></textarea>
+              <!-- Input Actions -->
+              <div class="absolute right-sm bottom-sm flex gap-xs">
+                <button
+                  class="p-xs text-on-surface-variant hover:text-error transition-colors rounded hover:bg-error-container"
+                  title="Record Audio"
+                >
+                  <span class="material-symbols-outlined" data-icon="mic"
+                    >mic</span
+                  >
+                </button>
+                <button
+                  class="p-xs bg-secondary text-on-secondary rounded hover:bg-secondary-fixed-variant transition-colors ai-glow shadow-sm flex items-center justify-center"
+                  title="Submit Answer"
+                >
+                  <span class="material-symbols-outlined" data-icon="send"
+                    >send</span
+                  >
+                </button>
+              </div>
+            </div>
+            <div class="flex justify-between items-center px-xs">
+              <span class="font-code text-code text-on-surface-variant"
+                >0:00 / 3:00 limits</span
+              >
+              <div class="flex gap-xs">
+                <span
+                  class="font-label-sm text-label-sm text-secondary bg-surface-container px-xs py-[2px] rounded cursor-pointer hover:bg-secondary-container hover:text-on-secondary-container transition-colors"
+                  >Vector Clocks</span
+                >
+                <span
+                  class="font-label-sm text-label-sm text-secondary bg-surface-container px-xs py-[2px] rounded cursor-pointer hover:bg-secondary-container hover:text-on-secondary-container transition-colors"
+                  >LWW (Last Write Wins)</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Bottom Progress -->
+        <div
+          class="bg-surface-container py-xs px-margin border-t border-outline-variant flex items-center justify-between z-10"
+        >
+          <span class="font-label-sm text-label-sm text-on-surface-variant"
+            >Question 3 of 8</span
+          >
+          <div
+            class="flex-1 mx-gutter max-w-md h-2 bg-surface-variant rounded-full overflow-hidden"
+          >
+            <div class="h-full bg-secondary w-3/8 rounded-full"></div>
+          </div>
+          <span class="font-label-sm text-label-sm text-on-surface-variant"
+            >System Design</span
+          >
+        </div>
+      </div>
+      <!-- Right: Hints & Context Panel -->
+      <aside
+        class="w-80 bg-surface-container-lowest border-l border-outline-variant flex flex-col shadow-[-4px_0_20px_rgba(0,0,0,0.02)] z-10"
+      >
+        <div
+          class="p-md border-b border-outline-variant flex items-center justify-between bg-surface"
+        >
+          <h3
+            class="font-label-sm text-label-sm text-primary flex items-center gap-xs"
+          >
+            <span
+              class="material-symbols-outlined text-secondary"
+              data-icon="lightbulb"
+              >lightbulb</span
+            >
+            Hints &amp; Context
+          </h3>
+          <span
+            class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary text-sm"
+            data-icon="close"
+            >close</span
+          >
+        </div>
+        <div class="flex-1 overflow-y-auto p-md flex flex-col gap-md">
+          <!-- Context Card 1 -->
+          <div
+            class="bg-surface border border-outline-variant rounded-lg p-sm shadow-sm hover:shadow transition-shadow"
+          >
+            <div class="flex items-center gap-xs mb-xs">
+              <span
+                class="material-symbols-outlined text-secondary text-sm"
+                data-icon="description"
+                >description</span
+              >
+              <span class="font-label-sm text-label-sm text-on-surface"
+                >Uploaded: SysDesign_Notes.pdf</span
+              >
+            </div>
+            <p
+              class="font-body-md text-body-md text-on-surface-variant text-sm"
+            >
+              "In leaderless systems like Dynamo, conflict resolution is often
+              pushed to the client on read, using vector clocks to determine
+              causality, or relying on wall-clock timestamps (Last Write Wins)
+              which can lead to data loss."
+            </p>
+          </div>
+          <!-- AI Suggestion Card -->
+          <div
+            class="bg-surface-container-low border-l-2 border-secondary rounded-r-lg p-sm shadow-sm relative overflow-hidden"
+          >
+            <div
+              class="absolute top-0 right-0 w-16 h-16 bg-secondary opacity-5 rounded-bl-full pointer-events-none"
+            ></div>
+            <h4
+              class="font-label-sm text-label-sm text-secondary mb-xs flex items-center gap-xs"
+            >
+              <span
+                class="material-symbols-outlined text-sm"
+                data-icon="auto_awesome"
+                >auto_awesome</span
+              >
+              AI Coaching
+            </h4>
+            <ul
+              class="list-disc list-inside font-body-md text-body-md text-on-surface-variant text-sm space-y-1"
+            >
+              <li>Define Vector Clocks briefly.</li>
+              <li>Mention the trade-offs of Last Write Wins (LWW).</li>
+              <li>Consider discussing read repair.</li>
+            </ul>
+          </div>
+          <!-- Code Snippet Context -->
+          <div class="bg-[#1e1e1e] rounded-lg p-sm mt-xs shadow-sm">
+            <div class="flex items-center justify-between mb-xs">
+              <span class="font-code text-xs text-outline-variant"
+                >VectorClock.java (RAG)</span
+              >
+              <span
+                class="material-symbols-outlined text-outline-variant text-xs cursor-pointer hover:text-white"
+                data-icon="content_copy"
+                >content_copy</span
+              >
+            </div>
+            <pre
+              class="font-code text-xs text-primary-fixed-dim overflow-x-auto"
+            ><code>class VectorClock {
+    Map<string, long=""> versions;
+    
+    // Returns true if this clock 
+    // descends from other
+    boolean descends(VectorClock other) {
+        // ...
+    }
+}</string,></code></pre>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </body>
+</html>

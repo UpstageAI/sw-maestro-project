@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GitHub → 포트폴리오</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="landing">
+    <div class="hero">
+      <div class="brand-mark big">★</div>
+      <h1>GitHub → 포트폴리오</h1>
+      <p class="subtitle">레포 URL 한 줄로, AI가 4섹션·다이어그램·머지를 거쳐 Notion 또는 PDF로.</p>
+    </div>
+
+    <form id="start-form" class="form-card">
+      <div class="field">
+        <label for="repo_url">GitHub 레포 URL</label>
+        <input id="repo_url" name="repo_url" type="url" required
+               placeholder="https://github.com/owner/repo">
+      </div>
+
+      <div class="field">
+        <label for="pat">GitHub PAT</label>
+        <input id="pat" name="pat" type="password" placeholder="ghp_...">
+        <span class="hint">Private 레포만 필요. 공개 레포라도 PAT가 있으면 rate limit이 5000/hour로 늘어납니다.</span>
+      </div>
+
+      <details>
+        <summary>Notion 발행 설정 (선택 — 끝에서 따로 입력 가능)</summary>
+        <div class="field">
+          <label for="notion_token">Notion Token</label>
+          <input id="notion_token" name="notion_token" type="password" placeholder="secret_...">
+        </div>
+        <div class="field">
+          <label for="notion_parent">Notion Parent Page ID</label>
+          <input id="notion_parent" name="notion_parent_page_id" type="text" placeholder="32-char id">
+        </div>
+      </details>
+
+      <div class="field">
+        <label for="extra">추가 정보 (선택)</label>
+        <textarea id="extra" name="user_attached_info" rows="4"
+                  placeholder="미리 적어둘 컨텍스트가 있다면..."></textarea>
+        <span class="hint">분석 중에 AI가 부족한 정보를 다시 물어볼 수도 있습니다.</span>
+      </div>
+
+      <button type="submit" class="primary full">분석 시작</button>
+      <p id="err" class="err"></p>
+    </form>
+
+    <footer>
+      <a href="/health" target="_blank">/health</a> · 로컬 전용
+    </footer>
+  </main>
+
+  <script>
+    const form = document.getElementById("start-form");
+    const errEl = document.getElementById("err");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errEl.textContent = "";
+      const data = Object.fromEntries(new FormData(form).entries());
+      try {
+        const r = await fetch("/api/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        if (!r.ok) {
+          const j = await r.json().catch(() => ({}));
+          throw new Error(j.detail || `HTTP ${r.status}`);
+        }
+        const { session_id } = await r.json();
+        location.href = `/app?sid=${session_id}`;
+      } catch (e) {
+        errEl.textContent = "에러: " + e.message;
+      }
+    });
+  </script>
+</body>
+</html>

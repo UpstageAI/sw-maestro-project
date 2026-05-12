@@ -1,0 +1,67 @@
+name: CI — Test & Coverage
+
+on:
+  push:
+    branches: [main, qa-performance]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 의존성 설치
+        run: pip install -r requirements-test.txt
+
+      - name: 테스트 실행
+        run: |
+          pytest tests/unit/ tests/integration/ tests/performance/ \
+            --cov=src \
+            --cov-report=xml:coverage.xml \
+            --cov-report=html:htmlcov \
+            --cov-fail-under=80 \
+            --junit-xml=test_results.xml \
+            -q
+        env:
+          UPSTAGE_API_KEY: mock-key
+          GITHUB_PAT: mock-pat
+          NOTION_TOKEN: mock-token
+
+      - name: QA 리포트 생성
+        if: always()
+        run: |
+          python -c "
+          import json, xml.etree.ElementTree as ET
+          # coverage.json 생성 (generate_report.py 용)
+          import subprocess
+          subprocess.run(['python', '-m', 'coverage', 'json', '-o', 'coverage.json'])
+          " || true
+          python generate_report.py || true
+        env:
+          UPSTAGE_API_KEY: mock-key
+
+      - name: 테스트 결과 아티팩트 업로드
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-report-${{ github.run_number }}
+          path: |
+            qa_report.html
+            test_results.xml
+            coverage.xml
+            htmlcov/
+          retention-days: 30
+
+      - name: PR 테스트 결과 코멘트
+        if: github.event_name == 'pull_request'
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: test_results.xml
+          comment_title: "🧪 테스트 결과"

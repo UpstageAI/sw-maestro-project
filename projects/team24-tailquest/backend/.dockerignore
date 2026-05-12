@@ -1,0 +1,23 @@
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.venv
+venv
+.pytest_cache
+.ruff_cache
+.coverage
+
+# runtime data — must be mounted from the host so it survives image rebuilds
+.chroma
+.materials
+.langgraph_state.db
+data
+
+# secrets must come from env_file at runtime, never baked into the image
+.env
+.env.*
+!.env.example
+
+Dockerfile
+.dockerignore

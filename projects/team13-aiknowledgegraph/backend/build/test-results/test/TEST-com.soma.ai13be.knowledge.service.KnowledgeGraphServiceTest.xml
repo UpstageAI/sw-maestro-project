@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.soma.ai13be.knowledge.service.KnowledgeGraphServiceTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-05-08T09:32:56.082Z" hostname="MINCom" time="0.043">
+  <properties/>
+  <testcase name="findsNodesByDomainNameWhenProvided()" classname="com.soma.ai13be.knowledge.service.KnowledgeGraphServiceTest" time="0.001"/>
+  <testcase name="createsNodeAsNotAnalyzed()" classname="com.soma.ai13be.knowledge.service.KnowledgeGraphServiceTest" time="0.001"/>
+  <testcase name="findsOneHopGraphAroundCenterNode()" classname="com.soma.ai13be.knowledge.service.KnowledgeGraphServiceTest" time="0.001"/>
+  <testcase name="createsEdgeBetweenExistingNodes()" classname="com.soma.ai13be.knowledge.service.KnowledgeGraphServiceTest" time="0.001"/>
+  <testcase name="rejectsBlankNodeTitle()" classname="com.soma.ai13be.knowledge.service.KnowledgeGraphServiceTest" time="0.0"/>
+  <testcase name="rejectsEdgeWhenTargetNodeDoesNotExist()" classname="com.soma.ai13be.knowledge.service.KnowledgeGraphServiceTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
