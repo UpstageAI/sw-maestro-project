@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from autocoin_ai.logger import get_logger
 from autocoin_ai.constants import LIFECYCLE_FAILED, MAX_TOOL_CALLS
 from autocoin_ai.llm import StepResult, gemini_step_with_tools
 from autocoin_ai.models import AgentState, ensure_state_shape
 from autocoin_ai.prompts.risk_agent_prompt import RISK_AGENT_SYSTEM_INSTRUCTION
 from autocoin_ai.tools.registry import REGISTRY, dispatch
+
+_log = get_logger("risk_agent")
 
 
 def risk_agent_node(state: AgentState) -> AgentState:
@@ -20,6 +23,9 @@ def risk_agent_node(state: AgentState) -> AgentState:
     persona = next_state.get("inferred_persona", "MODERATE")
     existing_calls: list = list(next_state.get("risk_tool_calls", []))
 
+    _log.info("[risk_agent] ReAct 루프 시작: %s %s %s USDT, persona=%s",
+              intent.get("symbol"), intent.get("side"),
+              proposal.get("size_usd", intent.get("quoteOrderQty", "?")), persona)
     prompt = _build_prompt(intent, proposal, persona, bounds)
     tools = _build_gemini_tools()
     contents: list = [prompt]
@@ -30,10 +36,17 @@ def risk_agent_node(state: AgentState) -> AgentState:
         try:
             step: StepResult = gemini_step_with_tools(contents, tools, RISK_AGENT_SYSTEM_INSTRUCTION)
         except Exception:
+            _log.info("[risk_agent] LLM 호출 실패 → 루프 종료")
             break
 
         if step.is_final or not step.function_calls:
+            if step.text:
+                _log.info("[risk_agent] 최종 판단: %s", step.text[:200])
+            _log.info("[risk_agent] ReAct 루프 완료 (총 %d 도구 호출)", total_calls)
             break
+
+        if step.text:
+            _log.info("[risk_agent] 사고: %s", step.text[:200])
 
         func_responses: list = []
         for fc in step.function_calls:
@@ -41,10 +54,16 @@ def risk_agent_node(state: AgentState) -> AgentState:
                 break
             name = fc.name
             args = dict(fc.args) if fc.args else {}
+            _log.info("[risk_agent] 도구 호출 [%d]: %s(%s)",
+                      len(existing_calls) + total_calls + 1, name,
+                      ", ".join("%s=%s" % (k, v) for k, v in args.items()))
             try:
                 result = dispatch(name, args)
             except KeyError:
                 result = {"error": "unknown tool: %s" % name}
+
+            _log.info("[risk_agent] 결과 [%d]: %s",
+                      len(existing_calls) + total_calls + 1, result)
 
             tool_calls.append({
                 "step": len(existing_calls) + total_calls + 1,

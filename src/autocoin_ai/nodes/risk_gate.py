@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
 
+from autocoin_ai.logger import get_logger
 from autocoin_ai.constants import (
     HOLD_DATA_INSUFFICIENT,
     HOLD_LOW_CONVICTION,
@@ -19,6 +20,8 @@ from autocoin_ai.constants import (
 )
 from autocoin_ai.models import AgentState, append_check, ensure_state_shape, set_trace
 from autocoin_ai.tools.registry import dispatch
+
+_log = get_logger("risk_gate")
 
 
 def risk_gate_node(state: AgentState) -> AgentState:
@@ -53,20 +56,29 @@ def risk_gate_node(state: AgentState) -> AgentState:
     min_conviction = Decimal(str(bounds.get("min_conviction", 0.65)))
     allowed_symbols: list = bounds.get("allowed_symbols", [])
 
+    _log.info("[risk_gate] 리스크 체크 시작: %s %s %.2f USDT, persona=%s",
+              symbol, action, float(size_usd), persona)
+
     # Check 1: action == HOLD
     if action == "HOLD":
+        _log.info("[risk_gate] CHECK action=HOLD → HOLD")
         return _hold(next_state, tool_calls, "HOLD_ACTION", HOLD_LOW_CONVICTION)
 
     # Check 2: conviction too low
     if conviction < min_conviction:
+        _log.info("[risk_gate] CHECK conviction=%.2f < min=%.2f → HOLD", float(conviction), float(min_conviction))
         return _hold(next_state, tool_calls, "LOW_CONVICTION", HOLD_LOW_CONVICTION)
+    _log.info("[risk_gate] CHECK conviction=%.2f >= min=%.2f → PASS", float(conviction), float(min_conviction))
 
     # Check 3: size exceeds persona max
     if size_usd > max_order:
+        _log.info("[risk_gate] CHECK size=%.2f > max=%.2f → NO_ORDER", float(size_usd), float(max_order))
         return _no_order(next_state, tool_calls, "SIZE_EXCEEDS_PERSONA")
+    _log.info("[risk_gate] CHECK size=%.2f <= max=%.2f → PASS", float(size_usd), float(max_order))
 
     # Check 4: symbol not in allowed list
     if allowed_symbols and symbol not in allowed_symbols:
+        _log.info("[risk_gate] CHECK symbol=%s not in allowlist=%s → NO_ORDER", symbol, allowed_symbols)
         return _no_order(next_state, tool_calls, "SYMBOL_NOT_ALLOWED")
 
     # Check 5: balance check
@@ -78,7 +90,9 @@ def risk_gate_node(state: AgentState) -> AgentState:
     except InvalidOperation:
         free_balance = Decimal("0")
     if free_balance < size_usd:
+        _log.info("[risk_gate] CHECK balance: free=%s < size=%s → HOLD", free_balance, size_usd)
         return _hold(next_state, tool_calls, "INSUFFICIENT_BALANCE", HOLD_DATA_INSUFFICIENT)
+    _log.info("[risk_gate] CHECK balance: free=%s %s >= size=%s → PASS", free_balance, quote_asset, size_usd)
 
     # Check 6: volatility check
     vol_result = _live_volatility_from_user_input(user_input, symbol) or dispatch("get_volatility", {"symbol": symbol, "days": 7})
@@ -89,7 +103,10 @@ def risk_gate_node(state: AgentState) -> AgentState:
     except InvalidOperation:
         atr_pct = Decimal("0")
     if atr_pct > Decimal(str(VOLATILITY_HIGH_THRESHOLD)):
+        _log.info("[risk_gate] CHECK volatility: atr_pct=%.4f > threshold=%s → HOLD",
+                  float(atr_pct), VOLATILITY_HIGH_THRESHOLD)
         return _hold(next_state, tool_calls, "VOLATILITY_HIGH", HOLD_RISK_AGENT_FLAGGED)
+    _log.info("[risk_gate] CHECK volatility: atr_pct=%.4f → PASS", float(atr_pct))
 
     # Check 7: concentration risk (conservative only)
     if persona == PERSONA_CONSERVATIVE:
@@ -100,9 +117,13 @@ def risk_gate_node(state: AgentState) -> AgentState:
         except InvalidOperation:
             conc_pct = Decimal("0")
         if conc_pct > Decimal(str(MAX_CONCENTRATION)):
+            _log.info("[risk_gate] CHECK concentration: %.1f%% > max=%s%% → HOLD",
+                      float(conc_pct), MAX_CONCENTRATION)
             return _hold(next_state, tool_calls, "CONCENTRATION_HIGH", HOLD_RISK_AGENT_FLAGGED)
+        _log.info("[risk_gate] CHECK concentration: %.1f%% → PASS", float(conc_pct))
 
     # All checks passed
+    _log.info("[risk_gate] 모든 체크 통과 → ALLOW")
     next_state["risk_tool_calls"] = tool_calls
     tools_called = [t["tool"] for t in tool_calls]
     next_state["risk_assessment"] = {"verdict": "ALLOW", "fail_reason": None, "tools_called": tools_called}

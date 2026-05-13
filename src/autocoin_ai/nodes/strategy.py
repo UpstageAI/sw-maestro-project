@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from autocoin_ai.logger import get_logger
 from autocoin_ai.constants import LIFECYCLE_FAILED, LIFECYCLE_HOLD
 from autocoin_ai.llm import gemini_generate
 from autocoin_ai.models import AgentState, append_check, ensure_state_shape, set_trace
 from autocoin_ai.prompts.strategy_prompt import STRATEGY_SCHEMA, STRATEGY_SYSTEM_INSTRUCTION
+
+_log = get_logger("strategy")
 
 
 def strategy_node(state: AgentState) -> AgentState:
@@ -23,19 +26,27 @@ def strategy_node(state: AgentState) -> AgentState:
     market_snapshot = user_input.get("market_snapshot", {}) if isinstance(user_input, dict) else {}
     account_balance = user_input.get("account_balance", {}) if isinstance(user_input, dict) else {}
 
+    _log.info("[strategy] 전략 판단 시작: %s %s, persona=%s, 원칙 %d개",
+              intent.get("symbol"), intent.get("side"), persona, len(principles))
     prompt = _build_prompt(intent, principles, bounds, persona, market_snapshot, account_balance)
 
+    _log.info("[strategy] LLM에 전략 요청 중...")
     try:
         response = gemini_generate(prompt, STRATEGY_SCHEMA, STRATEGY_SYSTEM_INSTRUCTION)
     except Exception:
+        _log.info("[strategy] LLM 호출 실패 → 폴백 전략 생성 시도")
         fallback = _fallback_proposal(intent, principles, bounds, persona)
         if fallback is None:
+            _log.info("[strategy] 폴백 실패 → FAILED")
             _fail(next_state, "STRATEGY_LLM_ERROR", ["gemini_generate"])
             return next_state
+        _log.info("[strategy] 폴백 전략 사용: action=%s, conviction=%.2f",
+                  fallback.get("action"), float(fallback.get("conviction", 0)))
         response = fallback
 
     required = STRATEGY_SCHEMA["required"]
     if not all(k in response for k in required):
+        _log.info("[strategy] 응답 스키마 불일치 → FAILED")
         _fail(next_state, "STRATEGY_LLM_ERROR", ["llm_response"])
         return next_state
 
@@ -52,6 +63,12 @@ def strategy_node(state: AgentState) -> AgentState:
     action = str(response.get("action", ""))
     conviction = float(response.get("conviction", 0))
     rationale = str(response.get("rationale", ""))
+
+    _log.info("[strategy] 결정: action=%s, conviction=%.2f, size=%s USDT",
+              action, conviction, response.get("size_usd", "?"))
+    _log.info("[strategy] 근거: %s", rationale[:120] if rationale else "(없음)")
+    if matched:
+        _log.info("[strategy] 적용 원칙: %s", ", ".join(str(t) for t in matched))
 
     append_check(
         next_state,
