@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from autocoin_ai.logger import get_logger
 from autocoin_ai.constants import LIFECYCLE_FAILED, LIFECYCLE_HOLD, LIFECYCLE_READY_FOR_BE, PASS_ACTION
 from autocoin_ai.llm import gemini_generate
 from autocoin_ai.models import AgentState, append_check, ensure_state_shape, set_trace
 from autocoin_ai.prompts.evaluator_prompt import EVALUATOR_SCHEMA, EVALUATOR_SYSTEM_INSTRUCTION
+
+_log = get_logger("evaluator")
 
 
 def evaluator_node(state: AgentState) -> AgentState:
@@ -65,6 +68,11 @@ def evaluator_node(state: AgentState) -> AgentState:
     if hallucinated:
         pre_warnings.append("hallucinated principle titles: %s" % hallucinated)
 
+    _log.info("[evaluator] 평가 시작: lifecycle=%s, verdict=%s", lifecycle, verdict)
+    if pre_warnings:
+        for w in pre_warnings:
+            _log.info("[evaluator] 경고: %s", w)
+
     prompt_proposal = dict(proposal)
     prompt_proposal.setdefault("action", action)
     prompt_proposal.setdefault("size_usd", size_usd)
@@ -72,6 +80,7 @@ def evaluator_node(state: AgentState) -> AgentState:
                              risk_assessment=risk_assessment, decision_trace=decision_trace,
                              pre_warnings=pre_warnings)
 
+    _log.info("[evaluator] LLM 평가 보고서 생성 중...")
     try:
         review = gemini_generate(prompt, EVALUATOR_SCHEMA, EVALUATOR_SYSTEM_INSTRUCTION)
         if pre_warnings:
@@ -80,6 +89,7 @@ def evaluator_node(state: AgentState) -> AgentState:
             review = dict(review)
             review["schema_warnings"] = existing
     except Exception:
+        _log.info("[evaluator] LLM 호출 실패 → 결정론적 폴백 사용")
         review = {
             "summary": "%s %s %s USDT 평가 완료. 결과: %s" % (action, symbol, size_usd, lifecycle),
             "user_message": "%s로 판단되었습니다. 사유: %s" % (verdict, fail_reason or "PASSED"),
@@ -88,6 +98,8 @@ def evaluator_node(state: AgentState) -> AgentState:
         }
 
     next_state["evaluator_review"] = review
+    _log.info("[evaluator] 최종 요약: %s", str(review.get("summary", ""))[:150])
+    _log.info("[evaluator] reason_codes: %s", review.get("reason_codes", []))
 
     eval_result = "pass" if review.get("reason_codes") != ["EVALUATOR_LLM_FALLBACK"] else "fail"
     append_check(next_state, "evaluator_summary_complete", "evaluator", eval_result, ["evaluator_review"])

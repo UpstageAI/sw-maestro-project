@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 
+from autocoin_ai.logger import get_logger
 from autocoin_ai.constants import (
     DEFAULT_TRADER,
     HOLD_INPUT_AMBIGUOUS,
@@ -15,6 +16,8 @@ from autocoin_ai.models import AgentState, append_check, ensure_state_shape, set
 from autocoin_ai.prompts.intake_prompt import INTAKE_SCHEMA, INTAKE_SYSTEM_INSTRUCTION
 from autocoin_ai.llm import gemini_generate
 from autocoin_ai.validators import validate_request_context
+
+_log = get_logger("intake")
 
 
 def intake_node(state: AgentState) -> AgentState:
@@ -31,16 +34,22 @@ def intake_node(state: AgentState) -> AgentState:
 
     text = user_input.get("text") or user_input.get("raw_text")
     if text:
+        _log.info("[intake] NL 텍스트 감지 → LLM 파싱 모드")
         return _llm_mode(next_state, user_input, str(text))
+    _log.info("[intake] dict 입력 → 직접 파싱 모드")
     return _dict_mode(next_state, user_input)
 
 
 def _llm_mode(state: AgentState, user_input: dict, text: str) -> AgentState:
+    _log.info("[intake] LLM 파싱 시도: \"%s\"", text[:80])
     try:
         parsed = gemini_generate(text, INTAKE_SCHEMA, INTAKE_SYSTEM_INSTRUCTION)
     except Exception:
+        _log.info("[intake] LLM 호출 실패 → 휴리스틱 폴백 시도")
         heuristic = _heuristic_parse(user_input, text)
         if heuristic is not None:
+            _log.info("[intake] 휴리스틱 파싱 성공: %s %s %s USDT",
+                      heuristic.get("symbol"), heuristic.get("side"), heuristic.get("size_usd"))
             _apply_parsed(state, heuristic, heuristic["trader_id"], text)
             set_trace(
                 state,
@@ -50,12 +59,14 @@ def _llm_mode(state: AgentState, user_input: dict, text: str) -> AgentState:
                 "PASS",
             )
             return state
+        _log.info("[intake] 휴리스틱 폴백 실패 → HOLD (입력 모호)")
         _set_trader_defaults_for_hold(state, user_input, text)
         _hold_ambiguous(state, ["request_context.user_input.text"], "LLM parsing failed; more explicit symbol/side/amount is required.")
         return state
 
     required = INTAKE_SCHEMA["required"]
     if not all(k in parsed for k in required):
+        _log.info("[intake] LLM 응답 스키마 불일치 → FAILED")
         _fail(state, "INTAKE_SCHEMA_INVALID", ["llm_response"])
         return state
 
@@ -67,9 +78,14 @@ def _llm_mode(state: AgentState, user_input: dict, text: str) -> AgentState:
     state["persona_override_reason"] = override if override else None
 
     ambiguity = parsed.get("ambiguity_score", 0)
+    _log.info("[intake] LLM 응답: symbol=%s, side=%s, ambiguity=%.2f",
+              parsed.get("symbol", "?"), parsed.get("side", "?"), float(ambiguity))
     if ambiguity > 0.5:
+        _log.info("[intake] 모호성 %.2f > 0.5 → 휴리스틱 폴백 시도", float(ambiguity))
         heuristic = _heuristic_parse(user_input, text)
         if heuristic is not None:
+            _log.info("[intake] 휴리스틱 파싱 성공: %s %s %s USDT",
+                      heuristic.get("symbol"), heuristic.get("side"), heuristic.get("size_usd"))
             _apply_parsed(state, heuristic, heuristic["trader_id"], text)
             set_trace(
                 state,
@@ -79,10 +95,13 @@ def _llm_mode(state: AgentState, user_input: dict, text: str) -> AgentState:
                 "PASS",
             )
             return state
+        _log.info("[intake] 입력 모호 → HOLD")
         _hold_ambiguous(state, ["ambiguity_score"], "심볼, 방향, 금액 또는 진입 조건을 더 구체적으로 입력하세요.")
         return state
 
     _apply_parsed(state, parsed, trader_id, text)
+    _log.info("[intake] 파싱 완료: %s %s %s USDT (trader=%s, persona=%s)",
+              parsed.get("symbol"), parsed.get("side"), parsed.get("size_usd"), trader_id, inferred_persona)
     return state
 
 
@@ -90,6 +109,7 @@ def _dict_mode(state: AgentState, user_input: dict) -> AgentState:
     request_context = state.get("request_context", {})
     missing = validate_request_context(request_context)
     if missing:
+        _log.info("[intake] 필수 필드 누락 → FAILED: %s", missing)
         _fail(state, "INITIAL_REQUEST_CONTRACT_FAILED", ["request_context"])
         return state
 
@@ -110,6 +130,8 @@ def _dict_mode(state: AgentState, user_input: dict) -> AgentState:
 
     append_check(state, "intake_parse_complete", "intake", "pass", ["normalized_order_intent"])
     set_trace(state, "intake", ["DICT_MODE_PASS"], ["request_context.user_input"], "PASS")
+    _log.info("[intake] dict 파싱 완료: %s %s (trader=%s)",
+              normalized.get("symbol"), normalized.get("side"), state.get("trader_id"))
     return state
 
 

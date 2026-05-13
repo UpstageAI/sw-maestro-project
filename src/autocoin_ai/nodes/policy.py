@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import dataclasses
 
+from autocoin_ai.logger import get_logger
 from autocoin_ai.constants import DEFAULT_TRADER, LIFECYCLE_FAILED, PASS_ACTION, PERSONA_MODERATE
 from autocoin_ai.models import AgentState, append_check, effective_user_input, ensure_state_shape, set_trace
 from autocoin_ai.personas import PERSONA_PROFILES
 from autocoin_ai.rag.retriever import retrieve_relevant
 from autocoin_ai.validators import validate_policy_context, validate_request_context
+
+_log = get_logger("policy")
 
 
 def policy_node(state: AgentState) -> AgentState:
@@ -68,6 +71,8 @@ def policy_node(state: AgentState) -> AgentState:
     trader_id = next_state.get("trader_id") or DEFAULT_TRADER
     persona = next_state.get("inferred_persona") or PERSONA_MODERATE
 
+    _log.info("[policy] 트레이더=%s, 페르소나=%s", trader_id, persona)
+
     policy_context = dict(next_state.get("policy_context", {}))
     policy_context["persona"] = persona
     policy_context["persona_bounds"] = PERSONA_PROFILES.get(persona, PERSONA_PROFILES[PERSONA_MODERATE])
@@ -76,6 +81,8 @@ def policy_node(state: AgentState) -> AgentState:
     query = "%s %s %s" % (intent.get("symbol", ""), intent.get("side", ""), persona)
     principles = retrieve_relevant(trader_id, query, k=5)
     next_state["trader_principles"] = [dataclasses.asdict(p) for p in principles]
+
+    _log.info("[policy] 원칙 %d개 로드 완료 (query: %s)", len(principles), query.strip())
 
     append_check(next_state, "policy_context_available", "policy", "pass", ["policy_context.policy_refs[0]"])
     append_check(next_state, "policy_context_grounded", "policy", "pass", ["trader_principles"])
