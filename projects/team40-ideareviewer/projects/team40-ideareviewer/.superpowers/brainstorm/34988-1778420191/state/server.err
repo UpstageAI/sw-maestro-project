@@ -1,0 +1,17 @@
+node:fs:1871
+  binding.unlink(getValidatedPath(path));
+          ^
+
+Error: EPERM: operation not permitted, unlink 'C:\2025proj\persona\.superpowers\brainstorm\34988-1778420191\state\server-info'
+    at Object.unlinkSync (node:fs:1871:11)
+    at shutdown (C:\Users\Jaewon\.codex\plugins\cache\openai-curated\superpowers\63976030\skills\brainstorming\scripts\server.cjs:304:37)
+    at Timeout._onTimeout (C:\Users\Jaewon\.codex\plugins\cache\openai-curated\superpowers\63976030\skills\brainstorming\scripts\server.cjs:322:59)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7) {
+  errno: -4048,
+  code: 'EPERM',
+  syscall: 'unlink',
+  path: 'C:\\2025proj\\persona\\.superpowers\\brainstorm\\34988-1778420191\\state\\server-info'
+}
+
+Node.js v22.12.0
