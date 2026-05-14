@@ -1,0 +1,36 @@
+[
+  {"review_id": "REV_001_PLACE_001", "review_text": "주말에 1시간 대기는 너무하네요. 자리 너무 없어요.", "rating": 2, "created_at": "2026-04-10T15:20:00Z"},
+  {"review_id": "REV_002_PLACE_001", "review_text": "음료 나오는데 30분 걸렸어요. 시간 좀 단축해주세요.", "rating": 2, "created_at": "2026-04-15T18:00:00Z"},
+  {"review_id": "REV_003_PLACE_001", "review_text": "주말 오후엔 자리도 없고 음료도 늦어요. 인력 좀 더 두세요.", "rating": 1, "created_at": "2026-04-21T16:30:00Z"},
+  {"review_id": "REV_004_PLACE_001", "review_text": "주문 받은 순서가 뒤죽박죽이에요. 나중에 온 사람이 먼저 받아요.", "rating": 2, "created_at": "2026-04-25T14:10:00Z"},
+  {"review_id": "REV_005_PLACE_001", "review_text": "키오스크 사용법이 헷갈려서 한참 헤맸어요. 도와주는 분이 없네요.", "rating": 2, "created_at": "2026-04-30T11:45:00Z"},
+  {"review_id": "REV_006_PLACE_001", "review_text": "테이크아웃 주문도 30분 걸렸음. 빨리 좀 해주세요.", "rating": 2, "created_at": "2026-05-04T13:20:00Z"},
+  {"review_id": "REV_007_PLACE_001", "review_text": "오늘도 줄 길어서 다른 곳 갔어요. 자리 좀 늘려주세요.", "rating": 1, "created_at": "2026-05-07T17:30:00Z"},
+
+  {"review_id": "REV_008_PLACE_001", "review_text": "테이블이 끈적거려요. 닦아주세요.", "rating": 2, "created_at": "2026-04-12T20:00:00Z"},
+  {"review_id": "REV_009_PLACE_001", "review_text": "화장실 휴지가 없어요. 위생 신경 좀 써주세요.", "rating": 1, "created_at": "2026-04-18T10:30:00Z"},
+  {"review_id": "REV_010_PLACE_001", "review_text": "컵 가장자리가 더러워요. 식기 세척 제대로 해주세요.", "rating": 2, "created_at": "2026-04-24T19:00:00Z"},
+  {"review_id": "REV_011_PLACE_001", "review_text": "빨대가 맨손으로 꽂혀있어서 좀 그래요. 위생적으로 해주시면 좋겠어요.", "rating": 2, "created_at": "2026-04-28T16:15:00Z"},
+  {"review_id": "REV_012_PLACE_001", "review_text": "에어컨 필터 청소 좀 해주세요. 먼지가 떨어지는 게 보여요.", "rating": 2, "created_at": "2026-05-03T14:00:00Z"},
+
+  {"review_id": "REV_013_PLACE_001", "review_text": "케이크 한 조각 7000원? 너무 비싸요. 양은 적은데...", "rating": 2, "created_at": "2026-04-14T18:30:00Z"},
+  {"review_id": "REV_014_PLACE_001", "review_text": "샌드위치 가격대비 양이 너무 적음. 가격 다시 책정해보세요.", "rating": 2, "created_at": "2026-04-22T12:40:00Z"},
+  {"review_id": "REV_015_PLACE_001", "review_text": "쿠폰 차감 안 해주신 적 있어요. 010-1234-5678로 연락주세요.", "rating": 2, "created_at": "2026-05-02T15:00:00Z"},
+
+  {"review_id": "REV_016_PLACE_001", "review_text": "직원이 짜증내듯이 응대해요. 표정 관리 좀.", "rating": 1, "created_at": "2026-04-19T13:25:00Z"},
+  {"review_id": "REV_017_PLACE_001", "review_text": "주문 잘못 나왔는데 사과도 없네요. 응대 교육 필요해 보여요.", "rating": 1, "created_at": "2026-05-07T19:00:00Z"},
+
+  {"review_id": "REV_018_PLACE_001", "review_text": "라떼가 미지근하게 나왔어요. 온도 체크 부탁드려요.", "rating": 2, "created_at": "2026-04-27T16:50:00Z"},
+
+  {"review_id": "REV_019_PLACE_001", "review_text": "라떼 진짜 맛있어요. 원두향이 좋네요!", "rating": 5, "created_at": "2026-04-11T11:30:00Z"},
+  {"review_id": "REV_020_PLACE_001", "review_text": "사장님 친절하시고 분위기 좋아요. 다음에 또 올게요.", "rating": 5, "created_at": "2026-04-13T17:00:00Z"},
+  {"review_id": "REV_021_PLACE_001", "review_text": "아메리카노 산미 좋아요. 원두 잘 고르신 듯.", "rating": 4, "created_at": "2026-04-17T15:30:00Z"},
+  {"review_id": "REV_022_PLACE_001", "review_text": "조용하게 작업하기 좋아요. 와이파이도 잘 되고요.", "rating": 5, "created_at": "2026-04-20T13:00:00Z"},
+  {"review_id": "REV_023_PLACE_001", "review_text": "콜드브루 진하고 맛있네요. 시그니처로 밀어도 될 듯.", "rating": 5, "created_at": "2026-04-23T15:45:00Z"},
+  {"review_id": "REV_024_PLACE_001", "review_text": "이름 외워주셔서 감사해요. 단골 대접 받는 느낌이에요.", "rating": 5, "created_at": "2026-04-26T10:15:00Z"},
+  {"review_id": "REV_025_PLACE_001", "review_text": "데이트하기 좋은 곳이에요. 분위기 다 잡혀있어요.", "rating": 5, "created_at": "2026-05-01T19:30:00Z"},
+  {"review_id": "REV_026_PLACE_001", "review_text": "치즈케이크 부드럽고 좋아요. 커피랑 잘 어울려요.", "rating": 4, "created_at": "2026-05-06T16:00:00Z"},
+
+  {"review_id": "REV_027_PLACE_001", "review_text": "평범해요. 특별히 좋지도 나쁘지도 않음.", "rating": 3, "created_at": "2026-04-16T14:00:00Z"},
+  {"review_id": "REV_028_PLACE_001", "review_text": "분위기 ok, 음료 ok. 다시 갈지는 모르겠음.", "rating": 3, "created_at": "2026-05-05T17:00:00Z"}
+]

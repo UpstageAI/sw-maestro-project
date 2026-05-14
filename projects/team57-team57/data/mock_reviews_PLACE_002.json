@@ -1,0 +1,16 @@
+[
+  {"review_id": "REV_001_PLACE_002", "review_text": "음식 양 진짜 많아서 좋아요. 돈 아깝지 않아요.", "rating": 5, "created_at": "2026-04-15T19:00:00Z"},
+  {"review_id": "REV_002_PLACE_002", "review_text": "주말에 자리가 너무 없어서 한참 기다렸어요.", "rating": 2, "created_at": "2026-04-18T18:30:00Z"},
+  {"review_id": "REV_003_PLACE_002", "review_text": "반찬이 정갈하고 맛있어요. 집밥 같아요.", "rating": 5, "created_at": "2026-04-20T13:00:00Z"},
+  {"review_id": "REV_004_PLACE_002", "review_text": "직원분 친절하시네요. 다음에 또 올게요.", "rating": 5, "created_at": "2026-04-22T20:00:00Z"},
+  {"review_id": "REV_005_PLACE_002", "review_text": "음식 좀 짜요. 간 좀 약하게 해주시면 좋겠어요.", "rating": 3, "created_at": "2026-04-24T12:30:00Z"},
+  {"review_id": "REV_006_PLACE_002", "review_text": "테이블 좀 좁아요. 그래도 음식은 만족.", "rating": 4, "created_at": "2026-04-26T19:15:00Z"},
+  {"review_id": "REV_007_PLACE_002", "review_text": "주차 어려워요. 근처 공영주차장 안내해주시면 좋을 듯.", "rating": 3, "created_at": "2026-04-28T18:45:00Z"},
+  {"review_id": "REV_008_PLACE_002", "review_text": "혼밥하기 좋아요. 1인 메뉴도 있고 분위기 부담없음.", "rating": 5, "created_at": "2026-05-01T13:30:00Z"},
+  {"review_id": "REV_009_PLACE_002", "review_text": "재료가 신선해 보여요. 깔끔합니다.", "rating": 4, "created_at": "2026-05-03T18:00:00Z"},
+  {"review_id": "REV_010_PLACE_002", "review_text": "음식 늦게 나왔어요. 30분 넘게 기다렸음.", "rating": 2, "created_at": "2026-05-04T19:30:00Z"},
+  {"review_id": "REV_011_PLACE_002", "review_text": "사장님 인사도 잘 해주시고 좋네요.", "rating": 5, "created_at": "2026-05-05T12:45:00Z"},
+  {"review_id": "REV_012_PLACE_002", "review_text": "맛 평범해요. 가격대 생각하면 ok.", "rating": 3, "created_at": "2026-05-06T19:00:00Z"},
+  {"review_id": "REV_013_PLACE_002", "review_text": "메뉴가 다양하면 좋겠어요. 지금은 종류가 적네요.", "rating": 3, "created_at": "2026-05-07T13:00:00Z"},
+  {"review_id": "REV_014_PLACE_002", "review_text": "주말에 사람 많아서 시끄러워요. 평일 추천.", "rating": 4, "created_at": "2026-05-07T20:00:00Z"}
+]

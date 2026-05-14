@@ -1,31 +1,33 @@
 [project]
-name = "review-agent"
+name = "review-ops-agent"
 version = "0.1.0"
-description = "Small business review response and complaint pattern AI agent MVP"
+description = "소상공인 리뷰 응대 AI Agent — LangGraph multi-tenant memory + conditional router + SQL tool"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.13"
 dependencies = [
-  "python-dotenv>=1.0.1",
-  "pydantic>=2.7.0",
-  "streamlit>=1.45.0",
-  "langgraph>=0.2.50",
-  "langchain>=0.3.0",
-  "openai>=1.30.0",
-  "anthropic>=0.34.0",
+    "langgraph>=0.2.50",
+    "langchain-core>=0.3.0",
+    "langchain-upstage>=0.7.0",
+    "openai>=1.50.0",
+    "streamlit>=1.40.0",
+    "python-dotenv>=1.0.1",
+    "pydantic>=2.9.0",
 ]
 
 [dependency-groups]
 dev = [
-  "pytest>=8.3.0",
+    "pytest>=8.3.0",
+    "ruff>=0.7.0",
 ]
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+[tool.ruff]
+line-length = 110
+target-version = "py311"
 
-[tool.hatch.build.targets.wheel]
-packages = ["src"]
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501"]
 
 [tool.pytest.ini_options]
-pythonpath = ["."]
 testpaths = ["tests"]
+python_files = "test_*.py"

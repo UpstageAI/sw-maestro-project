@@ -1,246 +1,293 @@
-# Review Agent
+# review-ops-agent
 
-소상공인 리뷰 응대 및 반복 불만 분석 AI Agent의 MVP 구현 프로젝트입니다.
+> 소상공인 리뷰 응대 및 반복 불만 분석 AI Agent — 매장 컨텍스트를 기억해 점점 '우리 가게답게' 답글을 쓰고, 누적된 부정 리뷰에서 반복 불만을 뽑아 점검 체크리스트까지 만드는 멀티 Agent 시스템.
 
-현재는 3단계까지 구현되어 있으며, 아래 항목이 포함되어 있습니다.
+LangGraph 위에 multi-tenant Memory를 영속하고, 감정·신뢰도 기반 conditional Router로 답글 Drafter를 분기하며, SQL query tool로 다세션 반복 불만을 집계합니다.
 
-- 프로젝트 기본 구조
-- SQLite 스키마 및 초기화 로직
-- Repository 계층
-- Mock LLM provider
-- 샘플 리뷰 데이터
-- README 및 문서 초안
-- LangGraph 기반 Agent node/edge 실행
-- Streamlit 단일 페이지 UI
-- 답글 수정 및 피드백 저장
+**SOMA 17기 · 57조** — 박세민, 박세원, 박준하, 유혁진, 윤성민
 
-## 프로젝트 소개
+---
 
-이 프로젝트는 소상공인이 리뷰를 붙여넣으면 리뷰를 구조화해 저장하고, 이후 Agent가 감정 분석, 유형 분류, 답글 생성, 반복 불만 분석까지 이어서 수행할 수 있도록 설계된 MVP입니다.
+## 상태
 
-이번 과제의 핵심은 상용 서비스 완성도가 아니라 다음 Agent 구성 요소를 직접 구현하고 설명 가능한 형태로 남기는 것입니다.
+🟢 **구현 완료 · 데모 영상 제출 준비 중** — Upstage Solar API + Docker.
 
-- node / edge
-- tool calling
-- state
-- memory
-- persistence
-- feedback loop
+- 전체 spec: [`docs/spec/`](./docs/spec/)
+- 원본 기획서: [`PROPOSAL.md`](./PROPOSAL.md)
+- 데모 자료: [`docs/demo/`](./docs/demo/)
 
-현재는 mock provider 기반 Agent 플로우와 Streamlit 데모 UI까지 연결된 상태입니다.
+---
 
-## 실행 방법
+## 어떻게 구현하나
 
-### 1. uv 사용
+### 입력 → 처리 → 출력
 
-```bash
-uv sync
+```
+Mock JSON 리뷰
+  → Streamlit "fetch batch" 버튼
+  → graph.stream() 1 review = 1 invocation
+  → 답글 초안 + 분류 카드
+  → [복사] / [수정 후 저장]
+  → 매장 톤 학습 (다음 호출에 반영)
 ```
 
-### 2. 앱 실행
+리뷰 한 건이 들어오면 LangGraph 그래프가 다음 노드를 차례로 통과합니다:
 
-현재 `make run`은 Streamlit UI를 실행합니다.
+1. **load_context** — Memory Store에서 매장 메타·과거 답글 톤 샘플·피드백 hint를 읽어 state에 주입
+2. **pii_mask** — 전화·이메일·계좌를 정규식으로 마스킹 (LLM에 raw PII 노출 방지)
+3. **classifier** — Solar Pro 2로 감정·카테고리(멀티라벨)·신뢰도·risk_flag를 한 번에 JSON 출력
+4. **route_by_sentiment** — 감정과 신뢰도로 4갈래 conditional 분기
+5. **drafter** (긍/부/부저신뢰도/중 4종 중 1개 실행) — 매장 톤 + 톤 샘플 few-shot + diff hint를 prompt에 자동 주입
+6. **memory_save** — 사장이 답글 수정·복사 시 톤 샘플을 Memory Store에 append
 
-```bash
-make run
-```
+별도 **batch 그래프**가 주1회 (수동 트리거) 다세션 분석을 수행:
 
-또는
+1. **pattern_aggregator** — SQL query tool을 호출하여 최근 4주 부정 카테고리 TOP 3를 집계
+2. **checklist_generator** — TOP 3와 매장 메뉴·가격대를 보고 점검 To-Do 3~5개 생성
 
-```bash
-uv run streamlit run app.py
-```
+---
 
-LangGraph 데모 실행:
+## 신경 쓴 점
 
-```bash
-uv run python run_graph_demo.py --scenario both --reset-db
-```
+| 영역 | 설계 |
+|---|---|
+| **개인화** | 매장 메뉴·과거 답글 톤 샘플·사장 수정 이력을 Memory Store에 namespace 분리하여 영속. 모든 Drafter 호출 시 자동 주입. |
+| **점진 학습** | 사장이 답글 수정할 때마다 (1) 수정본을 톤 샘플 풀에 추가, (2) AI 원본 vs 사장 수정본 차이를 Solar로 한 줄 요약하여 다음 호출 prompt에 hint로 주입. |
+| **다세션 분석** | 분류 결과를 SQLite에 다대다 정규화로 저장 (`reviews` ⇆ `review_categories`). 4주 윈도우 SQL 집계로 반복 불만을 데이터로 가시화. |
+| **multi-tenant** | 매장별 데이터 격리. Memory Store는 `(place_id, kind)` tuple namespace, SQL은 모든 쿼리에 `place_id` 조건. |
+| **민감정보 보호** | 전화번호·이메일·계좌 등 PII는 Classifier 이전 단계에서 정규식 마스킹. SQLite에는 마스킹된 본문만 저장. |
+| **안전성** | 욕설·법적 위험 표현 감지 시 Classifier가 `risk_flag` 출력 → 부정·저신뢰도 흐름으로 분기되어 *보수적 prompt* 사용 (구체적 약속·정책 변경 표현 회피). |
+| **비용** | 전 노드 Solar Pro 2 (Upstage). SOMA 발급 16만원 free credit 으로 학습·평가·데모 모두 충분. 골든셋 결과에 따라 일부 노드 mini 다운그레이드 검토. |
+| **재현성** | mock 리뷰·시드 데이터는 frozen JSON. DB는 `make seed` 한 번에 초기화. 발표 직전 깨끗한 상태로 reset 가능. |
 
-또는 `uv`가 없으면
+---
 
-```bash
-python3 run_graph_demo.py --scenario both --reset-db
-```
+## Agent 주요 요소
 
-### 3. Streamlit 실행
+### Node — 9개
 
-현재 `app.py`는 단일 페이지 Streamlit UI입니다.
-
-```bash
-uv run streamlit run app.py
-```
-
-## 환경변수 설정
-
-`.env.example`를 복사해 `.env`를 생성하세요.
-
-```bash
-cp .env.example .env
-```
-
-provider 우선순위:
-
-1. `ANTHROPIC_API_KEY`
-2. `OPENAI_API_KEY`
-3. 키가 없으면 `MockProvider`
-
-현재도 API 키가 없으면 `MockProvider`가 기본 동작합니다.
-
-## Agent 구조 설명
-
-### State
-
-현재 `ReviewAgentState`는 아래 필드를 포함합니다.
-
-- `store_id`
-- `session_id`
-- `raw_input_text`
-- `parsed_reviews`
-- `store_context`
-- `classified_reviews`
-- `drafted_replies`
-- `saved_review_ids`
-- `pattern_summary`
-- `checklist`
-- `execution_log`
-- `warnings`
-- `errors`
-
-### Node
-
-구현된 LangGraph node 구성:
-
-1. `InputParserNode`
-2. `ContextLoaderNode`
-3. `ClassifierAgentNode`
-4. `ReplyDrafterAgentNode`
-5. `PersistenceToolNode`
-6. `PatternAgentNode`
-7. `ChecklistAgentNode`
+| 종류 | 노드 | 역할 |
+|---|---|---|
+| Memory I/O | `load_context`, `memory_save` | Cross-thread Memory Store read/write |
+| 전처리 | `pii_mask` | 정규식 마스킹 (LLM 호출 없음) |
+| LLM 분류 | `classifier` | Solar Pro 2, structured JSON 출력 (`response_format=json_schema`) |
+| LLM 생성 | `thanks_drafter` / `apology_drafter` / `apology_drafter_lowconf` / `neutral_drafter` | 4종 — 매장 톤·few-shot·hint 주입 |
+| Batch | `pattern_aggregator`, `checklist_generator` | SQL tool 호출 + 자유 생성 |
+| Chat (별도 graph) | `agent` + `tools` (ReAct) | 매장 비서 — 5개 tool (read+write) 로 사장님 자연어 요청 처리. UI 우측 하단 💬 floating button → dialog. |
 
 ### Edge
 
-구현된 기본 흐름:
+| 종류 | 위치 |
+|---|---|
+| 일반 edge | START → load_context → pii_mask → classifier, drafter → memory_save → END |
+| **Conditional edge** | `route_by_sentiment` 분기 함수가 감정 × 신뢰도 → 4 Drafter 중 1개 선택 |
 
-`InputParserNode -> ContextLoaderNode -> ClassifierAgentNode -> ReplyDrafterAgentNode -> PersistenceToolNode -> PatternAgentNode -> ChecklistAgentNode -> END`
+분기 함수:
 
-### Tool Calling
+```python
+def route_by_sentiment(state: ReviewState) -> str:
+    if state["sentiment"] == "positive":  return "thanks_drafter"
+    if state["sentiment"] == "neutral":   return "neutral_drafter"
+    if state["confidence"] >= 0.7:        return "apology_drafter"
+    return "apology_drafter_lowconf"
+```
 
-SQLite 저장/조회 동작은 tool-like function 형태로 분리했습니다.
+### Tool calling
 
-- `load_store_context_tool`
-- `load_recent_feedback_tool`
-- `save_reviews_tool`
-- `load_negative_review_patterns_tool`
+```python
+@tool
+def query_review_stats(place_id: str, group_by: Literal["category", "sentiment"], days: int = 28) -> str:
+    """Aggregate review categories for a place. Returns JSON of {key: count}."""
+```
+
+- `pattern_aggregator` 노드가 `ChatUpstage.bind_tools([query_review_stats])` 로 LLM 에게 도구를 노출 → LLM이 args 를 결정해 호출 → 결과를 받아 자연어로 TOP 3 정리. trace 가 *decide → sql_tool → summarize* 3단계로 분할.
+- 안전: `group_by`는 enum whitelist만 허용. raw SQL은 tool 내부에서 parameterized query.
 
 ### Memory
 
-메모리는 SQLite 기반으로 설계됩니다.
+LangGraph의 cross-thread `Store` API. `(place_id, kind)` tuple namespace로 매장별 격리.
 
-- 매장 컨텍스트 저장
-- 리뷰 분석 결과 누적
-- 사장님 수정 답글 저장
-- 피드백 이벤트 저장
+| Namespace | 내용 | 쓰기 시점 |
+|---|---|---|
+| `(place_id, "metadata")` | 매장명·업종·메뉴 5~10개·가격대·답글 톤 선호 | 첫 진입 또는 seed 자동 로드 |
+| `(place_id, "tone_samples")` | 사장이 채택/수정한 답글 누적 (최근 N건이 Drafter few-shot으로) | 답글 [복사] 또는 [수정 저장] 시 append |
+| `(place_id, "feedback")` | AI 원본 vs 사장 수정본 diff를 Solar 가 요약한 hint | 톤 샘플 추가 후 비동기 |
 
-### Feedback Loop
+### Streaming
 
-사용자가 수정한 답글은 `feedback_events` 및 `reviews.edited_reply`에 저장되고, 다음 실행 시 최근 수정 예시로 다시 주입됩니다.
+`graph.stream(..., stream_mode='updates')`로 노드 단위 변경분만 받아 Streamlit 사이드바의 그래프 진행 패널에 ✓/⏳/⏸ 아이콘으로 노출. 평가자가 "어느 노드가 지금 동작 중인가"를 시각적으로 추적 가능.
+
+---
 
 ## 데모 시나리오
 
-상세 시나리오는 [docs/demo_scenarios.md](/Users/parksewon/Documents/New%20project%202/review-agent/docs/demo_scenarios.md) 에 정리했습니다.
+### 시나리오 1 — 마감 후 리뷰 5건 정리 (메인 graph)
 
-## 데모 영상 촬영 가이드
+> 저녁 9시. 카페 A 사장은 사이드바에서 "예시 카페 A"를 선택하고 **새 리뷰 5건 가져오기** 버튼을 누른다.
 
-### 어떤 화면을 먼저 보여줄지
+- 그래프가 1건씩 처리하며 사이드바에 노드 진행이 ✓로 차례로 켜진다 (`load_context → pii_mask → classifier → route_by_sentiment → apology_drafter → memory_save`).
+- 5건 처리 후 메인에 카드가 5개 쌓임 — 각 카드에 (a) 분류 결과, (b) 답글 초안, (c) [복사]/[수정] 버튼.
+- 부정 리뷰 카드 1개의 답글을 사장이 살짝 다듬어 [수정 저장]. → 톤 샘플 append + 비동기 diff hint 생성.
+- 마지막 부정 리뷰에서는 직전 수정한 톤이 prompt에 반영되어 답글 톤이 자연스럽게 갱신됨.
 
-- 먼저 사이드바의 매장 컨텍스트 영역을 보여줍니다.
-- 그다음 `데모 모드 초기화` 버튼으로 샘플 매장과 누적 리뷰 memory를 준비합니다.
-- 이후 메인 영역의 리뷰 입력 박스와 샘플 리뷰 버튼을 보여줍니다.
+**핵심 포인트**: 노드 단위 streaming, conditional Router 분기, Memory Store write.
 
-### 어떤 버튼을 누를지
+### 시나리오 2 — 주말 누적 분석 (batch graph)
 
-1. `데모 모드 초기화`
-2. `샘플 리뷰 A 불러오기` 또는 `샘플 리뷰 B 불러오기`
-3. `분석 시작`
-4. 리뷰별 `수정 답글 저장`
+> 일요일 밤. 사장은 **TOP 3 + 체크리스트 새로고침** 버튼을 누른다.
 
-### 백엔드 동작은 어떤 패널에서 확인할지
+- batch graph가 시작 → `pattern_aggregator`가 SQL query tool을 호출 → 최근 4주 부정 카테고리 빈도를 집계 → "대기시간 12회 / 위생 5회 / 가격 3회" 결과를 자연어로 정리.
+- `checklist_generator`가 TOP 3와 매장 메뉴·가격대를 보고 점검 To-Do 3~5개 생성: "피크타임 인력 1명 추가 검토", "빨대 제공 동선 점검" 등.
+- UI 메인 영역의 TOP 3 카드 + 체크리스트 카드가 갱신.
 
-- `Agent 실행 흐름` 영역에서 node 순서를 설명합니다.
-- `백엔드 실행 로그` 패널에서 node별 입력/출력 요약, 실행 시간, DB 저장 여부를 설명합니다.
-- 사이드바의 `개발자 확인용 DB 상태` expander에서 실제 DB 저장 결과를 확인합니다.
+**핵심 포인트**: Tool calling, multi-step batch graph, SQL 집계와 LLM 자유 생성의 결합.
 
-### 프론트엔드 구성은 어떤 영역으로 설명할지
+### 시나리오 4 — 채팅 비서 (별도 chat agent)
 
-- 사이드바: 매장 컨텍스트 입력/수정
-- 메인 상단: 리뷰 붙여넣기, 샘플 리뷰 버튼, 분석 시작 버튼
-- 중간: 요약 카드, 반복 불만 TOP 3, 개선 체크리스트
-- 하단: 리뷰별 결과, 답글 수정 입력란, 실행 로그, 백엔드 실행 로그
+> 사장은 우측 하단 💬 매장 비서 버튼을 클릭. dialog 모달에서 자연어로 요청.
 
-### Agent의 node, edge, tool calling, memory를 영상에서 어떻게 설명할지
+- "오늘 새 리뷰 5건 분석해줘" → `analyze_new_reviews(5)` tool 호출 → main graph 5번 실행 → 결과 요약 token streaming
+- "이번 주 반복 불만" → `get_top_complaints()` → batch graph
+- "내 메뉴랑 톤 샘플 알려줘" → `get_store_info()` → 즉시 답
+- "이 답글 톤 샘플로 추가해줘 — [리뷰] / [내 답글]" → `add_owner_reply(...)` → Memory Store write
 
-- node:
-`Agent 실행 흐름`과 `백엔드 실행 로그`에서 `InputParserNode`부터 `ChecklistAgentNode`까지 순서대로 설명합니다.
-- edge:
-`분석 시작` 클릭 후 node가 다음 node로 이어지는 흐름을 보여주며 edge를 설명합니다.
-- tool calling:
-`PersistenceToolNode`와 `ContextLoaderNode`가 DB tool-like function을 호출하는 구조를 설명합니다.
-- memory:
-`데모 모드 초기화` 후 누적 리뷰가 seed되고, `PatternAgentNode`가 이를 다시 조회하는 장면으로 설명합니다.
-- feedback loop:
-답글을 수정 저장한 뒤 다음 분석에서 최근 수정 답글 샘플 수가 반영되는 장면으로 설명합니다.
+**핵심 포인트**: `langgraph.prebuilt.create_react_agent` ReAct loop, 5개 tool (read+write), token streaming, 매장별 closure 격리.
 
-## In-scope / Out-of-scope
+### 시나리오 3 — 매장 톤 학습 (개인화 효과 비교)
 
-### In-scope
+> 사장이 사이드바에서 매장을 "예시 식당 B (신규)"로 전환한 뒤, 카페 A와 동일한 부정 리뷰("주말 대기가 너무 길어요")를 처리한다.
 
-- SQLite 기반 persistence
-- Mock 기반 전체 플로우 검증 가능 구조
-- LangGraph 확장 가능한 node 분리 구조
-- Streamlit 단일 페이지 앱으로 확장 가능한 프로젝트 구조
+- 식당 B에는 톤 샘플이 0건 → Drafter prompt에 few-shot 블록이 비어있고 매장 메타도 빈약 → 답글이 generic·교과서적.
+- 매장을 카페 A로 다시 전환하면 동일 리뷰에 대한 답글이 톤 샘플 3건 + diff hint를 반영하여 *카페 A의 평소 톤*에 가깝게 생성됨.
+- 두 결과를 나란히 보여 "Memory Store가 매장별로 격리되어 다른 답글이 나온다"는 multi-tenant + 개인화 효과를 동시 시연.
 
-### Out-of-scope
+**핵심 포인트**: Memory Store namespace 격리, tone_samples few-shot 효과, diff hint 누적.
 
-- 외부 리뷰 플랫폼 API 연동: 확장 예정
-- 자동 답글 발행: 확장 예정
-- 관리자/권한 체계: 확장 예정
-- 정교한 통계 대시보드: 확장 예정
+---
 
-## 발표 때 설명할 포인트
+## 기술 스택
 
-### 이 서비스에서 Agent라고 볼 수 있는 이유
+| 영역 | 선택 |
+|---|---|
+| 언어 / 런타임 | Python 3.11 |
+| Agent 프레임워크 | LangGraph + LangChain (core) + `langchain-upstage` |
+| LLM 호출 | Upstage Solar API (`openai` SDK + `base_url=https://api.upstage.ai/v1`) |
+| 모델 | Solar Pro 2 전 노드 (한국어 강점, Ko-MT-Bench 81.0) |
+| 인증 | `UPSTAGE_API_KEY` (Upstage 콘솔 16만원 free credit) |
+| 구조화 출력 | `response_format={"type": "json_schema", ...}` (OpenAI 호환 schema validation) |
+| UI | Streamlit (단일 프로세스) |
+| 저장소 | SQLite (관계 데이터) + LangGraph Memory Store (매장별 KV, JSON dump 영속) |
+| 컨테이너화 | Dockerfile + docker-compose (`make docker-up`) |
+| 패키징 | uv + Makefile |
+| 테스트 | pytest + 자체 골든셋 50건 (5명 cross-label, Fleiss kappa) |
 
-- 입력 리뷰를 파싱하고
-- 매장 컨텍스트를 불러오고
-- 분류와 답글 생성을 수행하고
-- 누적 데이터를 저장하고
-- 다음 실행에 피드백을 반영하는 순차적 의사결정 흐름이 있기 때문입니다.
+---
 
-### 어떤 node가 어떤 역할을 하는지
+## Quick Start
 
-node별 역할은 [docs/agent_architecture.md](/Users/parksewon/Documents/New%20project%202/review-agent/docs/agent_architecture.md) 에 정리했습니다.
+### 옵션 A — 로컬 실행
 
-### tool calling이 어디에 들어가는지
+```bash
+# 1. 환경 변수 설정 (Upstage 콘솔에서 API 키 발급, https://console.upstage.ai)
+cp .env.example .env
+# .env 에서 UPSTAGE_API_KEY 입력
 
-DB 저장/조회와 안전 필터 함수를 tool-like function으로 분리해 Agent node에서 호출하도록 설계합니다.
+# 2. 의존성
+uv sync
 
-### memory가 어떻게 동작하는지
+# 3. 시드 데이터 + DB 초기화 (매장 2개 + mock 리뷰 ~42건)
+make seed
 
-SQLite의 `stores`, `review_sessions`, `reviews`, `feedback_events`가 각각 장기 기억 저장소 역할을 담당합니다.
+# 4. 1 review end-to-end 검증 (graph stream + batch graph)
+make smoke
 
-### 피드백이 어떻게 다음 답글에 반영되는지
+# 5. Streamlit 실행
+make run                # localhost:8501
 
-사용자 수정 답글을 저장하고 최근 수정 이력을 다시 prompt 예시에 주입하는 방식으로 반영합니다.
+# 부속: Graph 다이어그램 (Mermaid)
+make graph-diagram
+```
 
-## 현재 구현 범위
+#### Mock 모드 (오프라인 데모/CI)
 
-현재 완료 기준:
+`UPSTAGE_API_KEY` 가 비어있거나 `REVIEW_OPS_LLM=mock` 이면 모든 Solar 호출이 결정론적 더미 응답으로 자동 대체됩니다 — 네트워크 없이 그래프 회귀 테스트 가능.
 
-- DB 초기화 가능
-- Repository CRUD 가능
-- 샘플 리뷰 로드 가능
-- Mock provider 응답 가능
-- LangGraph graph를 mock provider로 end-to-end 실행 가능
-- Streamlit UI에서 리뷰 분석, 결과 확인, 답글 수정 저장 가능
+```bash
+REVIEW_OPS_LLM=mock make smoke   # 또는 unset UPSTAGE_API_KEY && make run
+```
+
+⚠️ Mock 모드의 채팅 비서는 stub 한 줄만 응답합니다 (실제 ReAct 루프는 실 키 필요).
+
+### 옵션 B — Docker
+
+```bash
+# 1. .env 준비 (옵션 A 와 동일)
+cp .env.example .env
+# UPSTAGE_API_KEY 입력
+
+# 2. 컨테이너 빌드 + 시작
+make docker-build
+make docker-up           # → http://localhost:8501
+
+# 3. 시드 (컨테이너 안에서)
+make docker-seed
+
+# 4. (옵션) smoke test
+make docker-smoke
+
+# 5. 종료
+make docker-down
+```
+
+`docker-compose.yml` 은 `./data` 와 `./migrations` 를 볼륨 마운트해 SQLite + Memory Store dump 가 호스트와 동기화됩니다.
+
+---
+
+## 핵심 KPI
+
+| 지표 | 목표값 |
+|---|---|
+| 분류 정확도 (골든셋 50건) | ≥ 85% |
+| 답글 사용 의향 | ≥ 70% |
+| 처리 시간 단축 | 직접 처리 대비 1/3 이하 |
+| 다세션 반복 불만 TOP 3 정합성 | 3개 중 2개 이상 일치 |
+| 사용성 (무가이드 5분 이내 완료) | ≥ 80% |
+| 개인화 체감 (입력 전/후 비교) | ≥ 60% |
+
+---
+
+## Spec 색인
+
+- [00 — Overview](./docs/spec/00-overview.md)
+- [01 — LangGraph Architecture](./docs/spec/01-langgraph-architecture.md)
+- [02 — Data Model](./docs/spec/02-data-model.md)
+- [03 — Input & Runtime](./docs/spec/03-input-and-runtime.md)
+- [04 — UX & Streaming](./docs/spec/04-ux-and-streaming.md)
+- [05 — Personalization & Feedback Loop](./docs/spec/05-personalization.md)
+- [06 — Models & Evaluation](./docs/spec/06-models-and-evaluation.md)
+- [07 — Team & Demo](./docs/spec/07-team-and-demo.md)
+- [08 — Risks & Deferrals](./docs/spec/08-risks-and-deferrals.md)
+- [CHANGES — Diff from PROPOSAL.md v2](./docs/spec/CHANGES-FROM-PROPOSAL.md)
+
+---
+
+## 학습 회고
+
+- [LangGraph 학습 회고](./docs/LANGGRAPH-LEARNING.md) — 핵심 개념 6가지 + 구현하며 마주친 고민 10가지. 같은 팀·다음 LangGraph 프로젝트 시작할 사람 대상.
+
+---
+
+## 데모 자료
+
+발표 영상 녹화·편집을 위한 일체.
+
+- [시나리오 3종 (액션 사양)](./docs/demo/scenarios.md) — 시나리오별 step-by-step 액션 + 기대 출력 + 노출 surface
+- [영상 대본 (5막 · 6:30)](./docs/demo/script.md) — 시간/화면/narration/자막 매핑
+- [한글 자막 SRT](./docs/demo/subtitles.srt) — DaVinci Resolve · VLC import 가능
+- [녹화 가이드](./docs/demo/recording-guide.md) — OBS 셋업 + 사전 준비 + 편집 + fallback
+
+---
+
+## 라이선스
+
+미정 (SOMA 17기 교육 목적 프로젝트).

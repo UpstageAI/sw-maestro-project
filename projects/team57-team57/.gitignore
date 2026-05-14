@@ -1,0 +1,81 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- uv (keep uv.lock and .python-version) ---
+# uv.lock         # do NOT ignore — required for reproducible installs
+# .python-version # do NOT ignore — pins runtime version
+
+# --- Environment / secrets ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# --- LLM / API credentials ---
+.anthropic
+.openai
+
+# --- Local DB (SQLite) ---
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+data/*.db
+data/local/
+
+# --- Memory Store dump (런타임 생성, 시드로 재생성됨) ---
+data/store_dump.json
+
+# --- Streamlit ---
+.streamlit/secrets.toml
+
+# --- Test / coverage ---
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+
+# --- Type checkers / linters ---
+.mypy_cache/
+.ruff_cache/
+.pyright/
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+
+# --- IDE / editor ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Logs / runtime artifacts ---
+*.log
+logs/
+tmp/
+.cache/

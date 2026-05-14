@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    image: review-ops-agent:latest
+    container_name: review-ops-agent
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    volumes:
+      # SQLite + Memory Store dump 영속 (호스트와 동기화)
+      - ./data:/app/data
+      # migrations 는 read-only
+      - ./migrations:/app/migrations:ro
+    restart: unless-stopped

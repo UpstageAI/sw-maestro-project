@@ -1,0 +1,31 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	load_context(load_context)
+	pii_mask(pii_mask)
+	classifier(classifier)
+	thanks_drafter(thanks_drafter)
+	apology_drafter(apology_drafter)
+	apology_drafter_lowconf(apology_drafter_lowconf)
+	neutral_drafter(neutral_drafter)
+	memory_save(memory_save)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> load_context;
+	apology_drafter --> memory_save;
+	apology_drafter_lowconf --> memory_save;
+	classifier -.-> apology_drafter;
+	classifier -.-> apology_drafter_lowconf;
+	classifier -.-> neutral_drafter;
+	classifier -.-> thanks_drafter;
+	load_context --> pii_mask;
+	neutral_drafter --> memory_save;
+	pii_mask --> classifier;
+	thanks_drafter --> memory_save;
+	memory_save --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc

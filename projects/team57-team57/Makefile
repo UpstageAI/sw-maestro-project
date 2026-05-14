@@ -1,17 +1,54 @@
-PYTHON := $(shell if command -v uv >/dev/null 2>&1; then echo "uv run python"; else echo "python3"; fi)
-STREAMLIT := $(shell if command -v uv >/dev/null 2>&1; then echo "uv run streamlit"; else echo "python3 -m streamlit"; fi)
-PYTEST := $(shell if command -v uv >/dev/null 2>&1; then echo "uv run pytest"; else echo "python3 -m pytest"; fi)
+.PHONY: install seed run smoke graph-diagram test lint format reset clean \
+	docker-build docker-up docker-down docker-logs docker-seed docker-smoke
 
-.PHONY: run init-db test lint
+install:
+	uv sync
+
+seed:
+	uv run python -m src.scripts.seed
 
 run:
-	$(STREAMLIT) run app.py
+	uv run python -m streamlit run src/ui/app.py
 
-init-db:
-	$(PYTHON) -m src.db.schema
+smoke:
+	uv run python -m src.scripts.smoke_test
+
+graph-diagram:
+	uv run python -m src.scripts.draw_graph
 
 test:
-	$(PYTEST)
+	uv run pytest
 
 lint:
-	$(PYTHON) -m compileall app.py src tests
+	uv run ruff check src/ tests/
+	uv run ruff format --check src/ tests/
+
+format:
+	uv run ruff format src/ tests/
+
+reset:
+	uv run python -m src.scripts.reset
+
+clean:
+	uv run python -c "import shutil, pathlib; [shutil.rmtree(p, ignore_errors=True) for p in pathlib.Path('.').rglob('__pycache__')]; [shutil.rmtree(p, ignore_errors=True) for p in pathlib.Path('.').glob('.*_cache')]"
+
+# --- Docker ----------------------------------------------------------------
+
+docker-build:
+	docker compose build
+
+docker-up:
+	docker compose up -d
+	@echo "→ http://localhost:8501"
+
+docker-down:
+	docker compose down
+
+docker-logs:
+	docker compose logs -f app
+
+docker-seed:
+	docker compose exec app uv run python -m src.scripts.seed
+
+docker-smoke:
+	docker compose exec app uv run python -m src.scripts.smoke_test

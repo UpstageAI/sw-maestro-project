@@ -1,0 +1,45 @@
+# Build / venv
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+
+# 캐시
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Git / IDE
+.git/
+.gitignore
+.vscode/
+.idea/
+*.swp
+*~
+
+# Secrets / runtime
+.env
+.env.*
+!.env.example
+data/review_ops.db
+data/store_dump.json
+
+# 문서 (이미지 빌드에서 제외 — 별도 mount 불필요)
+docs/
+PROPOSAL.md
+README.md
+
+# 로그 / OS
+*.log
+.DS_Store
+Thumbs.db
+desktop.ini
