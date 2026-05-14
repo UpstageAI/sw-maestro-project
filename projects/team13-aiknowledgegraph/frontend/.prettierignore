@@ -1,0 +1,37 @@
+# 디펜던시/빌드
+node_modules
+dist
+build
+coverage
+.next
+.out
+
+# 잠재적 정적/바이너리 파일
+*.png
+*.jpg
+*.svg
+*.ico
+*.webp
+*.mp4
+*.mp3
+*.wav
+
+# 환경 파일
+.env
+.env.*
+
+# 캐시/백업
+*.log
+.eslintcache
+
+# 패키지 관리자 lock 파일
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# 개인 개발 환경
+.vscode
+
+# 정적 HTML
+public
+*.min.js

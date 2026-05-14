@@ -1,0 +1,146 @@
+import { StyleSheet } from "react-native";
+
+import { colors, radii } from "../constants/theme";
+
+export const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: colors.indigo50,
+  },
+  topBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  topBarButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.6)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  topBarTitle: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.ink2,
+  },
+  centered: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: colors.muted,
+  },
+  hero: {
+    paddingHorizontal: 24,
+    paddingTop: 30,
+    paddingBottom: 24,
+  },
+  kairosBadge: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: colors.indigo,
+    marginBottom: 12,
+  },
+  kairosBadgeText: {
+    color: "#ffffff",
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  heroTitle: {
+    fontSize: 28,
+    fontWeight: "700",
+    letterSpacing: -0.84,
+    lineHeight: 34,
+    color: colors.ink,
+  },
+  heroMeta: {
+    fontSize: 14,
+    color: colors.muted,
+    marginTop: 6,
+  },
+  sheet: {
+    flex: 1,
+    backgroundColor: colors.paper,
+    borderTopLeftRadius: radii.xl,
+    borderTopRightRadius: radii.xl,
+  },
+  sheetContent: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 36,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.line2,
+  },
+  rowIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: colors.cream2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  rowLabel: {
+    fontSize: 11,
+    color: colors.muted,
+    fontWeight: "500",
+  },
+  rowValue: {
+    fontSize: 14.5,
+    fontWeight: "600",
+    letterSpacing: -0.14,
+    color: colors.ink,
+    marginTop: 1,
+  },
+  rowSub: {
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  originalCard: {
+    marginTop: 14,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: colors.cream,
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "flex-start",
+  },
+  originalIcon: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    backgroundColor: colors.indigo,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  originalLabel: {
+    fontSize: 12,
+    color: colors.muted,
+    fontWeight: "600",
+    marginBottom: 3,
+  },
+  originalText: {
+    fontSize: 13,
+    color: colors.ink2,
+    lineHeight: 20,
+  },
+});

@@ -1,0 +1,13 @@
+{
+  "name": "brainrot-patent",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev:backend": "cd backend && uvicorn app.main:app --reload",
+    "dev:frontend": "cd frontend && npm run dev",
+    "test:backend": "python -m unittest discover -s backend/tests -t .",
+    "test:scaffold": "python scripts/validate_scaffold.py",
+    "test:e2e": "cd tests && npx playwright test"
+  }
+}
+

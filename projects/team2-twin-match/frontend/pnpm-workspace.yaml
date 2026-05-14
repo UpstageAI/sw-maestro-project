@@ -1,0 +1,8 @@
+# sharp: Next.js 이미지 최적화 / unrs-resolver: ESLint resolver
+# 둘 다 공식 의존성이라 빌드 스크립트 실행을 허용한다.
+allowBuilds:
+  sharp: true
+  unrs-resolver: true
+onlyBuiltDependencies:
+  - sharp
+  - unrs-resolver
