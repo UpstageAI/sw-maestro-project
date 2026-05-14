@@ -1,0 +1,85 @@
+{
+  "decision_trace": {
+    "evaluator": {
+      "final_action": "",
+      "reason_codes": []
+    },
+    "execution": {
+      "final_action": "",
+      "reason_codes": []
+    },
+    "policy": {
+      "final_action": "PASS",
+      "reason_codes": [
+        "ORDER_INTENT_NORMALIZED"
+      ]
+    },
+    "risk": {
+      "final_action": "HOLD",
+      "reason_codes": [
+        "STALE_MARKET_SNAPSHOT"
+      ]
+    },
+    "run_summary": {
+      "final_action": "",
+      "reason_codes": []
+    }
+  },
+  "expected": {
+    "hold_reason": "HOLD_DATA_INSUFFICIENT",
+    "lifecycle_status": "HOLD",
+    "risk.reason_codes": [
+      "STALE_MARKET_SNAPSHOT"
+    ]
+  },
+  "input_payload": {
+    "policy_context": {
+      "policy_refs": [
+        "policy.symbol_allowlist",
+        "policy.spot_testnet_only"
+      ]
+    },
+    "request_context": {
+      "request_id": "req_test_001",
+      "request_type": "PLACE_ORDER_TEST",
+      "requested_at": "2026-05-07T10:00:00+09:00",
+      "user_input": {
+        "market_snapshot_fresh": false,
+        "quoteOrderQty": "50",
+        "side": "BUY",
+        "symbol": "BTCUSDT",
+        "type": "MARKET"
+      }
+    },
+    "run_id": "airun_test_001"
+  },
+  "notes": "request_with_user_input(market_snapshot_fresh=False) → risk_node가 HOLD + HOLD_DATA_INSUFFICIENT를 셋팅",
+  "observed": {
+    "hold_reason": "HOLD_DATA_INSUFFICIENT",
+    "lifecycle_status": "HOLD",
+    "risk.reason_codes": [
+      "STALE_MARKET_SNAPSHOT"
+    ]
+  },
+  "passed": true,
+  "purpose": "데이터 부족이 generic failure가 아니라 data hold(HOLD_DATA_INSUFFICIENT)로 분리되는지 확인",
+  "reviewer": "검수자 B",
+  "scenario_id": "QA-B-01",
+  "verification_checks": [
+    {
+      "name": "initial_request_contract",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "name": "policy_context_available",
+      "result": "pass",
+      "stage": "policy"
+    },
+    {
+      "name": "market_snapshot_freshness",
+      "result": "fail",
+      "stage": "risk"
+    }
+  ]
+}

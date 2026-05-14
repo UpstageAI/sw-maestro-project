@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "currentUser": {
+    "name": "Demo PM"
+  },
+  "projects": [
+    {
+      "id": "proj_DEMO0001",
+      "name": "AI 일정관리 MVP 발표 데모",
+      "goal": "문서 기반 PM Agent가 우선순위, 일정, 리스크를 로컬 FE/BE로 분석하는 흐름을 시연한다.",
+      "startsAt": "2026-05-07",
+      "endsAt": "2026-06-30",
+      "baseHours": 40,
+      "defaultWorkStart": "09:00",
+      "defaultWorkEnd": "18:00",
+      "weekendEnabled": false,
+      "weekendWorkStart": "10:00",
+      "weekendWorkEnd": "16:00",
+      "members": [
+        {
+          "id": "mem_DEMO01",
+          "name": "김개발",
+          "role": "Backend",
+          "availableHours": 32,
+          "workStart": "09:00",
+          "workEnd": "18:00"
+        },
+        {
+          "id": "mem_DEMO02",
+          "name": "이프론트",
+          "role": "Frontend",
+          "availableHours": 30,
+          "workStart": "10:00",
+          "workEnd": "18:00"
+        },
+        {
+          "id": "mem_DEMO03",
+          "name": "박PM",
+          "role": "PM",
+          "availableHours": 20,
+          "workStart": "09:00",
+          "workEnd": "16:00"
+        }
+      ],
+      "milestones": [
+        {
+          "id": "ms_DEMO01",
+          "title": "문서 계약 고정",
+          "dueDate": "2026-05-20",
+          "status": "approved",
+          "aiRationale": "API, 데이터, 승인 게이트의 기준을 먼저 고정한다."
+        },
+        {
+          "id": "ms_DEMO02",
+          "title": "FE/BE 통합 데모",
+          "dueDate": "2026-06-10",
+          "status": "approved",
+          "aiRationale": "로컬 FE와 BE가 실제 API로 연결되는 흐름을 시연한다."
+        }
+      ],
+      "tasks": [
+        {
+          "id": "task_DEMO0001",
+          "milestoneId": "ms_DEMO01",
+          "title": "FastAPI 계약 검증",
+          "description": "OpenAPI와 07-data-contracts 기준으로 주요 API 응답을 검증한다.",
+          "assigneeId": "mem_DEMO01",
+          "importance": "critical",
+          "status": "in_progress",
+          "progress": 35,
+          "estimatedHours": 8,
+          "dueDate": "2026-05-18",
+          "predecessorIds": [],
+          "delayReason": null
+        },
+        {
+          "id": "task_DEMO0002",
+          "milestoneId": "ms_DEMO02",
+          "title": "Dashboard 분석 패널 연결",
+          "description": "우선순위, 일정안, 리스크 탭이 backend analyze 응답을 표시하도록 연결한다.",
+          "assigneeId": "mem_DEMO02",
+          "importance": "high",
+          "status": "todo",
+          "progress": 10,
+          "estimatedHours": 12,
+          "dueDate": "2026-05-24",
+          "predecessorIds": [
+            "task_DEMO0001"
+          ],
+          "delayReason": null
+        },
+        {
+          "id": "task_DEMO0003",
+          "milestoneId": "ms_DEMO02",
+          "title": "G2 일정 승인 시연",
+          "description": "추천 슬롯을 선택하고 schedule:approve 응답을 내부 캘린더에 저장한다.",
+          "assigneeId": "mem_DEMO02",
+          "importance": "high",
+          "status": "todo",
+          "progress": 0,
+          "estimatedHours": 6,
+          "dueDate": "2026-05-28",
+          "predecessorIds": [
+            "task_DEMO0002"
+          ],
+          "delayReason": null
+        },
+        {
+          "id": "task_DEMO0004",
+          "milestoneId": "ms_DEMO02",
+          "title": "리스크 과부하 시뮬레이션",
+          "description": "담당자 과부하와 미배정 critical task가 Risk 탭에서 드러나는지 확인한다.",
+          "assigneeId": null,
+          "importance": "critical",
+          "status": "todo",
+          "progress": 0,
+          "estimatedHours": 10,
+          "dueDate": "2026-05-21",
+          "predecessorIds": [],
+          "delayReason": null
+        }
+      ],
+      "events": [
+        {
+          "id": "evt_DEMO0001",
+          "taskId": "task_DEMO0001",
+          "title": "FastAPI 계약 검증",
+          "date": "2026-05-12",
+          "assigneeId": "mem_DEMO01",
+          "startTime": "09:00",
+          "endTime": "12:00",
+          "approved": true,
+          "source": "ai_suggested"
+        }
+      ]
+    }
+  ],
+  "clientMetrics": {
+    "analyzeLatenciesMs": [],
+    "suggestionAcceptanceEvents": []
+  }
+}

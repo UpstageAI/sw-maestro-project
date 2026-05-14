@@ -1,0 +1,102 @@
+[
+  {
+    "symbol": "005930",
+    "name": "삼성전자",
+    "price": 72600,
+    "change": 1200,
+    "changeRate": 1.68,
+    "volume": 18450231,
+    "market": "KOSPI",
+    "updatedAt": "2026-05-07T09:00:00+09:00"
+  },
+  {
+    "symbol": "000660",
+    "name": "SK하이닉스",
+    "price": 152300,
+    "change": -2100,
+    "changeRate": -1.36,
+    "volume": 9861240,
+    "market": "KOSPI",
+    "updatedAt": "2026-05-07T09:00:00+09:00"
+  },
+  {
+    "symbol": "035420",
+    "name": "NAVER",
+    "price": 184500,
+    "change": 3400,
+    "changeRate": 1.88,
+    "volume": 3128805,
+    "market": "KOSPI",
+    "updatedAt": "2026-05-07T09:00:00+09:00"
+  },
+  {
+    "symbol": "035720",
+    "name": "카카오",
+    "price": 45100,
+    "change": -650,
+    "changeRate": -1.42,
+    "volume": 7429912,
+    "market": "KOSPI",
+    "updatedAt": "2026-05-07T09:00:00+09:00"
+  },
+  {
+    "symbol": "373220",
+    "name": "LG에너지솔루션",
+    "price": 312000,
+    "change": 5000,
+    "changeRate": 1.63,
+    "volume": 2265011,
+    "market": "KOSPI",
+    "updatedAt": "2026-05-07T09:00:00+09:00"
+  },
+  {
+    "symbol": "005380",
+    "name": "현대차",
+    "price": 231500,
+    "change": 2700,
+    "changeRate": 1.18,
+    "volume": 4187720,
+    "market": "KOSPI",
+    "updatedAt": "2026-05-07T09:00:00+09:00"
+  },
+  {
+    "symbol": "068270",
+    "name": "셀트리온",
+    "price": 182800,
+    "change": -1800,
+    "changeRate": -0.98,
+    "volume": 3591124,
+    "market": "KOSPI",
+    "updatedAt": "2026-05-07T09:00:00+09:00"
+  },
+  {
+    "symbol": "207940",
+    "name": "삼성바이오로직스",
+    "price": 748000,
+    "change": 8000,
+    "changeRate": 1.08,
+    "volume": 915443,
+    "market": "KOSPI",
+    "updatedAt": "2026-05-07T09:00:00+09:00"
+  },
+  {
+    "symbol": "051910",
+    "name": "LG화학",
+    "price": 382000,
+    "change": -4300,
+    "changeRate": -1.11,
+    "volume": 1217328,
+    "market": "KOSPI",
+    "updatedAt": "2026-05-07T09:00:00+09:00"
+  },
+  {
+    "symbol": "006400",
+    "name": "삼성SDI",
+    "price": 310500,
+    "change": 6200,
+    "changeRate": 2.04,
+    "volume": 1639844,
+    "market": "KOSPI",
+    "updatedAt": "2026-05-07T09:00:00+09:00"
+  }
+]

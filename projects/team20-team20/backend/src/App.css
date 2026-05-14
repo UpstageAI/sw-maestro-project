@@ -1,0 +1,154 @@
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo',
+    'Segoe UI', Roboto, sans-serif;
+  background: #f7f7f8;
+  color: #1a1a1a;
+}
+
+.feed {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+}
+
+.feed-head h1 {
+  margin: 0 0 6px;
+  font-size: 22px;
+}
+
+.feed-head .hint {
+  margin: 0 0 20px;
+  color: #666;
+  font-size: 13px;
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #e5e5e7;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.controls select,
+.controls button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #d0d0d4;
+  background: #fafafa;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.controls .count {
+  margin-left: auto;
+  font-size: 12px;
+  color: #888;
+}
+
+.error {
+  background: #fff5f5;
+  color: #c00;
+  border: 1px solid #ffd0d0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.reports {
+  background: #fff;
+  border: 1px solid #e5e5e7;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+.reports summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.reports ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.reports .warn {
+  color: #b25a00;
+}
+
+.notice-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background: #fff;
+  border: 1px solid #e5e5e7;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.notice-list li {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f0f2;
+}
+
+.notice-list li:last-child {
+  border-bottom: none;
+}
+
+.notice-list a {
+  color: #0a66c2;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.notice-list a:hover {
+  text-decoration: underline;
+}
+
+.notice-list .meta {
+  font-size: 12px;
+  color: #777;
+  margin-top: 4px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.notice-list .src {
+  background: #eef3f9;
+  color: #345;
+  padding: 1px 8px;
+  border-radius: 4px;
+}
+
+.notice-list .empty {
+  color: #888;
+  font-size: 13px;
+  text-align: center;
+}
+
+code {
+  background: #eee;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+}

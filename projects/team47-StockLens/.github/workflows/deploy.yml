@@ -1,0 +1,58 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: python -m pytest tests/test_score_hypotheses.py tests/test_filter_noise.py tests/test_schema.py tests/test_api.py -v
+        env:
+          NEWSAPI_KEY: dummy
+          UPSTAGE_API_KEY: dummy
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 3.34.109.154
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd ~/AI47
+
+            echo "▶ Pulling latest code..."
+            git fetch origin main
+            git checkout main
+            git reset --hard origin/main
+
+            echo "▶ Installing dependencies..."
+            /home/ubuntu/.local/bin/uv pip install -r requirements.txt --python .venv/bin/python
+
+            echo "▶ Restarting service..."
+            sudo systemctl restart ai47
+
+            echo "▶ Health check..."
+            sleep 5
+            curl -sf http://localhost:8000/health || (echo "✗ Health check failed" && exit 1)
+
+            echo "✓ Deploy complete — $(git log -1 --oneline)"

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>분석 — GitHub 포트폴리오</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <div class="chat-shell">
+    <header class="chat-header">
+      <div class="header-left">
+        <div class="brand">
+          <div class="brand-mark">★</div>
+          <div>
+            <h1 id="title">분석</h1>
+            <p class="repo" id="repo-name"></p>
+          </div>
+        </div>
+      </div>
+      <div class="header-right">
+        <span class="elapsed" id="elapsed"></span>
+        <span class="state-pill running" id="state-pill">
+          <span class="dot"></span><span id="state-label">INIT</span>
+        </span>
+        <button id="abort-btn" class="ghost ghost-sm hidden">중단</button>
+      </div>
+    </header>
+
+    <!-- 진행 단계 표시기 -->
+    <div class="step-bar" id="step-bar">
+      <div class="step" data-step="FETCHING"><span class="dot-sm"></span>레포</div>
+      <div class="step" data-step="COMPRESSING"><span class="dot-sm"></span>압축</div>
+      <div class="step" data-step="INTERVIEWING"><span class="dot-sm"></span>인터뷰</div>
+      <div class="step" data-step="GENERATING"><span class="dot-sm"></span>4섹션</div>
+      <div class="step" data-step="VALIDATING"><span class="dot-sm"></span>채점</div>
+      <div class="step" data-step="DIAGRAMMING"><span class="dot-sm"></span>다이어그램</div>
+      <div class="step" data-step="MERGING"><span class="dot-sm"></span>머지</div>
+      <div class="step" data-step="READY_FOR_TEMPLATE"><span class="dot-sm"></span>완료</div>
+    </div>
+
+    <!-- 현재 작업 sticky 배너 — 최신 로그 라인 즉시 표시 -->
+    <div class="activity-strip" id="activity-strip">
+      <span class="spin">◐</span>
+      <span class="activity-label">현재 작업</span>
+      <span class="activity-text" id="activity-text">시작 중…</span>
+    </div>
+
+    <div class="thread" id="thread"></div>
+
+    <div class="composer hidden" id="composer">
+      <div class="composer-card">
+        <div id="composer-content"></div>
+        <div class="composer-actions">
+          <span class="hint" id="composer-hint"></span>
+          <button id="composer-submit" class="primary">제출</button>
+        </div>
+        <p class="err" id="composer-err"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    mermaid.initialize({ startOnLoad: false, theme: "default", securityLevel: "loose" });
+  </script>
+  <script src="/static/app.js"></script>
+</body>
+</html>

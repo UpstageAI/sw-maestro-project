@@ -1,0 +1,17 @@
+{
+  "run_id": "qa-c-03-no-order-001",
+  "request_context": {
+    "request_id": "req_c03_001",
+    "request_type": "PLACE_ORDER_TEST",
+    "requested_at": "2026-05-08T10:00:00+09:00",
+    "user_input": {
+      "symbol": "BTCUSDT",
+      "side": "BUY",
+      "type": "MARKET",
+      "quoteOrderQty": "0"
+    }
+  },
+  "policy_context": {
+    "policy_refs": ["policy.symbol_allowlist", "policy.spot_testnet_only"]
+  }
+}

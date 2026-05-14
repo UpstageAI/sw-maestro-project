@@ -1,0 +1,29 @@
+[I 2026-05-05 20:46:31.423 ServerApp] jupyter_lsp | extension was successfully linked.
+[I 2026-05-05 20:46:31.439 ServerApp] jupyter_server_terminals | extension was successfully linked.
+[I 2026-05-05 20:46:31.456 ServerApp] jupyterlab | extension was successfully linked.
+[I 2026-05-05 20:46:31.469 ServerApp] Writing Jupyter server cookie secret to C:\2025proj\persona\.jupyter_runtime\jupyter_cookie_secret
+[E 2026-05-05 20:46:31.480 ServerApp] Failed to write cookie secret to C:\2025proj\persona\.jupyter_runtime\jupyter_cookie_secret: [WinError 5] 액세스가 거부되었습니다.
+[I 2026-05-05 20:46:33.423 ServerApp] notebook_shim | extension was successfully linked.
+[I 2026-05-05 20:46:33.589 ServerApp] notebook_shim | extension was successfully loaded.
+[I 2026-05-05 20:46:33.593 ServerApp] jupyter_lsp | extension was successfully loaded.
+[I 2026-05-05 20:46:33.593 ServerApp] jupyter_server_terminals | extension was successfully loaded.
+[I 2026-05-05 20:46:33.600 LabApp] JupyterLab extension loaded from C:\2025proj\persona\.venv\Lib\site-packages\jupyterlab
+[I 2026-05-05 20:46:33.600 LabApp] JupyterLab application directory is C:\2025proj\persona\.venv\share\jupyter\lab
+[I 2026-05-05 20:46:33.600 LabApp] Extension Manager is 'pypi'.
+[I 2026-05-05 20:46:33.693 LabApp] Extensions will be fetched using proxy, proxy host and port: ('127.0.0.1', '9')
+[I 2026-05-05 20:46:33.713 ServerApp] jupyterlab | extension was successfully loaded.
+[I 2026-05-05 20:46:33.713 ServerApp] Serving notebooks from local directory: C:\2025proj\persona
+[I 2026-05-05 20:46:33.717 ServerApp] Jupyter Server 2.18.1 is running at:
+[I 2026-05-05 20:46:33.717 ServerApp] http://localhost:8888/lab?token=9de7253d7a63f9cbaf30434818ae68a9bc94f52c74c4d3c6
+[I 2026-05-05 20:46:33.718 ServerApp]     http://127.0.0.1:8888/lab?token=9de7253d7a63f9cbaf30434818ae68a9bc94f52c74c4d3c6
+[I 2026-05-05 20:46:33.719 ServerApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[E 2026-05-05 20:46:33.722 ServerApp] Failed to write server-info to C:\2025proj\persona\.jupyter_runtime\jpserver-38604.json: PermissionError(13, '액세스가 거부되었습니다.', None, 5)
+[C 2026-05-05 20:46:33.728 ServerApp] 
+    
+    To access the server, open this file in a browser:
+        file:///C:/2025proj/persona/.jupyter_runtime/jpserver-38604-open.html
+    Or copy and paste one of these URLs:
+        http://localhost:8888/lab?token=9de7253d7a63f9cbaf30434818ae68a9bc94f52c74c4d3c6
+        http://127.0.0.1:8888/lab?token=9de7253d7a63f9cbaf30434818ae68a9bc94f52c74c4d3c6
+[I 2026-05-05 20:46:34.536 ServerApp] Skipped non-installed server(s): basedpyright, bash-language-server, dockerfile-language-server-nodejs, javascript-typescript-langserver, jedi-language-server, julia-language-server, pyrefly, pyright, python-language-server, python-lsp-server, r-languageserver, sql-language-server, texlab, typescript-language-server, unified-language-server, vscode-css-languageserver-bin, vscode-html-languageserver-bin, vscode-json-languageserver-bin, yaml-language-server
+[I 2026-05-05 21:02:09.611 LabApp] 302 GET /lab (@127.0.0.1) 1.51ms

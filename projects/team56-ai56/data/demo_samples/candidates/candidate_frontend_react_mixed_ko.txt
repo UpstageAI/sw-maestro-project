@@ -1,0 +1,21 @@
+이름: 문가은
+이메일: gaeun.moon@example.com
+연락처: 010-8899-0011
+
+[한 줄 소개]
+React 경험은 충분하지만 정보 시각화와 복잡한 상태 관리 경험은 상대적으로 적습니다.
+
+[기술]
+React, JavaScript, CSS, REST API, GitHub
+
+[프로젝트]
+- 팀 프로젝트에서 상품 목록, 상세 페이지, 검색 기능을 구현했습니다.
+- fetch 기반 API 연동 경험이 있습니다.
+- 반응형 레이아웃과 기본 접근성 수정 경험이 있습니다.
+
+[보완점]
+- TypeScript와 대시보드형 정보 구조 경험은 더 쌓아야 합니다.
+
+GitHub: https://github.com/remix-run
+포트폴리오: https://example.com/gaeun-react
+

@@ -1,0 +1,189 @@
+## Codebase Patterns
+- Frontend: Next.js 14 with App Router in frontend/src/app/
+- Backend: FastAPI in backend/main.py, Python 3.12
+- Docker: hwpx-mcp uses node:20-slim official image (no custom Dockerfile needed)
+- TypeScript typecheck command: `npm run typecheck` (alias for `tsc --noEmit`)
+- Python typecheck: `uv run --with mypy --with fastapi --with httpx mypy main.py mcp_client.py --ignore-missing-imports` (system uses uv, no venv)
+- Session state stored in module-level `_session_last_used: dict[str, float]` in backend/main.py
+- Session dirs: /tmp/sessions/{session_id}/ — created via `touch_session()`, cleaned via `cleanup_expired_sessions()`
+- MCP client in backend/mcp_client.py: HTTP JSON-RPC primary, stdio subprocess fallback
+- FastAPI lifespan used for MCPClient init/teardown; `_mcp_client: MCPClient | None` is module-level global
+- MCP JSON-RPC paths tried in order: /, /rpc, /mcp (hwpx-mcp endpoint unknown ahead of time)
+- Next.js 14 does NOT support `next.config.ts`; must use `next.config.mjs` or `next.config.js`
+- Frontend session ID: stored in localStorage under key `hwp-session-id`, injected as `X-Session-ID` header
+- NEXT_PUBLIC_BACKEND_URL env var used for backend URL (default: http://localhost:8000)
+- File upload: POST /upload with FormData (no explicit Content-Type header — browser sets multipart boundary)
+- Message role 'info' = green success bubble; 'system' = red error bubble
+- Claude agentic loop: _MAX_TOOL_ROUNDS=10; check stop_reason=="tool_use" to continue; build serialisable dicts for messages (not SDK objects)
+- MCP inputSchema → Claude input_schema: always remap camelCase when converting tools for Claude API
+- Use getattr(block, "type", None) for type-safe access to Anthropic content blocks (avoids mypy errors with union types)
+
+---
+
+## 2026-05-08 - US-001
+- What was implemented: Docker Compose scaffolding with three services (frontend Next.js, backend FastAPI, hwpx-mcp)
+- Files changed:
+  - docker-compose.yml (new)
+  - frontend/Dockerfile, frontend/package.json, frontend/tsconfig.json, frontend/next.config.ts
+  - frontend/src/app/layout.tsx, frontend/src/app/page.tsx, frontend/src/app/globals.css
+  - frontend/.eslintrc.json
+  - backend/Dockerfile, backend/main.py, backend/requirements.txt
+  - .env.example, .gitignore, README.md
+- **Learnings for future iterations:**
+  - hwpx-mcp is used via npx/npm install in node:20-slim image; transport mode (HTTP vs stdio) needs verification
+  - Next.js output mode set to "standalone" for Docker compatibility
+  - Frontend typecheck passes with zero errors
+  - The project root is /Users/wonjae/asm/ai-course/ (not a subdirectory)
+  - git repo initialized fresh; first commit on ralph/hwpx-editor-chatbot branch
+---
+
+## 2026-05-08 - US-002
+- What was implemented: FastAPI session management middleware + background cleanup
+  - HTTP middleware reads X-Session-ID header and calls `touch_session()` to create /tmp/sessions/{id}/ dir and update last-used timestamp
+  - `cleanup_expired_sessions()` removes dirs unused for >1 hour; triggered as BackgroundTask in /health endpoint
+  - GET /health now includes BackgroundTask cleanup trigger
+  - Added mypy==1.11.2 to requirements.txt for Python type checking
+- Files changed:
+  - backend/main.py (rewritten with session management)
+  - backend/requirements.txt (added mypy)
+- **Learnings for future iterations:**
+  - System uses `uv` instead of pip/venv; run Python tools via `uv run --with <pkg> <cmd>`
+  - FastAPI middleware signature: `call_next: Callable[[Request], Awaitable[Response]]` from `collections.abc`
+  - `time.monotonic()` preferred over `time.time()` for elapsed-time tracking (no clock drift)
+  - `_session_last_used` dict is module-level state; fine for single-process, would need Redis for multi-worker
+---
+
+## 2026-05-08 - US-004
+- What was implemented: POST /upload endpoint for multipart HWPX file upload
+  - Reads X-Session-ID header; 400 if missing
+  - Rejects non-.hwpx extensions with 400
+  - Rejects files >10MB with 413
+  - Saves uploaded file to /tmp/sessions/{session_id}/current.hwpx
+  - Returns { filename, size, session_id }
+- Files changed:
+  - backend/main.py (added File/UploadFile imports, MAX_UPLOAD_BYTES constant, upload_hwpx endpoint)
+- **Learnings for future iterations:**
+  - `python-multipart` was already in requirements.txt; no new deps needed for file upload
+  - UploadFile.read() returns bytes; use len(data) for size check before writing
+  - touch_session() handles session dir creation and last-used update in one call
+---
+
+## 2026-05-08 - US-003
+- What was implemented: hwpx-mcp HTTP client + stdio subprocess fallback
+  - New `backend/mcp_client.py`: MCPClient class with `connect()`, `list_tools()`, `call_tool()`, `close()`
+  - HTTP mode: sends JSON-RPC 2.0 POST to HWPX_MCP_URL; tries /, /rpc, /mcp paths
+  - stdio fallback: spawns `npx hwpx-mcp` as persistent subprocess, MCP initialize handshake, asyncio.Lock for concurrency
+  - `backend/main.py` updated: FastAPI lifespan initialises MCPClient from HWPX_MCP_URL env var
+  - Added `GET /mcp/tools` and `POST /mcp/call` endpoints
+- Files changed:
+  - backend/mcp_client.py (new)
+  - backend/main.py (lifespan, endpoints, MCPToolCallRequest model)
+- **Learnings for future iterations:**
+  - `asyncio.subprocess.Process` is the correct type for the subprocess; use `asyncio.subprocess.PIPE/DEVNULL`
+  - MCP stdio needs initialize handshake (protocolVersion "2024-11-05") before any tool call
+  - asyncio.Lock required on stdio reads/writes to prevent concurrent request interleaving
+  - FastAPI lifespan `@asynccontextmanager` must yield; use `AsyncGenerator[None, None]` return type for mypy
+  - httpx is already in requirements.txt; no new deps needed for HTTP mode
+---
+
+## 2026-05-08 - US-005
+- What was implemented: Next.js chat UI shell with session management
+  - `frontend/src/app/page.tsx` rewritten as "use client" component
+  - Chat messages rendered as bubbles: user (right, blue), assistant (left, white), system error (center, red)
+  - Input textarea: Enter sends, Shift+Enter adds newline
+  - Loading spinner (CSS animation) in assistant bubble during request
+  - Session ID generated with `crypto.randomUUID()`, stored in localStorage under `hwp-session-id`
+  - All API requests include `X-Session-ID` header; backend URL from `NEXT_PUBLIC_BACKEND_URL`
+  - `globals.css` updated with full chat layout styles
+  - `next.config.ts` → `next.config.mjs` (Next.js 14 doesn't support .ts config files)
+- Files changed:
+  - frontend/src/app/page.tsx (rewritten)
+  - frontend/src/app/globals.css (rewritten)
+  - frontend/next.config.mjs (new)
+  - frontend/next.config.ts (deleted)
+  - frontend/next-env.d.ts (added to repo)
+  - .gitignore (added .gstack/, *.tsbuildinfo)
+- **Learnings for future iterations:**
+  - Next.js 14.2.5 throws at runtime if `next.config.ts` exists; must rename to `.mjs`
+  - `crypto.randomUUID()` available in modern browsers without any import
+  - `void handleSend()` pattern needed for async functions in onClick/onKeyDown to satisfy TypeScript without wrapping in a separate non-async function
+  - Browse verification: dev server must be running; session ID badge + localStorage confirmed working
+---
+
+## 2026-05-08 - US-006
+- What was implemented: 파일 업로드 UI 컴포넌트
+  - Hidden `<input type="file" accept=".hwpx">` triggered by a visible 📎 attach button
+  - Client-side extension validation: non-.hwpx files show red system bubble '지원하지 않는 파일 형식입니다'
+  - Successful upload shows green info bubble '{filename} 업로드 완료'
+  - Upload failure shows red system bubble
+  - `isUploading` state disables attach button (and both buttons) while upload is in flight
+  - Added `role: "info"` to Message interface for non-error system messages
+- Files changed:
+  - frontend/src/app/page.tsx (ChangeEvent import, isUploading state, fileInputRef, handleFileUpload, 📎 button + hidden input)
+  - frontend/src/app/globals.css (.attach-btn styles, .bubble.info green variant)
+- **Learnings for future iterations:**
+  - Reset `e.target.value = ""` immediately after reading files so the same file can be re-selected
+  - Use `void handleFileUpload(e)` inside onChange arrow for async handlers (same pattern as handleSend)
+  - Do NOT send Content-Type header when posting FormData — let the browser set multipart boundary automatically
+  - Add a distinct Message role ('info') rather than overloading 'system' for success vs error visuals
+---
+
+## 2026-05-08 - US-007
+- What was implemented: POST /chat endpoint — core Claude API ↔ hwpx-mcp agentic loop
+  - `ChatRequest` Pydantic model: `{ message: str, session_id: str }`
+  - `_claude_client: anthropic.AsyncAnthropic` initialized in lifespan, closed on shutdown
+  - `/chat` endpoint: fetches MCP tools, converts inputSchema→input_schema, builds system prompt with session file path
+  - Agentic loop (up to 10 rounds): calls Claude, detects tool_use stop_reason, executes tools via `_mcp_client.call_tool`, feeds results back as tool_result messages
+  - Returns `{ response: str, file_ready: bool }` — `file_ready` is true when `current.hwpx` exists in session dir
+  - Degrades gracefully: empty tools list if MCP unavailable; tool errors returned as string content blocks
+- Files changed:
+  - backend/main.py (import json/anthropic, _claude_client global, lifespan update, ChatRequest, /chat endpoint)
+- **Learnings for future iterations:**
+  - Serialize response.content blocks manually to dicts (not SDK objects) before appending to messages list
+  - MCP tools use camelCase `inputSchema`; Claude API requires snake_case `input_schema` — always remap
+  - Use `getattr(block, "type", None)` to access content block type without mypy union errors
+  - AsyncAnthropic client has `.close()` coroutine — must be awaited in lifespan teardown
+  - ANTHROPIC_API_KEY read automatically from env by AsyncAnthropic(); no explicit kwarg needed
+---
+
+## 2026-05-08 - US-008
+- What was implemented: HWPX 파일 다운로드 기능 (PRD US-006)
+  - Backend: `GET /download` endpoint — reads X-Session-ID header, returns `current.hwpx` as file download with `edited_YYYYMMDD_HHMMSS.hwpx` filename
+  - Frontend: `Message.fileReady` boolean field; `handleDownload()` fetches blob and triggers browser save; download button rendered below every assistant bubble
+  - CSS: `.download-row` separator + `.download-btn` (enabled=blue, disabled=grey)
+- Files changed:
+  - backend/main.py (import datetime/FileResponse, GET /download endpoint)
+  - frontend/src/app/page.tsx (fileReady field, handleDownload, download button in message render)
+  - frontend/src/app/globals.css (.bubble.assistant flex-direction:column, .download-row, .download-btn)
+- **Learnings for future iterations:**
+  - `FileResponse` from fastapi.responses handles Content-Disposition and streaming automatically; pass `filename=` kwarg for the download name
+  - `bubble.assistant` had `display:flex; align-items:center` — must change to `flex-direction:column; align-items:flex-start` to stack content above download button
+  - To trigger browser file download from a fetch blob: create ObjectURL, click a hidden `<a>`, then revoke the URL
+  - Parse filename from `content-disposition` header with regex before falling back to a default
+---
+
+## 2026-05-08 - US-008
+- What was implemented: 기본 서식 편집 안내 (폰트, 크기, 정렬, 볼드/이탤릭/밑줄)
+  - Enhanced system prompt in `/chat` endpoint with a "서식 편집 안내" section mapping each formatting request type to the appropriate hwpx-mcp tool (set_font, set_font_size, set_alignment, set_bold, set_italic, set_underline)
+  - Dynamically inserts the list of currently available tools into the system prompt so Claude knows exactly what's supported
+  - Instructs Claude to respond '지원하지 않는 기능입니다' when the requested operation is not in the available tools list
+- Files changed:
+  - backend/main.py (system_prompt expanded with formatting guidance and unsupported-feature handling)
+- **Learnings for future iterations:**
+  - US-008 reuses the US-007 agentic loop unchanged; only the system prompt needed updating
+  - Injecting `available_tool_names` (built from `claude_tools`) into the system prompt lets Claude self-detect unsupported operations without hardcoding a blocklist
+  - System prompt is built AFTER `claude_tools` is populated, so dynamic tool name injection is safe
+---
+
+## 2026-05-08 - US-009
+- What was implemented: HWPX 파일 다운로드 버튼 (already implemented in prior US-008 iteration)
+  - Backend `GET /download` endpoint: reads X-Session-ID header, returns FileResponse with `edited_YYYYMMDD_HHMMSS.hwpx` filename, 404 if no file exists
+  - Frontend `handleDownload()`: fetches blob, creates ObjectURL, triggers `<a>` click for browser download, revokes URL
+  - Download button rendered below every assistant bubble; disabled when `!msg.fileReady`
+  - CSS: `.download-row` separator, `.download-btn` with enabled/disabled styles
+- Files changed: none (code already present from previous iteration; only PRD updated to mark passes: true)
+- **Learnings for future iterations:**
+  - US-009 acceptance criteria says "GET /download?session_id={id}" but implementation correctly uses X-Session-ID header for consistency with all other endpoints
+  - When PRD story is already implemented but not marked, verify typechecks pass and update PRD without re-implementing
+  - FileResponse filename kwarg sets Content-Disposition header; frontend regex `/filename="?([^"]+)"?/` extracts it
+---

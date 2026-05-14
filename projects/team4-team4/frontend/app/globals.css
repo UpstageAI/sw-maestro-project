@@ -1,0 +1,185 @@
+:root {
+  color: #191714;
+  background: #f6f1e8;
+  font-family:
+    "Inter", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+button,
+textarea {
+  font: inherit;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.85fr) minmax(360px, 1.15fr);
+  min-height: 100vh;
+}
+
+.workspace {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 32px;
+  padding: 48px;
+  background: #202724;
+  color: #fffaf0;
+}
+
+.intro {
+  max-width: 620px;
+}
+
+.eyebrow {
+  margin: 0 0 16px;
+  color: #f0b35a;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-size: 44px;
+  line-height: 1.08;
+  letter-spacing: 0;
+}
+
+.intro p:last-child {
+  color: #d9dfd6;
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.composer {
+  display: grid;
+  gap: 12px;
+}
+
+.composer label {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+textarea {
+  width: 100%;
+  min-height: 132px;
+  resize: vertical;
+  border: 1px solid #738071;
+  border-radius: 8px;
+  padding: 16px;
+  color: #fffaf0;
+  background: #151a18;
+  outline: none;
+}
+
+textarea:focus {
+  border-color: #f0b35a;
+}
+
+button {
+  min-height: 48px;
+  border: 0;
+  border-radius: 8px;
+  color: #17130d;
+  background: #f0b35a;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.error {
+  margin: 0;
+  color: #ffcfbc;
+}
+
+.document {
+  padding: 48px;
+  overflow: auto;
+}
+
+.documentHeader {
+  display: grid;
+  gap: 10px;
+  padding-bottom: 24px;
+  border-bottom: 3px double #3a352d;
+}
+
+.documentHeader span {
+  color: #665f52;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.documentHeader strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 32px;
+  line-height: 1.25;
+}
+
+.section {
+  padding: 24px 0;
+  border-bottom: 1px solid #d7cbb9;
+}
+
+.section h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
+.section p,
+.section li {
+  color: #353029;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.section ol,
+.section ul {
+  margin: 0;
+  padding-left: 22px;
+}
+
+.section a {
+  color: #7a4d00;
+  font-weight: 800;
+}
+
+.compact p {
+  margin: 4px 0 0;
+}
+
+footer {
+  padding-top: 20px;
+  color: #756d60;
+  font-size: 13px;
+}
+
+@media (max-width: 860px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace,
+  .document {
+    padding: 28px;
+  }
+
+  h1 {
+    font-size: 34px;
+  }
+}
+

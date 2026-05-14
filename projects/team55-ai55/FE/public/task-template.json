@@ -1,0 +1,13 @@
+{
+  "title": "API 계약 검증",
+  "description": "Backend analyze 응답 필드와 Frontend 표시 상태를 확인한다.",
+  "importance": "high",
+  "status": "todo",
+  "assigneeName": "Backend",
+  "milestoneTitle": "MVP 검증",
+  "dueDate": "2026-05-30",
+  "estimatedHours": 4,
+  "progress": 0,
+  "predecessorTitles": [],
+  "delayReason": null
+}

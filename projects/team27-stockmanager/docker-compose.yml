@@ -1,0 +1,42 @@
+services:
+  api:
+    build: .
+    image: stock-manager:latest
+    container_name: stock-manager-api
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - kis-cache:/app/.cache
+    command: ["uvicorn", "app.api:app", "--host", "0.0.0.0", "--port", "8000"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  ui:
+    build: .
+    image: stock-manager:latest
+    container_name: stock-manager-ui
+    depends_on:
+      api:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      API_BASE: http://api:8000
+    ports:
+      - "8501:8501"
+    command:
+      - streamlit
+      - run
+      - frontend/streamlit_app.py
+      - --server.port=8501
+      - --server.address=0.0.0.0
+      - --server.headless=true
+    restart: unless-stopped
+
+volumes:
+  kis-cache:

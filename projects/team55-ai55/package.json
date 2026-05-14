@@ -1,0 +1,25 @@
+{
+  "name": "make-ai-agent",
+  "private": true,
+  "workspaces": [
+    "FE"
+  ],
+  "scripts": {
+    "dev:fe": "VITE_API_BASE_URL=http://127.0.0.1:8000 npm --workspace FE run dev -- --host 127.0.0.1 --port 5173",
+    "dev:be": "cd BE && RATE_LIMIT_PER_MIN=${RATE_LIMIT_PER_MIN:-120} .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
+    "build:fe": "npm --workspace FE run build",
+    "check:audit": "BE/.venv/bin/python scripts/check_audit_consistency.py",
+    "check:e2e-list": "npm --workspace FE run check:e2e-list",
+    "check:fe-bundle": "node scripts/check_fe_bundle_budget.mjs",
+    "check:local-servers": "BE/.venv/bin/python scripts/check_local_servers.py",
+    "check:openapi": "PYTHONPATH=BE BE/.venv/bin/python scripts/check_openapi_generated.py",
+    "check:upstage-ready": "PYTHONPATH=BE BE/.venv/bin/python scripts/check_upstage_readiness.py",
+    "check:completion": "bash scripts/check_completion_ready.sh",
+    "generate:openapi": "PYTHONPATH=BE BE/.venv/bin/python scripts/generate_openapi_types.py",
+    "qa:local": "bash scripts/run_local_quality_checks.sh",
+    "test:fe": "node FE/tests/apiClientSnapshot.test.mjs",
+    "test:be": "BE/.venv/bin/python -m pytest BE/tests",
+    "test:e2e": "npm --workspace FE run test:e2e",
+    "smoke:local": "BE/.venv/bin/python scripts/local_api_smoke.py ${SMOKE_BASE_URL:-http://127.0.0.1:8000}"
+  }
+}

@@ -1,0 +1,9 @@
+[
+  {"date": "2026-04-21", "type": "헬스", "duration_min": 60, "muscles": ["가슴", "삼두"], "intensity": 4},
+  {"date": "2026-04-23", "type": "러닝", "duration_min": 35, "muscles": ["하체", "코어"], "intensity": 3},
+  {"date": "2026-04-25", "type": "헬스", "duration_min": 70, "muscles": ["등", "이두"], "intensity": 4},
+  {"date": "2026-04-27", "type": "홈트", "duration_min": 25, "muscles": ["코어"], "intensity": 2},
+  {"date": "2026-04-29", "type": "헬스", "duration_min": 65, "muscles": ["하체"], "intensity": 4},
+  {"date": "2026-05-01", "type": "러닝", "duration_min": 40, "muscles": ["하체", "코어"], "intensity": 3},
+  {"date": "2026-05-02", "type": "헬스", "duration_min": 55, "muscles": ["어깨", "삼두"], "intensity": 3}
+]

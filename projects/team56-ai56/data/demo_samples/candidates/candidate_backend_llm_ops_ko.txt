@@ -1,0 +1,22 @@
+이름: 윤태성
+이메일: taesung.yoon@example.com
+연락처: 010-2233-4455
+
+[한 줄 소개]
+LLM API와 운영 로그를 함께 다뤄본 백엔드 지향 지원자입니다.
+
+[기술]
+Python, FastAPI, SQL, Redis, Docker, Logging, GitHub
+
+[프로젝트]
+- LLM 응답을 받아 요약 결과를 API로 제공하는 실험 프로젝트를 만들었습니다.
+- 요청 로그와 오류 로그를 분리해 장애 상황을 재현하기 쉽게 구성했습니다.
+- 캐시 레이어를 넣어 반복 요청 비용을 줄여봤습니다.
+
+[강점]
+- 외부 API 오류 처리와 타임아웃 대응에 관심이 많습니다.
+- README와 실행 가이드를 자세히 남기는 편입니다.
+
+GitHub: https://github.com/psf
+포트폴리오: https://example.com/taesung-llm
+

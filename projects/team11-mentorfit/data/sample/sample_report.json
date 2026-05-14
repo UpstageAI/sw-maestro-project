@@ -1,0 +1,524 @@
+{
+  "team": {
+    "skills": [
+      "React",
+      "Node.js",
+      "AWS"
+    ],
+    "members_r_and_r": "팀장(기획/FE), 팀원1(BE), 팀원2(BE)",
+    "project_plan": "생성형 AI를 활용한 개인 맞춤형 법률 문서 요약 서비스",
+    "program_goals": "소마 과정을 통해 실제 법인 설립 및 시드 투자 유치를 목표로 함",
+    "mentoring_needs": "비즈니스 모델의 시장성 검증과 초기 투자자 대상 피칭 전략에 대한 도움 필요",
+    "fit_conditions": "스타트업 창업가 출신이나 VC 네트워크가 있으신 분"
+  },
+  "generated_at": "2026-05-06T09:40:00+09:00",
+  "top_mentors": [
+    {
+      "mentor": {
+        "id": "mentor_011",
+        "name": "조윤호",
+        "tags": [
+          "Node.js",
+          "React",
+          "TypeScript",
+          "MVP 개발",
+          "풀스택",
+          "창업"
+        ],
+        "bio": "아이디어를 코드로 옮겨 실제 MVP를 빠르게 런칭하고 시장 검증을 수행하는 풀스택 개발을 선호합니다. 초기 스타트업 환경에서의 기술 부채 관리와 애자일 스프린트 운영을 지도합니다.",
+        "career": "연쇄 창업가 및 풀스택 엔지니어 8년",
+        "past_mentoring_projects": "SW마에스트로 15기 전담 멘토. 외국인 유학생 대상의 O2O 주거 매칭 플랫폼 기획 및 풀스택 개발 지도. Node.js와 React를 활용해 단 2개월 만에 MVP를 출시하고 실제 글로벌 유저 1,000명을 확보하는 애자일 스프린트 과정을 밀착 멘토링함. 해당 팀은 소마 인증자 배출 성공."
+      },
+      "disposition": "빠른 실험을 밀어주는 MVP 코치형",
+      "help_areas": [
+        {
+          "tag": "창업"
+        },
+        {
+          "tag": "MVP"
+        },
+        {
+          "tag": "풀스택"
+        },
+        {
+          "tag": "시장검증"
+        }
+      ],
+      "recommendation_reason": "팀의 React, Node.js 기반 역량과 창업 목표가 모두 맞닿아 있어 MVP 출시와 시장 검증을 동시에 밀어줄 수 있습니다. 초기 기술 부채 관리와 애자일 운영 경험도 팀의 빠른 검증 사이클에 적합합니다.",
+      "domain_scores": [
+        {
+          "domain": "기술_깊이",
+          "score": 0.76
+        },
+        {
+          "domain": "아키텍처_설계",
+          "score": 0.78
+        },
+        {
+          "domain": "창업_BM",
+          "score": 0.92
+        },
+        {
+          "domain": "취업_커리어",
+          "score": 0.48
+        },
+        {
+          "domain": "인증_발표",
+          "score": 0.74
+        },
+        {
+          "domain": "협업_기획",
+          "score": 0.86
+        }
+      ],
+      "fit_score": 0.94
+    },
+    {
+      "mentor": {
+        "id": "mentor_015",
+        "name": "신하늘",
+        "tags": [
+          "Python",
+          "Django",
+          "PostgreSQL",
+          "Redis",
+          "백엔드"
+        ],
+        "bio": "Python 생태계 기반의 견고한 백엔드 서버를 설계합니다. RDBMS의 복잡한 쿼리 튜닝과 Redis를 활용한 캐싱 전략으로 응답 속도를 개선하는 백엔드 심화 과정을 다룹니다.",
+        "career": "데이터 기반 에듀테크 백엔드 리드 8년",
+        "past_mentoring_projects": "SW마에스트로 16기 전담 멘토. B2B SaaS 기반의 AI 법률 문서 요약 및 판례 검색 서비스 팀 지도. 초기 기획 단계에서 비즈니스 모델(BM) 피벗을 유도하고, 안정적인 Python/Django 백엔드 아키텍처 설계를 지원함. 해당 팀은 데모데이 1위를 차지하고 현재 프리-A 라운드 투자 유치 완료."
+      },
+      "disposition": "데이터로 피벗을 이끄는 백엔드 전략가형",
+      "help_areas": [
+        {
+          "tag": "백엔드"
+        },
+        {
+          "tag": "BM 피벗"
+        },
+        {
+          "tag": "투자유치"
+        },
+        {
+          "tag": "데모데이"
+        }
+      ],
+      "recommendation_reason": "AI 법률 문서 요약과 유사한 B2B SaaS 지도 경험이 있어 팀의 서비스 방향과 수익 모델을 현실적으로 점검할 수 있습니다. 백엔드 안정성과 투자 유치 관점의 피벗 경험도 보완점입니다.",
+      "domain_scores": [
+        {
+          "domain": "기술_깊이",
+          "score": 0.82
+        },
+        {
+          "domain": "아키텍처_설계",
+          "score": 0.84
+        },
+        {
+          "domain": "창업_BM",
+          "score": 0.86
+        },
+        {
+          "domain": "취업_커리어",
+          "score": 0.56
+        },
+        {
+          "domain": "인증_발표",
+          "score": 0.82
+        },
+        {
+          "domain": "협업_기획",
+          "score": 0.74
+        }
+      ],
+      "fit_score": 0.89
+    },
+    {
+      "mentor": {
+        "id": "mentor_016",
+        "name": "장현우",
+        "tags": [
+          "Agentic AI",
+          "LangChain",
+          "LLM",
+          "Python",
+          "생성형AI"
+        ],
+        "bio": "단순한 챗봇을 넘어, 외부 도구(API)를 호출하고 스스로 추론하여 작업을 수행하는 AI 에이전트(Agentic AI) 파이프라인을 설계합니다. LLM의 할루시네이션을 제어하는 프롬프트 엔지니어링을 멘토링합니다.",
+        "career": "생성형 AI 전문 기업 AI 엔지니어 4년",
+        "past_mentoring_projects": "SW마에스트로 16기 멘토. 시각 장애인을 위한 온디바이스 AI 기반 실시간 주변 환경 음성 안내 프로젝트 지도. LLM 에이전트 설계 및 RAG 시스템 구축을 지원하였으며, 기술적 난이도를 높게 평가받아 특별상 수상."
+      },
+      "disposition": "LLM 리스크를 구조화하는 기술 검증형",
+      "help_areas": [
+        {
+          "tag": "LLM"
+        },
+        {
+          "tag": "Agentic AI"
+        },
+        {
+          "tag": "프롬프트"
+        },
+        {
+          "tag": "기술검증"
+        }
+      ],
+      "recommendation_reason": "생성형 AI 기반 법률 요약 서비스에서 중요한 LLM 품질, 도구 호출, 할루시네이션 제어를 점검할 수 있습니다. 팀의 기술 차별화와 시연 안정성을 높이는 데 직접적인 도움이 됩니다.",
+      "domain_scores": [
+        {
+          "domain": "기술_깊이",
+          "score": 0.9
+        },
+        {
+          "domain": "아키텍처_설계",
+          "score": 0.76
+        },
+        {
+          "domain": "창업_BM",
+          "score": 0.5
+        },
+        {
+          "domain": "취업_커리어",
+          "score": 0.58
+        },
+        {
+          "domain": "인증_발표",
+          "score": 0.7
+        },
+        {
+          "domain": "협업_기획",
+          "score": 0.62
+        }
+      ],
+      "fit_score": 0.86
+    },
+    {
+      "mentor": {
+        "id": "mentor_002",
+        "name": "박서준",
+        "tags": [
+          "Python",
+          "FastAPI",
+          "MLOps",
+          "Docker & Kubernetes",
+          "LLM",
+          "인프라"
+        ],
+        "bio": "AI 모델을 연구 단계에서 끝내지 않고 실제 프로덕션 환경에 배포하는 MLOps 파이프라인을 구축합니다. 트래픽 폭주 시의 Auto-scaling과 CI/CD 구축, LLM 모델의 서빙 최적화를 주로 다룹니다.",
+        "career": "AI 모빌리티 스타트업 플랫폼 엔지니어 7년",
+        "past_mentoring_projects": ""
+      },
+      "disposition": "서비스화를 끝까지 챙기는 인프라 실전형",
+      "help_areas": [
+        {
+          "tag": "MLOps"
+        },
+        {
+          "tag": "배포"
+        },
+        {
+          "tag": "LLM 서빙"
+        },
+        {
+          "tag": "인프라"
+        }
+      ],
+      "recommendation_reason": "생성형 AI 서비스를 실제 사용자에게 안정적으로 제공하려면 배포, 확장, CI/CD 관점이 필요합니다. MVP 이후 실서비스 전환 단계에서 팀의 기술 리스크를 줄여줄 수 있습니다.",
+      "domain_scores": [
+        {
+          "domain": "기술_깊이",
+          "score": 0.86
+        },
+        {
+          "domain": "아키텍처_설계",
+          "score": 0.82
+        },
+        {
+          "domain": "창업_BM",
+          "score": 0.48
+        },
+        {
+          "domain": "취업_커리어",
+          "score": 0.62
+        },
+        {
+          "domain": "인증_발표",
+          "score": 0.58
+        },
+        {
+          "domain": "협업_기획",
+          "score": 0.56
+        }
+      ],
+      "fit_score": 0.8
+    },
+    {
+      "mentor": {
+        "id": "mentor_017",
+        "name": "권민수",
+        "tags": [
+          "VectorDB",
+          "RAG",
+          "NLP",
+          "데이터 사이언스",
+          "검색엔진"
+        ],
+        "bio": "사내 문서나 방대한 데이터베이스를 기반으로 정확한 답변을 생성하는 RAG(검색 증강 생성) 시스템을 고도화합니다. 임베딩 모델 파인튜닝과 하이브리드 검색 기법을 통한 응답 품질 개선을 다룹니다.",
+        "career": "엔터프라이즈 검색 솔루션 연구원 5년",
+        "past_mentoring_projects": ""
+      },
+      "disposition": "검색 품질을 집요하게 다듬는 RAG 고도화형",
+      "help_areas": [
+        {
+          "tag": "RAG"
+        },
+        {
+          "tag": "검색"
+        },
+        {
+          "tag": "NLP"
+        },
+        {
+          "tag": "품질개선"
+        }
+      ],
+      "recommendation_reason": "법률 문서 요약 서비스에서 근거 검색과 응답 정확도는 핵심 품질 지표입니다. RAG와 하이브리드 검색 경험을 통해 데모의 신뢰도를 높이는 데 기여할 수 있습니다.",
+      "domain_scores": [
+        {
+          "domain": "기술_깊이",
+          "score": 0.88
+        },
+        {
+          "domain": "아키텍처_설계",
+          "score": 0.72
+        },
+        {
+          "domain": "창업_BM",
+          "score": 0.42
+        },
+        {
+          "domain": "취업_커리어",
+          "score": 0.54
+        },
+        {
+          "domain": "인증_발표",
+          "score": 0.62
+        },
+        {
+          "domain": "협업_기획",
+          "score": 0.5
+        }
+      ],
+      "fit_score": 0.76
+    }
+  ],
+  "recommended_combinations": [
+    {
+      "mentor_ids": [
+        "mentor_011",
+        "mentor_015",
+        "mentor_016"
+      ],
+      "strengths": [
+        "MVP 개발, 백엔드 안정화, LLM 기술 검증을 한 조합 안에서 모두 다룰 수 있음",
+        "창업 목표와 데모데이 성과를 동시에 고려하는 멘토링 포트폴리오 구성",
+        "법률 문서 요약 서비스의 기술 차별성과 시장 검증 리스크를 균형 있게 점검 가능"
+      ],
+      "gaps": [
+        "투자자 관점의 피칭 스토리와 재무적 설득력은 별도 보완 필요",
+        "법률 도메인 전문가 검증과 규제 리스크 점검은 추후 외부 자문 필요",
+        "취업 포트폴리오 관점의 커리어 코칭은 상대적으로 낮은 우선순위"
+      ],
+      "combined_domain_scores": [
+        {
+          "domain": "기술_깊이",
+          "score": 0.83
+        },
+        {
+          "domain": "아키텍처_설계",
+          "score": 0.79
+        },
+        {
+          "domain": "창업_BM",
+          "score": 0.86
+        },
+        {
+          "domain": "취업_커리어",
+          "score": 0.54
+        },
+        {
+          "domain": "인증_발표",
+          "score": 0.78
+        },
+        {
+          "domain": "협업_기획",
+          "score": 0.8
+        }
+      ],
+      "free_mentoring_supplements": [
+        {
+          "mentor": {
+            "id": "mentor_021",
+            "name": "김철수",
+            "tags": [
+              "비기술멘토",
+              "창업",
+              "투자유치",
+              "비즈니스모델",
+              "스타트업"
+            ],
+            "bio": "투자 관점에서의 스타트업 비즈니스 모델을 점검하고 피칭 스킬을 멘토링합니다.",
+            "career": "벤처캐피탈 심사역 5년",
+            "past_mentoring_projects": ""
+          },
+          "disposition": "투자자 관점으로 날카롭게 묻는 피칭 코치형",
+          "help_areas": [
+            {
+              "tag": "투자유치"
+            },
+            {
+              "tag": "비즈니스모델"
+            },
+            {
+              "tag": "피칭"
+            },
+            {
+              "tag": "창업"
+            }
+          ],
+          "recommendation_reason": "상위 기술 멘토 조합에서 부족한 투자자 관점의 비즈니스 모델 점검과 피칭 설득력을 보완할 수 있습니다. 자유멘토링으로 짧게 연결해도 데모데이 메시지 정리에 효과적입니다.",
+          "domain_scores": [
+            {
+              "domain": "기술_깊이",
+              "score": 0.22
+            },
+            {
+              "domain": "아키텍처_설계",
+              "score": 0.2
+            },
+            {
+              "domain": "창업_BM",
+              "score": 0.94
+            },
+            {
+              "domain": "취업_커리어",
+              "score": 0.42
+            },
+            {
+              "domain": "인증_발표",
+              "score": 0.82
+            },
+            {
+              "domain": "협업_기획",
+              "score": 0.72
+            }
+          ],
+          "fit_score": 0.82
+        }
+      ]
+    },
+    {
+      "mentor_ids": [
+        "mentor_016",
+        "mentor_002",
+        "mentor_017"
+      ],
+      "strengths": [
+        "LLM 에이전트 설계, 모델 서빙, RAG 검색 품질을 한 흐름으로 검증할 수 있음",
+        "생성형 AI 서비스의 기술 신뢰도와 운영 안정성을 우선적으로 끌어올리는 조합",
+        "법률 문서 요약 서비스의 응답 정확도와 배포 리스크를 함께 점검 가능"
+      ],
+      "gaps": [
+        "MVP 시장 검증과 BM 피벗 관점은 창업 멘토 조합보다 약함",
+        "투자자 대상 피칭 스토리와 사업화 메시지는 자유멘토링 보완 필요",
+        "프론트엔드 제품 경험과 사용자 인터뷰 설계는 별도 보완 필요"
+      ],
+      "combined_domain_scores": [
+        {
+          "domain": "기술_깊이",
+          "score": 0.88
+        },
+        {
+          "domain": "아키텍처_설계",
+          "score": 0.78
+        },
+        {
+          "domain": "창업_BM",
+          "score": 0.5
+        },
+        {
+          "domain": "취업_커리어",
+          "score": 0.6
+        },
+        {
+          "domain": "인증_발표",
+          "score": 0.66
+        },
+        {
+          "domain": "협업_기획",
+          "score": 0.58
+        }
+      ],
+      "free_mentoring_supplements": [
+        {
+          "mentor": {
+            "id": "mentor_021",
+            "name": "김철수",
+            "tags": [
+              "비기술멘토",
+              "창업",
+              "투자유치",
+              "비즈니스모델",
+              "스타트업"
+            ],
+            "bio": "투자 관점에서의 스타트업 비즈니스 모델을 점검하고 피칭 스킬을 멘토링합니다.",
+            "career": "벤처캐피탈 심사역 5년",
+            "past_mentoring_projects": ""
+          },
+          "disposition": "투자자 관점으로 날카롭게 묻는 피칭 코치형",
+          "help_areas": [
+            {
+              "tag": "투자유치"
+            },
+            {
+              "tag": "비즈니스모델"
+            },
+            {
+              "tag": "피칭"
+            },
+            {
+              "tag": "창업"
+            }
+          ],
+          "recommendation_reason": "기술 검증 중심 조합에서 부족한 사업화 관점과 투자자 메시지를 보완할 수 있습니다. 자유멘토링으로 연결하면 기술 데모를 비즈니스 설득 구조로 정리하는 데 도움이 됩니다.",
+          "domain_scores": [
+            {
+              "domain": "기술_깊이",
+              "score": 0.22
+            },
+            {
+              "domain": "아키텍처_설계",
+              "score": 0.2
+            },
+            {
+              "domain": "창업_BM",
+              "score": 0.94
+            },
+            {
+              "domain": "취업_커리어",
+              "score": 0.42
+            },
+            {
+              "domain": "인증_발표",
+              "score": 0.82
+            },
+            {
+              "domain": "협업_기획",
+              "score": 0.72
+            }
+          ],
+          "fit_score": 0.82
+        }
+      ]
+    }
+  ]
+}

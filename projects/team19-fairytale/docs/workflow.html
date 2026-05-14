@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<title>Fairytale · Agentic Workflow 설명</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root {
+    --bg: #0f1226;
+    --bg2: #161a3a;
+    --panel: rgba(255,255,255,0.04);
+    --panel-strong: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.10);
+    --text: #e9ecff;
+    --muted: #9aa3d1;
+    --dim: #6f78a8;
+    --plan: #b9a8ff;
+    --write: #7fdcff;
+    --critique: #ffd07a;
+    --finalize: #82e6bd;
+    --bad: #ff8aa3;
+    --ok: #7ce8bb;
+    --warn: #ffb547;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Pretendard", sans-serif;
+    color: var(--text);
+    background:
+      radial-gradient(1200px 700px at 80% -10%, rgba(124,92,255,0.20), transparent 60%),
+      radial-gradient(1000px 600px at -10% 110%, rgba(43,196,255,0.15), transparent 60%),
+      linear-gradient(180deg, var(--bg), var(--bg2));
+    line-height: 1.65;
+    font-size: 15px;
+  }
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 48px 28px 100px;
+  }
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 22px;
+    margin-bottom: 32px;
+  }
+  header .eyebrow {
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  h1 {
+    font-size: 30px;
+    margin: 8px 0 8px;
+    letter-spacing: -0.01em;
+  }
+  header .lead {
+    color: var(--muted);
+    font-size: 14px;
+    max-width: 720px;
+  }
+  h2 {
+    font-size: 20px;
+    margin: 44px 0 14px;
+    letter-spacing: -0.005em;
+  }
+  h3 {
+    font-size: 15px;
+    margin: 22px 0 8px;
+    color: var(--text);
+  }
+  p { color: #d6dbf5; margin: 8px 0; }
+  code {
+    background: rgba(255,255,255,0.07);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    color: #e0e6ff;
+  }
+  pre {
+    background: rgba(0,0,0,0.32);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: #cfd6f7;
+  }
+  ul, ol { padding-left: 22px; color: #d6dbf5; }
+  li { margin: 4px 0; }
+  strong { color: #fff; }
+
+  /* ── 흐름도 ── */
+  .flow {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 18px;
+    margin: 18px 0 8px;
+  }
+  .flow svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .flow .legend {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 12px;
+  }
+  .flow .legend span::before {
+    content: "";
+    display: inline-block;
+    width: 18px; height: 2px;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  .flow .legend .ok::before    { background: #7c5cff; }
+  .flow .legend .loop::before  { background: var(--warn); border-top: 2px dashed var(--warn); height: 0; }
+  .flow .legend .end::before   { background: var(--finalize); }
+
+  /* ── 단계별 카드 ── */
+  .stage {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 24px;
+    margin: 22px 0;
+    background: var(--panel);
+    position: relative;
+    overflow: hidden;
+  }
+  .stage::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+  }
+  .stage.plan::before     { background: var(--plan); }
+  .stage.write::before    { background: var(--write); }
+  .stage.critique::before { background: var(--critique); }
+  .stage.finalize::before { background: var(--finalize); }
+  .stage .head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .stage .num {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    color: var(--muted);
+  }
+  .stage.plan .num     { color: var(--plan); }
+  .stage.write .num    { color: var(--write); }
+  .stage.critique .num { color: var(--critique); }
+  .stage.finalize .num { color: var(--finalize); }
+  .stage h2 { margin: 0; font-size: 22px; }
+  .stage .role {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+
+  /* 2열 그리드 */
+  .grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 12px;
+  }
+  @media (max-width: 760px) {
+    .grid2 { grid-template-columns: 1fr; }
+  }
+  .box {
+    background: var(--panel-strong);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .box h4 {
+    margin: 0 0 6px;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+  }
+  .box.fail h4 { color: var(--bad); }
+  .box.fail { border-color: rgba(255,138,163,0.30); }
+  .box.auto h4 { color: var(--ok); }
+  .box.auto { border-color: rgba(124,232,187,0.25); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 13px;
+  }
+  th, td {
+    text-align: left;
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; }
+
+  .pill {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .pill.pass { background: rgba(65,211,156,0.18); color: var(--ok); border: 1px solid rgba(65,211,156,0.4); }
+  .pill.fail { background: rgba(255,107,138,0.16); color: var(--bad); border: 1px solid rgba(255,107,138,0.4); }
+  .pill.warn { background: rgba(255,181,71,0.16); color: var(--warn); border: 1px solid rgba(255,181,71,0.4); }
+  .pill.idle { background: rgba(255,255,255,0.06); color: var(--muted); border: 1px solid var(--border); }
+
+  .callout {
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--warn);
+    background: rgba(255,181,71,0.06);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin: 14px 0;
+    font-size: 14px;
+  }
+  .callout.ok { border-left-color: var(--ok); background: rgba(124,232,187,0.06); }
+
+  footer {
+    color: var(--dim);
+    font-size: 12px;
+    margin-top: 50px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Fairytale · AI Module</div>
+  <h1>일기 → 동화 생성 Agentic Workflow</h1>
+  <p class="lead">
+    LangGraph 위에서 <b>3개의 LLM 에이전트(기획자 · 작가 · 편집자)</b>가 협업해서 한 편의 동화를 만든다.
+    각 단계는 정해진 자율성을 갖고 결정을 내리며, 미달 시 코드 레벨의 안전장치가 개입한다.
+    아래 문서는 <code>backend/app/graph/nodes.py</code>의 실제 동작을 설명한다.
+  </p>
+</header>
+
+<!-- ────────── 흐름도 ────────── -->
+<section class="flow">
+  <svg viewBox="0 0 1080 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="플로우 다이어그램">
+    <defs>
+      <marker id="arrow"     viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#7c5cff"/>
+      </marker>
+      <marker id="arrowWarn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#ffb547"/>
+      </marker>
+      <marker id="arrowOk"   viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#41d39c"/>
+      </marker>
+
+      <linearGradient id="gPlan" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stop-color="rgba(185,168,255,0.18)"/>
+        <stop offset="1" stop-color="rgba(185,168,255,0.04)"/>
+      </linearGradient>
+      <linearGradient id="gWrite" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stop-color="rgba(127,220,255,0.18)"/>
+        <stop offset="1" stop-color="rgba(127,220,255,0.04)"/>
+      </linearGradient>
+      <linearGradient id="gCrit" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stop-color="rgba(255,208,122,0.18)"/>
+        <stop offset="1" stop-color="rgba(255,208,122,0.04)"/>
+      </linearGradient>
+      <linearGradient id="gFin" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stop-color="rgba(130,230,189,0.18)"/>
+        <stop offset="1" stop-color="rgba(130,230,189,0.04)"/>
+      </linearGradient>
+    </defs>
+
+    <!-- 상단 라벨 -->
+    <text x="540" y="34" text-anchor="middle" fill="#e9ecff" font-size="13" font-weight="700">LangGraph StateGraph (GraphState 공유)</text>
+    <text x="540" y="54" text-anchor="middle" fill="#9aa3d1" font-size="11">각 노드는 독립된 LLM 호출 — 앞 노드의 출력이 뒤 노드의 프롬프트로 들어간다</text>
+    <line x1="80" y1="78" x2="1000" y2="78" stroke="rgba(255,255,255,0.08)" stroke-dasharray="3 4"/>
+
+    <!-- 노드 레이아웃 (가로 중앙선 y=170, 박스 y=130~210)
+         x 좌표 / 가로 폭:
+           입력      x=20   w=110   (오른쪽 끝 130)
+           PLAN      x=200  w=140   (오른쪽 끝 340)   gap 70
+           WRITE     x=420  w=140   (오른쪽 끝 560)   gap 80
+           CRITIQUE  x=640  w=140   (오른쪽 끝 780)   gap 80
+           FINALIZE  x=860  w=140   (오른쪽 끝 1000)  gap 80
+           END       cx=1050 r=22                       gap 28
+    -->
+
+    <!-- 입력 -->
+    <g>
+      <rect x="20"  y="140" width="110" height="60" rx="12"
+            fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.20)"/>
+      <text x="75"  y="166" text-anchor="middle" fill="#e9ecff" font-size="12" font-weight="700">입력</text>
+      <text x="75"  y="184" text-anchor="middle" fill="#9aa3d1" font-size="11">diary + people</text>
+    </g>
+
+    <!-- PLAN -->
+    <g>
+      <rect x="200" y="130" width="140" height="80" rx="14" fill="url(#gPlan)" stroke="#b9a8ff" stroke-width="1.4"/>
+      <text x="270" y="154" text-anchor="middle" fill="#b9a8ff" font-size="11" font-weight="800" letter-spacing="2.2">① PLAN</text>
+      <text x="270" y="174" text-anchor="middle" fill="#fff"   font-size="14" font-weight="700">기획자</text>
+      <text x="270" y="192" text-anchor="middle" fill="#9aa3d1" font-size="11">outline 설계</text>
+    </g>
+
+    <!-- WRITE -->
+    <g>
+      <rect x="420" y="130" width="140" height="80" rx="14" fill="url(#gWrite)" stroke="#7fdcff" stroke-width="1.4"/>
+      <text x="490" y="154" text-anchor="middle" fill="#7fdcff" font-size="11" font-weight="800" letter-spacing="2.2">② WRITE</text>
+      <text x="490" y="174" text-anchor="middle" fill="#fff"   font-size="14" font-weight="700">작가</text>
+      <text x="490" y="192" text-anchor="middle" fill="#9aa3d1" font-size="11">동화 본문 집필</text>
+    </g>
+
+    <!-- CRITIQUE -->
+    <g>
+      <rect x="640" y="130" width="140" height="80" rx="14" fill="url(#gCrit)" stroke="#ffd07a" stroke-width="1.4"/>
+      <text x="710" y="154" text-anchor="middle" fill="#ffd07a" font-size="11" font-weight="800" letter-spacing="2.2">③ CRITIQUE</text>
+      <text x="710" y="174" text-anchor="middle" fill="#fff"   font-size="14" font-weight="700">편집자</text>
+      <text x="710" y="192" text-anchor="middle" fill="#9aa3d1" font-size="11">4축 채점</text>
+    </g>
+
+    <!-- FINALIZE -->
+    <g>
+      <rect x="860" y="130" width="140" height="80" rx="14" fill="url(#gFin)" stroke="#82e6bd" stroke-width="1.4"/>
+      <text x="930" y="154" text-anchor="middle" fill="#82e6bd" font-size="11" font-weight="800" letter-spacing="2.2">④ FINALIZE</text>
+      <text x="930" y="174" text-anchor="middle" fill="#fff"   font-size="14" font-weight="700">확정</text>
+      <text x="930" y="192" text-anchor="middle" fill="#9aa3d1" font-size="11">draft → story</text>
+    </g>
+
+    <!-- END -->
+    <g>
+      <circle cx="1050" cy="170" r="22" fill="rgba(130,230,189,0.12)" stroke="#82e6bd" stroke-width="1.4"/>
+      <text x="1050" y="174" text-anchor="middle" fill="#82e6bd" font-size="11" font-weight="800" letter-spacing="1.5">END</text>
+    </g>
+
+    <!-- ── 직선 화살표 (가로 중앙 y=170) ── -->
+    <g stroke-width="2" fill="none" stroke-linecap="round">
+      <line x1="132" y1="170" x2="192" y2="170" stroke="#7c5cff" marker-end="url(#arrow)"/>
+      <line x1="342" y1="170" x2="412" y2="170" stroke="#7c5cff" marker-end="url(#arrow)"/>
+      <line x1="562" y1="170" x2="632" y2="170" stroke="#7c5cff" marker-end="url(#arrow)"/>
+      <!-- critique → finalize : passed -->
+      <line x1="782" y1="170" x2="852" y2="170" stroke="#41d39c" marker-end="url(#arrowOk)"/>
+      <!-- finalize → END -->
+      <line x1="1002" y1="170" x2="1024" y2="170" stroke="#41d39c" marker-end="url(#arrowOk)"/>
+    </g>
+
+    <!-- passed ✓ 라벨 -->
+    <text x="817" y="160" text-anchor="middle" fill="#7ce8bb" font-size="10.5" font-weight="700">passed ✓</text>
+
+    <!-- ── 재집필 루프: 직선 3개 (down → left → up) ──
+         CRITIQUE 하단 중앙 (710, 210) → 아래(710, 300) → 좌(490, 300) → 위(490, 212)
+    -->
+    <g fill="none" stroke="#ffb547" stroke-width="2" stroke-dasharray="6 5" stroke-linecap="round">
+      <line x1="710" y1="210" x2="710" y2="300"/>
+      <line x1="710" y1="300" x2="490" y2="300"/>
+      <line x1="490" y1="300" x2="490" y2="214" marker-end="url(#arrowWarn)"/>
+    </g>
+
+    <!-- 루프 라벨 (가로 직선 위에 pill로 얹기) -->
+    <g>
+      <rect x="458" y="343" width="284" height="22" rx="11"
+            fill="rgba(255,181,71,0.10)" stroke="rgba(255,181,71,0.35)"/>
+      <text x="600" y="358" text-anchor="middle" fill="#ffb547" font-size="11" font-weight="700">
+        passed = false &amp; revision_count ≤ 1 → revise
+      </text>
+    </g>
+  </svg>
+  <div class="legend">
+    <span class="ok">정상 진행</span>
+    <span class="loop">재집필 루프 (조건부)</span>
+    <span class="end">END 분기</span>
+  </div>
+</section>
+
+<p style="margin-top:14px; color: var(--muted); font-size: 13px;">
+  정상 케이스의 LLM 호출은 <b>3회</b>(plan + write + critique). 첫 critique 미달 시 1회 재집필이 들어가 최대 <b>5회</b>(plan + write×2 + critique×2)에서 강제 종료된다.
+</p>
+
+<!-- ────────── 자율성 vs 안전장치 ────────── -->
+<h2>에이전트의 자율성과 안전장치</h2>
+<p>
+  각 노드는 <b>LLM이 자유롭게 결정하는 부분</b>과 <b>코드가 강제하는 부분</b>이 구분되어 있다.
+  자율성은 창의성을 위해 허용하되, 미달·파싱 실패·안전 위반은 코드 레벨에서 차단한다.
+</p>
+<table>
+  <thead>
+    <tr>
+      <th style="width:14%">노드</th>
+      <th>LLM 자율성 (스스로 결정)</th>
+      <th>코드 강제 (자율성 제약)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><span class="pill" style="background:rgba(185,168,255,0.15); color:var(--plan); border:1px solid rgba(185,168,255,0.4);">PLAN</span></td>
+      <td>setting/protagonist/마법 장치/갈등/결말의 <b>구체 내용 전부</b>. 어떤 동물·자연물로 의인화할지, 마법 장치의 모티프를 무엇으로 잡을지.</td>
+      <td>JSON 스키마 6개 슬롯 강제 · 인물 카테고리별 매핑 규칙 (가족=보호자, 친구=갈등/협력, 선생님=안내자) · 파싱 실패 시 raw 텍스트 fallback.</td>
+    </tr>
+    <tr>
+      <td><span class="pill" style="background:rgba(127,220,255,0.15); color:var(--write); border:1px solid rgba(127,220,255,0.4);">WRITE</span></td>
+      <td>문체·운율·의성어/의태어 선택, 사건 묘사 디테일, 캐릭터 대사. 재집필 시 critique 코멘트를 어떻게 반영할지의 <b>판단</b>.</td>
+      <td>분량 6~10문장 · 5~7세 어휘 · 폭력/공포/혐오/직접 훈계 금지 · JSON 출력 형식 · 깨진 JSON은 정규식 폴백으로 복구.</td>
+    </tr>
+    <tr>
+      <td><span class="pill" style="background:rgba(255,208,122,0.15); color:var(--critique); border:1px solid rgba(255,208,122,0.4);">CRITIQUE</span></td>
+      <td>4축 1~5점 채점 · 자유 코멘트로 어디를 어떻게 고치라고 지시 (이게 다음 write의 입력이 됨).</td>
+      <td>점수 1~5 클램핑 · 누락 항목 보정 · safety 누락은 0점 강제 · 파싱 실패 시 강제 미통과.</td>
+    </tr>
+    <tr>
+      <td><span class="pill" style="background:rgba(130,230,189,0.15); color:var(--finalize); border:1px solid rgba(130,230,189,0.4);">FINALIZE</span></td>
+      <td>없음 (LLM 호출 없음).</td>
+      <td>마지막 draft를 story로 단순 복사. 빈 body는 service 레이어에서 <code>StoryParsingError</code>.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ────────── 단계별 상세 ────────── -->
+
+<!-- ① PLAN -->
+<article class="stage plan">
+  <div class="head">
+    <span class="num">STAGE ①</span>
+    <h2>PLAN — 기획자 LLM</h2>
+  </div>
+  <div class="role">일기와 인물 정보를 동화 세계의 뼈대(JSON)로 변환한다. 본문은 아직 쓰지 않는다.</div>
+
+  <h3>입력 / 출력</h3>
+  <ul>
+    <li><b>입력</b>: <code>diary</code>, <code>people</code> (가족/친구/선생님/이웃/기타로 그룹화된 텍스트)</li>
+    <li><b>출력 슬롯</b>: <code>setting</code>, <code>protagonist</code>, <code>companions[]</code>, <code>magical_element</code>, <code>conflict</code>, <code>resolution</code></li>
+  </ul>
+
+  <h3>자율성</h3>
+  <p>"엄마"를 달빛 사슴으로 바꿀지 곰 할머니로 바꿀지, "블록 다툼"을 어떤 마법 장치 갈등으로 풀지는 LLM이 결정한다.
+  이 자유도는 같은 일기로도 매번 다른 동화가 나오게 만드는 핵심이다.</p>
+
+  <div class="grid2">
+    <div class="box auto">
+      <h4>✅ 통과 조건</h4>
+      <p>JSON 파싱 성공 → <code>outline</code>을 indent 2로 정돈해서 다음 노드로 전달.</p>
+    </div>
+    <div class="box fail">
+      <h4>❌ 미달 / 실패 시</h4>
+      <ul>
+        <li><b>JSON 파싱 실패</b>: 코드펜스 제거 + <code>{...}</code> brace 추출로 재시도. 그래도 실패하면 <b>raw 텍스트 그대로</b> outline에 저장 (write 노드가 텍스트로라도 읽을 수 있게).</li>
+        <li><b>LLM 호출 자체 실패</b>: <code>_safe_invoke</code>가 <code>LLMUnavailableError(stage="plan")</code>로 감싸 throw → 그래프 중단 → service에서 503으로 매핑.</li>
+        <li>스키마 슬롯이 빠져도 별도 검증은 없다 (write 단계의 프롬프트가 outline의 결함을 보완).</li>
+      </ul>
+    </div>
+  </div>
+</article>
+
+<!-- ② WRITE -->
+<article class="stage write">
+  <div class="head">
+    <span class="num">STAGE ②</span>
+    <h2>WRITE — 작가 LLM</h2>
+  </div>
+  <div class="role">outline을 따라 한 편의 동화를 쓴다. 재호출 시에는 직전 critique 피드백을 반영해 고쳐 쓴다.</div>
+
+  <h3>입력 / 출력</h3>
+  <ul>
+    <li><b>입력</b>: <code>diary</code>, <code>people</code>, <code>outline</code>, (재호출 시) <code>critique.scores</code> + <code>critique.comment</code></li>
+    <li><b>출력</b>: <code>{ "title": "...", "body": "..." }</code></li>
+  </ul>
+
+  <h3>자율성</h3>
+  <p>도입부 ("옛날 옛적", "어느 별빛 흐르는 밤에"...), 의성어/의태어 선택, 운율, 캐릭터 대사·묘사를 LLM이 결정한다.
+  특히 <b>재집필 시</b> critique이 던진 자유 코멘트를 어떻게 반영할지의 판단이 작가의 핵심 자율성이다 — "톤이 너무 무겁다"는 지적을 보고
+  의성어를 추가할지, 결말 분위기를 바꿀지를 LLM이 스스로 정한다.</p>
+
+  <h3>제약 (시스템 프롬프트)</h3>
+  <ul>
+    <li>분량 6~10 문장, 5~7세 어휘</li>
+    <li>일기의 현실 사물·장소를 outline의 마법 장치로 변환해서 사용</li>
+    <li>폭력/공포/혐오/직접 훈계 금지 — 교훈은 결말 분위기로만</li>
+  </ul>
+
+  <div class="grid2">
+    <div class="box auto">
+      <h4>✅ 통과 조건</h4>
+      <p>응답에서 title/body 추출 성공 → <code>draft_title</code>, <code>draft_body</code>, <code>revision_count += 1</code> 갱신.</p>
+    </div>
+    <div class="box fail">
+      <h4>❌ 미달 / 실패 시</h4>
+      <ul>
+        <li><b>JSON 깨짐</b>: <code>_parse_story</code>가 3단계 폴백 — ① 정상 JSON 파싱 → ② 정규식 <code>"title":"..."</code> / <code>"body":"..."</code> 추출 → ③ 마지막 수단으로 <code>title="오늘의 동화"</code>, <code>body=원문 그대로</code>.</li>
+        <li><b>분량/어휘 위반</b>: 코드는 직접 검증하지 않는다. <b>다음 단계의 critique이 채점으로 잡아내고 재집필을 트리거</b>한다.</li>
+        <li><b>LLM 호출 실패</b>: <code>LLMUnavailableError(stage="write")</code>.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout">
+    <b>재집필 루프의 작동:</b> <code>revision_count > 0</code>이면 user 프롬프트에
+    <code>"[이전 원고에 대한 비평가의 지적 — 반드시 반영해서 다시 쓸 것]"</code> 블록이 추가된다.
+    LLM은 이전 자기 출력이 아니라 <b>비평을 보고</b> 다시 쓴다 — self-refine 패턴.
+  </div>
+</article>
+
+<!-- ③ CRITIQUE -->
+<article class="stage critique">
+  <div class="head">
+    <span class="num">STAGE ③</span>
+    <h2>CRITIQUE — 편집자 LLM</h2>
+  </div>
+  <div class="role">방금 쓰인 draft를 4축 1~5점으로 채점하고 자유 코멘트를 단다. 통과/실패 라우팅의 근거가 된다.</div>
+
+  <h3>4개 채점 축 (<code>CRITIQUE_KEYS</code>)</h3>
+  <table>
+    <tr><th>키</th><th>의미</th></tr>
+    <tr><td><code>fairy_tale</code></td><td>동화적 분위기 (옛날옛적 톤, 마법 장치, 의인화, 의성어/의태어)</td></tr>
+    <tr><td><code>age_vocab</code></td><td>5~7세 어휘 적절성</td></tr>
+    <tr><td><code>character_mapping</code></td><td>입력 인물의 카테고리/역할이 캐릭터에 잘 녹아들었는가</td></tr>
+    <tr><td><code>safety</code></td><td>공포·폭력·직접 훈계·차별 표현이 없는가</td></tr>
+  </table>
+
+  <h3>통과 기준</h3>
+  <p>
+    <code>average ≥ PASS_THRESHOLD (4.0)</code> AND 파싱 성공 → <code>passed=True</code>.
+  </p>
+
+  <h3>자율성</h3>
+  <p>각 항목에 몇 점을 줄지, 어떤 부분을 어떻게 고치라고 코멘트할지는 전적으로 LLM이 결정한다.
+  이 코멘트가 다음 write의 프롬프트에 그대로 들어가므로 <b>편집자 LLM은 작가 LLM에게 직접 지시를 내리는 권한</b>을 갖는다.</p>
+
+  <div class="grid2">
+    <div class="box auto">
+      <h4>✅ 통과 (passed=True)</h4>
+      <p><code>route_after_critique</code>가 <code>"finalize"</code> 반환 → 다음은 finalize.</p>
+    </div>
+    <div class="box fail">
+      <h4>❌ 미달 / 파싱 실패 시</h4>
+      <ul>
+        <li><b>점수 클램핑</b>: <code>_clamp_score</code>가 정수 변환 실패 시 3점, 1~5 범위 강제.</li>
+        <li><b>safety 누락</b>: <b>0점으로 강제</b> — 평균이 절대 4.0을 못 넘게 한다 (위험 콘텐츠 차단).</li>
+        <li><b>그 외 항목 누락</b>: 보수적으로 3점.</li>
+        <li><b>JSON 파싱 자체 실패</b>: <code>parsing_failed=True</code> + safety 0점 + <code>passed=False</code>. 위험 콘텐츠가 통과되는 경로 차단.</li>
+        <li><b>route_after_critique</b>: <code>passed=False</code>이고 <code>revision_count ≤ MAX_REVISIONS(=1)</code>이면 <code>"write"</code> 반환 → 재집필 루프 진입.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout">
+    <b>핵심 안전장치:</b> safety 누락 시 0점 강제는, "LLM이 safety 항목을 빼먹는 행위 = 평가 불가능 = 통과 불가"로 처리하는 보수적 정책이다.
+    무한 루프는 <code>MAX_REVISIONS</code> 한도로 막는다.
+  </div>
+</article>
+
+<!-- 라우팅 -->
+<h2>라우팅: <code>route_after_critique</code></h2>
+<pre>def route_after_critique(state):
+    crit = state.get("critique") or {}
+    rev = state.get("revision_count", 0)
+    if crit.get("passed") or rev > MAX_REVISIONS:
+        return "finalize"
+    return "write"</pre>
+
+<table>
+  <tr><th>상황</th><th>passed</th><th>revision_count</th><th>다음</th></tr>
+  <tr><td>1차 critique 통과</td><td><span class="pill pass">True</span></td><td>1</td><td>finalize</td></tr>
+  <tr><td>1차 미달 → 재집필</td><td><span class="pill fail">False</span></td><td>1</td><td>write (2차)</td></tr>
+  <tr><td>2차도 미달 → 한도 초과</td><td><span class="pill fail">False</span></td><td>2</td><td>finalize <span class="pill warn">강제</span></td></tr>
+  <tr><td>2차 통과</td><td><span class="pill pass">True</span></td><td>2</td><td>finalize</td></tr>
+</table>
+<p style="color:var(--muted); font-size:13px;">
+  최악의 경우에도 LLM 호출은 plan(1) + write(2) + critique(2) = <b>5회</b>에서 멈춘다.
+  품질이 끝까지 미달이어도 <b>마지막 draft가 그대로 사용자에게 나간다</b> — 빈 응답 대신 "덜 좋은 동화"를 주는 정책.
+</p>
+
+<!-- ④ FINALIZE -->
+<article class="stage finalize">
+  <div class="head">
+    <span class="num">STAGE ④</span>
+    <h2>FINALIZE — 확정 노드 (LLM 호출 없음)</h2>
+  </div>
+  <div class="role">draft를 story로 옮겨 담는 단순 변환. 후처리 훅을 끼워넣기 위한 자리.</div>
+
+  <h3>동작</h3>
+  <pre>def finalize(state):
+    return {"story": StoryOut(
+        title=state.get("draft_title", "오늘의 동화"),
+        body=state.get("draft_body", ""),
+    )}</pre>
+
+  <div class="grid2">
+    <div class="box auto">
+      <h4>✅ 정상</h4>
+      <p>title/body가 채워진 <code>StoryOut</code>이 최종 상태에 들어가고 그래프 종료(END).</p>
+    </div>
+    <div class="box fail">
+      <h4>❌ 빈 body</h4>
+      <p>모든 폴백을 거쳐도 body가 비어 있으면 <code>service.generate_story</code> 레이어에서 <code>StoryParsingError</code>로 변환 — 502 매핑.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ────────── 미달 시나리오 정리 ────────── -->
+<h2>요약: "미달" 상황별 처리</h2>
+<table>
+  <thead>
+    <tr><th>상황</th><th>발생 단계</th><th>처리</th><th>최종 결과</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>LLM 응답 JSON 깨짐</td>
+      <td>plan</td>
+      <td>raw 텍스트로 fallback해서 write에 그대로 전달</td>
+      <td>동화는 만들어짐 (품질은 critique이 검증)</td>
+    </tr>
+    <tr>
+      <td>LLM 응답 JSON 깨짐</td>
+      <td>write</td>
+      <td>정규식으로 title/body 추출 → 그것마저 실패 시 원문 전체를 body로</td>
+      <td>동화는 만들어짐</td>
+    </tr>
+    <tr>
+      <td>LLM 응답 JSON 깨짐</td>
+      <td>critique</td>
+      <td>safety 0점 + passed=False → 재집필 트리거</td>
+      <td>최대 1회 재집필 후 그대로 finalize</td>
+    </tr>
+    <tr>
+      <td>safety 점수 누락</td>
+      <td>critique</td>
+      <td>0점 강제 — 평균이 4.0을 못 넘음</td>
+      <td>재집필 루프 진입</td>
+    </tr>
+    <tr>
+      <td>품질 평균 < 4.0</td>
+      <td>critique</td>
+      <td>passed=False → write 재호출 (이번엔 critique 코멘트 첨부)</td>
+      <td>2차 통과 시 finalize, 또 미달이어도 한도 초과로 finalize</td>
+    </tr>
+    <tr>
+      <td>LLM 호출 자체 실패</td>
+      <td>any</td>
+      <td><code>LLMUnavailableError(stage=...)</code> throw → 그래프 중단</td>
+      <td>service 레이어에서 503으로 매핑</td>
+    </tr>
+    <tr>
+      <td>최종 body가 빈 문자열</td>
+      <td>finalize 이후</td>
+      <td><code>StoryParsingError</code></td>
+      <td>502</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ────────── 설계 의도 ────────── -->
+<h2>설계 의도 — 왜 이렇게 쪼갰나</h2>
+
+<h3>1. 단일 책임 LLM은 더 잘 한다</h3>
+<p>한 번의 LLM 호출에 "기획 + 집필 + 검수"를 다 시키면 어느 하나가 약해진다. 분리하면 각 시스템 프롬프트가 짧고 명확해지고, 모델이 한 가지 역할에 집중한다.</p>
+
+<h3>2. 객관적 평가 가능</h3>
+<p>critique은 자기가 쓴 글이 아닌 <b>독립된 컨텍스트</b>의 draft를 본다 → self-evaluation의 bias를 줄인다. 4축 정량 점수 덕분에 통과/실패 분기가 결정론적이다.</p>
+
+<h3>3. 자율성 ↔ 안전장치의 이중 레이어</h3>
+<ul>
+  <li><b>프롬프트 레벨</b>: "폭력/공포/훈계 금지" 같은 가이드</li>
+  <li><b>코드 레벨</b>: critique safety 0점 강제, 점수 클램핑, 파싱 fallback, MAX_REVISIONS 한도</li>
+</ul>
+<p>LLM의 자유 출력을 신뢰하되, 핵심 안전 속성(점수 범위, safety 평가 누락 차단, 무한 루프 방지)은 코드가 보장한다.</p>
+
+<h3>4. 빈 응답보다는 덜 좋은 동화</h3>
+<p>모든 폴백·강제 finalize는 "사용자에게 빈 화면을 보여주지 않는다"는 정책이다. 품질이 미달이어도 가능한 한 동화를 돌려주고, 진짜 시스템 실패(LLM 호출 실패, body 추출 완전 실패)에서만 예외를 던진다.</p>
+
+<footer>
+  근거 코드 — <code>backend/app/graph/builder.py</code>, <code>backend/app/graph/nodes.py</code>, <code>backend/app/graph/state.py</code>, <code>backend/app/service.py</code>.
+  상수: <code>MAX_REVISIONS=1</code>, <code>PASS_THRESHOLD=4.0</code>, <code>CRITIQUE_KEYS=("fairy_tale","age_vocab","character_mapping","safety")</code>.
+</footer>
+
+</div>
+</body>
+</html>

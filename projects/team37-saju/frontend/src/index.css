@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #7C3AED;
+  --color-primary-light: #A78BFA;
+  --color-primary-dark: #5B21B6;
+  --color-cream: #FAF5FF;
+  --color-cream-dark: #F3E8FF;
+  --color-gold: #F59E0B;
+  --color-gold-light: #FCD34D;
+  --shadow-soft: 0 4px 20px rgba(124, 58, 237, 0.08);
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--color-cream);
+    color: #1a1a1a;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  .bg-mystic {
+    background: linear-gradient(160deg, #FAF5FF 0%, #F3E8FF 50%, #EDE9FE 100%);
+  }
+
+  .bg-mystic-dark {
+    background: linear-gradient(160deg, #EDE9FE 0%, #DDD6FE 50%, #C4B5FD 100%);
+  }
+
+  .text-gradient-primary {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}

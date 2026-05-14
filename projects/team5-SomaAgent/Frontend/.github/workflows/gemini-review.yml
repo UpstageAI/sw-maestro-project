@@ -1,0 +1,41 @@
+name: Gemini Code Review
+
+# PR이 생성되거나 업데이트될 때마다 작동
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write # PR에 댓글을 달기 위한 권한
+
+    steps:
+      - name: 1. 저장소 코드 가져오기
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 전체 히스토리를 가져와 변경점(diff)을 비교할 수 있게 함
+
+      - name: 2. 변경된 코드(Diff) 추출하기
+        run: |
+          git diff origin/${{ github.base_ref }}...HEAD > pr_diff.txt
+
+      - name: 3. Node.js 환경 세팅
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 4. 리뷰 스크립트 실행 (Gemini 호출)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: node script/review.mjs
+
+      - name: 5. PR에 리뷰 댓글 달기
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -f review_result.txt ]; then
+            gh pr comment ${{ github.event.pull_request.number }} -F review_result.txt
+          fi

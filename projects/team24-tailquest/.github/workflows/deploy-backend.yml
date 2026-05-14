@@ -1,0 +1,59 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy-backend.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/deploy.pem
+          chmod 600 ~/.ssh/deploy.pem
+          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Sync backend source
+        # rsync source only — never .venv (we want EC2's Linux wheels, not the
+        # runner's), never .chroma / .materials / data / .env (state lives on
+        # EC2 and the deploy must not touch it).
+        run: |
+          rsync -az --delete \
+            --exclude='.venv' \
+            --exclude='.chroma' \
+            --exclude='.materials' \
+            --exclude='data' \
+            --exclude='.env' \
+            --exclude='__pycache__' \
+            --exclude='*.pyc' \
+            --exclude='*.egg-info' \
+            -e "ssh -i ~/.ssh/deploy.pem -o StrictHostKeyChecking=no" \
+            backend/ \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/tail-question/backend/
+
+      - name: Install deps + restart
+        # uv pip install -e . is idempotent — only changed deps re-install,
+        # so steady-state deploys are fast (a few seconds).
+        run: |
+          ssh -i ~/.ssh/deploy.pem -o StrictHostKeyChecking=no \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+            'set -e
+             export PATH="$HOME/.local/bin:$PATH"
+             cd /home/ubuntu/tail-question/backend
+             uv pip install -e . --python .venv/bin/python --quiet
+             sudo systemctl restart tq-backend
+             sleep 6
+             curl -fsS http://127.0.0.1:8000/health'

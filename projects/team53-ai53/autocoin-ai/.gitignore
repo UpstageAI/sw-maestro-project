@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.runtime/
+dist/
+build/
+*.egg-info/
+.sisyphus/*
+.ref/*
+docs/.ref/*
+.DS_Store
+.omc/
+docs/.omc/
