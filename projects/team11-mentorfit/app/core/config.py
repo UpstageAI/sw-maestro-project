@@ -25,6 +25,9 @@ class Settings(BaseSettings):
 
     llm_endpoint_rate_limit: int = 30
     llm_endpoint_rate_window_seconds: int = 60
+    recommendation_endpoint_rate_limit: int = 5
+    recommendation_endpoint_rate_window_seconds: int = 60
+    recommendation_top_k_max: int = 5
 
     model_config = SettingsConfigDict(
         env_file=".env",

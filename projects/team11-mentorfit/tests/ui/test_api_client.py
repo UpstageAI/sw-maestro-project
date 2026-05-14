@@ -113,6 +113,71 @@ async def test_create_report_parses_response(
 
 
 @pytest.mark.asyncio
+async def test_create_recommendation_from_session_parses_response(
+    monkeypatch,
+    team_profile: TeamProfile,
+    candidate: CandidateResult,
+    mentor: Mentor,
+):
+    combination = CombCandidateResult(
+        mentor_id=1,
+        candidate_ids=[],
+        strengths=[],
+        weak_points=[],
+        rank=1,
+        reason="기술 스택이 적합합니다.",
+        weak_point="일정 확인이 필요합니다.",
+    )
+
+    async def fake_request_json(method: str, path: str, *, json=None):
+        assert method == "POST"
+        assert path == "/api/recommendations"
+        assert json["chat_messages"] == [{"role": "user", "content": "팀 정보"}]
+        assert json["team_profile"]["skills"] == "Python, FastAPI"
+        assert json["draft_profile"] is None
+        assert json["ready_for_recommendation"] is True
+        assert json["collection_status"] == "ready"
+        assert "mentors" not in json
+        assert "candidates" not in json
+        assert "combinations" not in json
+        return {
+            "team_profile": team_profile.model_dump(mode="json"),
+            "team_report": "팀 리포트",
+            "candidates": [candidate.model_dump(mode="json")],
+            "combinations": [combination.model_dump(mode="json")],
+            "mentors": [mentor.model_dump(mode="json")],
+            "recommendation_report": {
+                "team_summary": "팀 요약",
+                "confidence_basis": "근거",
+                "candidate_summary": "후보 요약",
+                "combinations": [],
+                "final_recommendation": "최종 추천",
+                "cautions": [],
+                "generated_at": "2026-05-12T00:00:00+00:00",
+            },
+        }
+
+    monkeypatch.setattr(api_client, "_request_json", fake_request_json)
+
+    response = await api_client.create_recommendation_from_session(
+        chat_messages=[ChatMessage(role="user", content="팀 정보")],
+        team_profile=team_profile,
+        draft_profile=None,
+        team_report="팀 리포트",
+        ready_for_recommendation=True,
+        collection_status="ready",
+        current_matching_status=None,
+        top_k=1,
+        prefilter_top_n=10,
+    )
+
+    assert response.candidates == [candidate]
+    assert response.combinations == [combination]
+    assert response.mentors == [mentor]
+    assert response.recommendation_report.team_summary == "팀 요약"
+
+
+@pytest.mark.asyncio
 async def test_request_json_turns_status_error_into_api_error(monkeypatch):
     request = httpx.Request("GET", "http://test/api")
     response = httpx.Response(500, json={"detail": "서버 오류"}, request=request)

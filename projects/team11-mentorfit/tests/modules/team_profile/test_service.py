@@ -6,12 +6,15 @@ from pydantic import ValidationError
 from app.modules.team_profile.schemas import (
     ChatMessage,
     MemberProfile,
+    NextQuestionLLMResponse,
     TeamProfilePromptLLMResponse,
     TeamProfilePromptRequest,
     TeamProfileRequest,
 )
 from app.modules.team_profile.service import (
+    NEXT_QUESTION_JSON_CONTRACT,
     NEXT_QUESTION_RESPONSE_FORMAT,
+    NEXT_QUESTION_SYSTEM_PROMPT,
     TEAM_PROFILE_PROMPT_JSON_CONTRACT,
     TEAM_PROFILE_PROMPT_RESPONSE_FORMAT,
     build_team_profile_prompt_messages,
@@ -188,10 +191,45 @@ def test_prompt_system_message_forbids_abbreviated_one_character_outputs():
 
 def test_response_format_rejects_whitespace_only_text_fields():
     prompt_schema = TEAM_PROFILE_PROMPT_JSON_CONTRACT
-    question_schema = NEXT_QUESTION_RESPONSE_FORMAT["json_schema"]["schema"]
+    question_schema = NEXT_QUESTION_JSON_CONTRACT
 
     assert prompt_schema["properties"]["team_report"]["pattern"] == "\\S"
     assert question_schema["properties"]["next_question"]["pattern"] == "\\S"
+
+
+def test_next_question_prompt_forbids_one_character_and_internal_field_outputs():
+    assert "한 글자" in NEXT_QUESTION_SYSTEM_PROMPT
+    assert "단어 조각" in NEXT_QUESTION_SYSTEM_PROMPT
+    assert "임의 약어" in NEXT_QUESTION_SYSTEM_PROMPT
+    assert "내부 필드명" in NEXT_QUESTION_SYSTEM_PROMPT
+    assert "완결된 한국어 질문" in NEXT_QUESTION_SYSTEM_PROMPT
+    assert "next_question" in NEXT_QUESTION_SYSTEM_PROMPT
+
+
+def test_next_question_response_format_uses_json_object_mode():
+    assert NEXT_QUESTION_RESPONSE_FORMAT == {"type": "json_object"}
+
+
+def test_next_question_json_contract_requires_sentence_question():
+    question_property = NEXT_QUESTION_JSON_CONTRACT["properties"]["next_question"]
+
+    assert question_property["minLength"] == 10
+    assert "완결된 한국어 질문" in question_property["description"]
+    assert "한 글자" in question_property["description"]
+    assert "내부 필드명" in question_property["description"]
+
+
+def test_next_question_llm_response_rejects_one_character_question():
+    with pytest.raises(ValidationError):
+        NextQuestionLLMResponse.model_validate_json(_next_question_response("팀"))
+
+
+def test_next_question_llm_response_accepts_sentence_question():
+    response = NextQuestionLLMResponse.model_validate_json(
+        _next_question_response("프로젝트 계획을 조금 더 구체적으로 알려주세요.")
+    )
+
+    assert response.next_question == "프로젝트 계획을 조금 더 구체적으로 알려주세요."
 
 
 def test_merge_skills_dedup_and_normalize():
@@ -297,6 +335,86 @@ async def test_generate_team_profile_from_prompt_success_uses_prompt_response_fo
 
 
 @pytest.mark.asyncio
+async def test_generate_team_profile_from_prompt_embeds_next_question_contract_and_guidance(
+    monkeypatch,
+):
+    _enable_semantic_with_mock(monkeypatch)
+    next_question_prompt = ""
+
+    async def _complete(*, messages, response_format, **kwargs):
+        nonlocal next_question_prompt
+        if messages[0]["content"] != NEXT_QUESTION_SYSTEM_PROMPT:
+            return _llm_prompt_response(
+                MISSING_PROFILE,
+                "현재까지 입력된 팀 정보를 정리했습니다.",
+            )
+        if response_format == NEXT_QUESTION_RESPONSE_FORMAT:
+            next_question_prompt = messages[1]["content"]
+            return _next_question_response(
+                "팀원 구성과 프로젝트 계획을 조금 더 구체적으로 알려주세요."
+            )
+        raise AssertionError(f"unexpected response_format: {response_format}")
+
+    monkeypatch.setattr(
+        "app.modules.team_profile.service.upstage_client.get_chat_completion", _complete
+    )
+
+    await generate_team_profile_from_prompt(
+        TeamProfilePromptRequest(prompt=PROMPT_WITH_MISSING_FACTS)
+    )
+
+    assert "[반드시 지킬 JSON 계약]" in next_question_prompt
+    assert "recommended_next_question" in next_question_prompt
+    assert "프로젝트 계획과 기술 목표, SW마에스트로 과정 목표에 대해 조금 더 구체적으로 알려주세요." in next_question_prompt
+    assert "missing_field_guidance" in next_question_prompt
+    assert '"field": "project_plan_tech_goals"' in next_question_prompt
+    assert '"ask_about": "프로젝트 계획과 기술 목표"' in next_question_prompt
+    assert '"field": "maestro_program_goals"' in next_question_prompt
+    assert '"ask_about": "SW마에스트로 과정 목표"' in next_question_prompt
+    assert '"field": "mentoring_needs"' in next_question_prompt
+    assert '"ask_about": "받고 싶은 멘토링 도움"' in next_question_prompt
+
+
+@pytest.mark.asyncio
+async def test_generate_team_profile_from_prompt_regenerates_one_character_next_question(
+    monkeypatch,
+):
+    _enable_semantic_with_mock(monkeypatch)
+    next_question_calls = []
+
+    async def _complete(*, messages, response_format, **kwargs):
+        if messages[0]["content"] != NEXT_QUESTION_SYSTEM_PROMPT:
+            return _llm_prompt_response(
+                MISSING_PROFILE,
+                "현재까지 입력된 팀 정보를 정리했습니다.",
+            )
+        if response_format == NEXT_QUESTION_RESPONSE_FORMAT:
+            next_question_calls.append(messages)
+            if len(next_question_calls) == 1:
+                return _next_question_response("팀")
+            return _next_question_response(
+                "프로젝트 계획과 기술 목표를 조금 더 구체적으로 알려주세요."
+            )
+        raise AssertionError(f"unexpected response_format: {response_format}")
+
+    monkeypatch.setattr(
+        "app.modules.team_profile.service.upstage_client.get_chat_completion", _complete
+    )
+
+    response = await generate_team_profile_from_prompt(
+        TeamProfilePromptRequest(prompt=PROMPT_WITH_MISSING_FACTS)
+    )
+
+    assert response.status == "collecting"
+    assert response.ready_for_recommendation is False
+    assert response.next_question == "프로젝트 계획과 기술 목표를 조금 더 구체적으로 알려주세요."
+    assert response.chat_messages[-1].content == response.next_question
+    assert len(next_question_calls) == 2
+    assert next_question_calls[1][-2] == {"role": "assistant", "content": _next_question_response("팀")}
+    assert "JSON 계약을 위반" in next_question_calls[1][-1]["content"]
+
+
+@pytest.mark.asyncio
 async def test_generate_team_profile_from_prompt_collects_when_llm_returns_default_sentinel(
     monkeypatch,
 ):
@@ -307,7 +425,7 @@ async def test_generate_team_profile_from_prompt_collects_when_llm_returns_defau
         calls.append(
             {"messages": messages, "model": model, "response_format": response_format}
         )
-        if response_format == TEAM_PROFILE_PROMPT_RESPONSE_FORMAT:
+        if messages[0]["content"] != NEXT_QUESTION_SYSTEM_PROMPT:
             return _llm_prompt_response(
                 MISSING_PROFILE,
                 "현재까지 입력된 팀 정보를 정리했습니다.",
@@ -357,8 +475,8 @@ async def test_generate_team_profile_from_prompt_preserves_schema_valid_llm_resp
         "fit_conditions": "입력된 선호 조건 없음",
     }
 
-    async def _complete(*, response_format, **kwargs):
-        if response_format == TEAM_PROFILE_PROMPT_RESPONSE_FORMAT:
+    async def _complete(*, messages, response_format, **kwargs):
+        if messages[0]["content"] != NEXT_QUESTION_SYSTEM_PROMPT:
             return _llm_prompt_response(llm_profile, "스키마는 유효한 응답입니다.")
         if response_format == NEXT_QUESTION_RESPONSE_FORMAT:
             return _next_question_response("부족한 목표와 멘토링 정보를 알려주세요.")
@@ -395,8 +513,8 @@ async def test_generate_team_profile_from_prompt_collects_when_project_plan_is_d
         "fit_conditions": "재미있는 소마 생활을 함께할 멘토를 원합니다.",
     }
 
-    async def _complete(*, response_format, **kwargs):
-        if response_format == TEAM_PROFILE_PROMPT_RESPONSE_FORMAT:
+    async def _complete(*, messages, response_format, **kwargs):
+        if messages[0]["content"] != NEXT_QUESTION_SYSTEM_PROMPT:
             return _llm_prompt_response(llm_profile, "프로젝트 계획만 더 필요합니다.")
         if response_format == NEXT_QUESTION_RESPONSE_FORMAT:
             return _next_question_response("프로젝트 계획을 알려주세요.")

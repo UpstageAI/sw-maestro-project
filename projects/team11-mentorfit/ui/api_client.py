@@ -8,6 +8,7 @@ from pydantic import BaseModel, ValidationError
 from app.core.config import settings
 from app.modules.combination_generator.schemas import CombinationResponse, CombCandidateResult
 from app.modules.mentor_candidate.schemas import CandidateResult, Mentor, TeamProfile
+from app.modules.recommendation.schemas import RecommendationResponse
 from app.modules.report.schemas import RecommendationReport, ReportGenerationRequest
 from app.modules.team_profile.schemas import ChatMessage, TeamProfilePromptRequest, TeamProfilePromptResponse
 
@@ -42,7 +43,7 @@ def _error_detail(response: httpx.Response) -> str:
 async def _request_json(method: str, path: str, *, json: dict[str, Any] | None = None) -> Any:
     url = f"{settings.api_base_url.rstrip('/')}{path}"
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=600.0) as client:
             response = await client.request(method, url, json=json)
             response.raise_for_status()
             return response.json()
@@ -69,6 +70,35 @@ async def create_team_profile_from_prompt(
     request = TeamProfilePromptRequest(prompt=prompt, chat_messages=chat_messages)
     data = await _request_json("POST", "/api/team-profile/prompt", json=request.model_dump(mode="json"))
     return _validate_model(TeamProfilePromptResponse, data)
+
+
+async def create_recommendation_from_session(
+    chat_messages: list[ChatMessage],
+    team_profile: TeamProfile | None,
+    draft_profile: TeamProfile | None,
+    team_report: str,
+    ready_for_recommendation: bool,
+    collection_status: str,
+    current_matching_status: str | None,
+    top_k: int,
+    prefilter_top_n: int | None,
+) -> RecommendationResponse:
+    data = await _request_json(
+        "POST",
+        "/api/recommendations",
+        json={
+            "chat_messages": _jsonable(chat_messages),
+            "team_profile": _jsonable(team_profile),
+            "draft_profile": _jsonable(draft_profile),
+            "team_report": team_report,
+            "ready_for_recommendation": ready_for_recommendation,
+            "collection_status": collection_status,
+            "current_matching_status": current_matching_status,
+            "top_k": top_k,
+            "prefilter_top_n": prefilter_top_n,
+        },
+    )
+    return _validate_model(RecommendationResponse, data)
 
 
 async def create_mentor_candidates(

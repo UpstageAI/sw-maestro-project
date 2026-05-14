@@ -13,7 +13,7 @@ class ReportGenerationRequest(BaseModel):
     team_report: str = Field(..., min_length=1, max_length=8000)
     candidates: list[CandidateResult] = Field(default_factory=list, max_length=20)
     combinations: list[CombCandidateResult] = Field(default_factory=list, max_length=10)
-    mentors: list[Mentor] = Field(default_factory=list, min_length=1, max_length=50)
+    mentors: list[Mentor] = Field(default_factory=list, min_length=1, max_length=300)
     current_matching_status: str | None = Field(default=None, max_length=4000)
 
     @model_validator(mode="after")

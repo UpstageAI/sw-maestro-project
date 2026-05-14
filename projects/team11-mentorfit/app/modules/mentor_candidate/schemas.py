@@ -20,7 +20,7 @@ class TeamProfile(BaseModel):
 class Mentor(BaseModel):
     mentor_id: int
     name: str = Field(..., min_length=1, max_length=100)
-    stacks: List[ShortText] = Field(default_factory=list, max_length=30)
+    stacks: List[ShortText] = Field(default_factory=list, max_length=200)
     hobbie: str = Field(default="", max_length=1000)
     target: str = Field(default="", max_length=1000)
     is_overseas: bool

@@ -55,6 +55,9 @@ class TeamProfilePromptResponse(BaseModel):
 ProfileText4000 = Annotated[
     str, StringConstraints(min_length=1, max_length=4000, pattern=r"\S")
 ]
+NextQuestionText4000 = Annotated[
+    str, StringConstraints(min_length=10, max_length=4000, pattern=r"\S")
+]
 ProfilePhrase4000 = Annotated[
     str, StringConstraints(min_length=10, max_length=4000, pattern=r"\S")
 ]
@@ -108,7 +111,7 @@ class TeamProfilePromptLLMResponse(BaseModel):
 class NextQuestionLLMResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    next_question: ProfileText4000
+    next_question: NextQuestionText4000
 
 
 class TeamProfileSynthesisLLMResponse(BaseModel):

@@ -13,11 +13,8 @@ import streamlit as st  # noqa: E402
 from app.core.config import settings  # noqa: E402
 from ui.api_client import (  # noqa: E402
     MentorFitApiError,
-    create_combinations,
-    create_mentor_candidates,
-    create_report,
+    create_recommendation_from_session,
     create_team_profile_from_prompt,
-    list_mentors,
 )
 
 st.set_page_config(page_title="Mentor-Fit", page_icon="🧭", layout="wide")
@@ -49,25 +46,23 @@ async def _run_recommendation_flow() -> None:
     if team_profile is None:
         st.session_state.recommendation_error = "팀 정보 수집이 완료된 뒤 추천을 실행할 수 있습니다."
         return
-    candidates = await create_mentor_candidates(
-        team_profile,
-        st.session_state.top_k,
-        st.session_state.prefilter_top_n,
+    response = await create_recommendation_from_session(
+        chat_messages=st.session_state.chat_messages,
+        team_profile=team_profile,
+        draft_profile=st.session_state.draft_profile,
+        team_report=st.session_state.team_report,
+        ready_for_recommendation=st.session_state.ready_for_recommendation,
+        collection_status=st.session_state.collection_status,
+        current_matching_status=st.session_state.current_matching_status,
+        top_k=st.session_state.top_k,
+        prefilter_top_n=st.session_state.prefilter_top_n,
     )
-    combinations = await create_combinations(team_profile, candidates)
-    mentors = await list_mentors()
-    report = await create_report(
-        team_profile,
-        st.session_state.team_report,
-        candidates,
-        combinations,
-        mentors,
-        st.session_state.current_matching_status,
-    )
-    st.session_state.candidates = candidates
-    st.session_state.combinations = combinations
-    st.session_state.mentors = mentors
-    st.session_state.recommendation_report = report
+    st.session_state.team_profile = response.team_profile
+    st.session_state.team_report = response.team_report
+    st.session_state.candidates = response.candidates
+    st.session_state.combinations = response.combinations
+    st.session_state.mentors = response.mentors
+    st.session_state.recommendation_report = response.recommendation_report
 
 
 def _run_async(coro):

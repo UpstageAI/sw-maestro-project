@@ -16,19 +16,46 @@ def _client_key(request: Request) -> str:
     return request.client.host
 
 
-async def limit_llm_endpoint(request: Request) -> None:
+async def _limit_endpoint(
+    request: Request,
+    *,
+    bucket: str,
+    limit: int,
+    window_seconds: int,
+    detail: str,
+) -> None:
     now = time.monotonic()
-    window_start = now - settings.llm_endpoint_rate_window_seconds
-    key = _client_key(request)
+    window_start = now - window_seconds
+    key = f"{bucket}:{_client_key(request)}"
     timestamps = _requests[key]
 
     while timestamps and timestamps[0] < window_start:
         timestamps.popleft()
 
-    if len(timestamps) >= settings.llm_endpoint_rate_limit:
+    if len(timestamps) >= limit:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="LLM 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.",
+            detail=detail,
         )
 
     timestamps.append(now)
+
+
+async def limit_llm_endpoint(request: Request) -> None:
+    await _limit_endpoint(
+        request,
+        bucket="llm",
+        limit=settings.llm_endpoint_rate_limit,
+        window_seconds=settings.llm_endpoint_rate_window_seconds,
+        detail="LLM 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.",
+    )
+
+
+async def limit_recommendation_endpoint(request: Request) -> None:
+    await _limit_endpoint(
+        request,
+        bucket="recommendation",
+        limit=settings.recommendation_endpoint_rate_limit,
+        window_seconds=settings.recommendation_endpoint_rate_window_seconds,
+        detail="추천 생성 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.",
+    )
