@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/recommend.py": {
+      "includeFiles": "api/_lib/**"
+    },
+    "api/recommend/stream.py": {
+      "includeFiles": "api/_lib/**"
+    }
+  },
+  "rewrites": [
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
+}
