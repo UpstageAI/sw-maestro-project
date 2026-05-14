@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { PointerEvent } from "react"
-import { GitBranch, Maximize2, RotateCcw, Workflow, ZoomIn, ZoomOut } from "lucide-react"
+import { GitBranch, Maximize2, Route, RotateCcw, Workflow, ZoomIn, ZoomOut } from "lucide-react"
 
 import type { GraphLink, GraphNode, KnowledgeGraph } from "@/lib/api"
 import { Badge } from "@/components/ui/badge"
@@ -13,6 +13,7 @@ type PositionedNode = GraphNode & {
   y: number
   width: number
   height: number
+  titleLines: string[]
 }
 
 type DragState = {
@@ -39,6 +40,8 @@ type Viewport = {
 const cardTypeOrder = ["idea", "problem", "target", "hypothesis", "evidence", "decision", "risk", "feature", "question"]
 const graphStudioWidth = 1180
 const graphStudioHeight = 620
+const graphNodeTitleStartY = 48
+const graphNodeTitleLineHeight = 16
 
 export function KnowledgeGraphPanel({
   graph,
@@ -54,6 +57,7 @@ export function KnowledgeGraphPanel({
   const [positions, setPositions] = useState<Record<string, PositionedNode>>({})
   const [dragging, setDragging] = useState<DragState | null>(null)
   const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, k: 1 })
+  const [showAllGraphStudioLinks, setShowAllGraphStudioLinks] = useState(false)
   const graphStudioCanvasRef = useRef<SVGSVGElement | null>(null)
   const nodes = useMemo(() => Object.values(positions), [positions])
   const nodeMap = positions
@@ -75,7 +79,9 @@ export function KnowledgeGraphPanel({
     return () => canvas.removeEventListener("wheel", handleNativeWheel)
   }, [zoomGraphStudio])
 
-  const visibleLinks = graph.links.filter((link) => nodeMap[link.source] && nodeMap[link.target])
+  const visibleLinks = graph.links.filter((link) =>
+    nodeMap[link.source] && nodeMap[link.target] && isGraphStudioLinkVisible(link, selectedId, showAllGraphStudioLinks)
+  )
   const resetLayout = () => {
     const next = layoutGraph(graph.nodes, {})
     setPositions(next)
@@ -174,7 +180,16 @@ export function KnowledgeGraphPanel({
         <div className="studio-graph-toolbar">
           <Badge variant="secondary">{graph.nodes.filter((node) => node.type === "document").length} sources</Badge>
           <Badge variant="secondary">{graph.nodes.filter((node) => node.type === "card").length} cards</Badge>
-          <Badge variant="outline">{graph.links.length} links</Badge>
+          <Badge variant="outline">{visibleLinks.length}/{graph.links.length} links</Badge>
+          <Button
+            data-testid="graph-studio-link-mode"
+            variant={showAllGraphStudioLinks ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowAllGraphStudioLinks((value) => !value)}
+          >
+            <Route data-icon="inline-start" />
+            {showAllGraphStudioLinks ? "All links" : "Overview links"}
+          </Button>
           <div className="graph-studio-legend" aria-label="Graph legend">
             <span className="graph-legend-item"><span className="graph-legend-dot is-source" />source</span>
             <span className="graph-legend-item"><span className="graph-legend-dot is-card" />card</span>
@@ -224,6 +239,7 @@ export function KnowledgeGraphPanel({
                   target={nodeMap[link.target]}
                   isActive={selectedId === link.source || selectedId === link.target}
                   isDimmed={Boolean(selectedId) && (!selectedNeighborhood.has(link.source) || !selectedNeighborhood.has(link.target))}
+                  showLabel={showAllGraphStudioLinks || selectedId === link.source || selectedId === link.target}
                 />
               ))}
             </g>
@@ -252,12 +268,14 @@ function GraphEdge({
   target,
   isActive,
   isDimmed,
+  showLabel,
 }: {
   link: GraphLink
   source: PositionedNode
   target: PositionedNode
   isActive: boolean
   isDimmed: boolean
+  showLabel: boolean
 }) {
   const startX = source.x + source.width
   const startY = source.y + source.height / 2
@@ -272,9 +290,11 @@ function GraphEdge({
   return (
     <g className={cn("graph-edge", relationClass(link.type), isActive && "is-active", isDimmed && "is-dimmed")}>
       <path d={path} markerEnd="url(#graph-arrow)" />
-      <text x={labelX} y={labelY}>
-        {clipLabel(safeDisplayText(link.label), 24)}
-      </text>
+      {showLabel && (
+        <text x={labelX} y={labelY}>
+          {clipLabel(safeDisplayText(link.label), 24)}
+        </text>
+      )}
     </g>
   )
 }
@@ -306,9 +326,13 @@ function GraphNodeBox({
         {isDocument ? "source" : node.card_type}
       </text>
       <text className="graph-node-title" x="16" y="48">
-        {clipLabel(safeDisplayText(node.label), 28)}
+        {node.titleLines.map((line, index) => (
+          <tspan key={`${node.id}-title-${index}`} x="16" y={graphNodeTitleStartY + index * graphNodeTitleLineHeight}>
+            {line}
+          </tspan>
+        ))}
       </text>
-      <text className="graph-node-meta" x="16" y="72">
+      <text className="graph-node-meta" x="16" y={graphNodeMetaY(node.titleLines.length)}>
         {isDocument ? node.document_type : `${node.status} · ${node.confidence}`}
       </text>
     </g>
@@ -325,29 +349,69 @@ function layoutGraph(nodes: GraphNode[], current: Record<string, PositionedNode>
   })
   const next: Record<string, PositionedNode> = {}
 
-  documents.forEach((node, index) => {
-    next[node.id] = current[node.id] ?? {
-      ...node,
-      x: 54,
-      y: 70 + index * 108,
+  let documentY = 70
+  documents.forEach((node) => {
+    const previous = current[node.id]
+    const positioned = buildPositionedNode({
+      node,
+      x: previous?.x ?? 54,
+      y: previous?.y ?? documentY,
       width: 248,
-      height: 84,
-    }
+    })
+    next[node.id] = positioned
+    if (!previous) documentY += positioned.height + 24
   })
 
+  const cardColumnY = [56, 56, 56]
   sortedCards.forEach((node, index) => {
     const column = index % 3
-    const row = Math.floor(index / 3)
-    next[node.id] = current[node.id] ?? {
-      ...node,
-      x: 410 + column * 248,
-      y: 56 + row * 112,
+    const previous = current[node.id]
+    const positioned = buildPositionedNode({
+      node,
+      x: previous?.x ?? 410 + column * 248,
+      y: previous?.y ?? cardColumnY[column],
       width: 210,
-      height: 86,
-    }
+    })
+    next[node.id] = positioned
+    if (!previous) cardColumnY[column] += positioned.height + 24
   })
 
   return next
+}
+
+function buildPositionedNode({
+  node,
+  x,
+  y,
+  width,
+}: {
+  node: GraphNode
+  x: number
+  y: number
+  width: number
+}): PositionedNode {
+  const titleLines = wrapSvgLabel(safeDisplayText(node.label), width - 48, node.type === "document" ? 2 : 3)
+  const minHeight = node.type === "document" ? 88 : 92
+  const height = Math.max(minHeight, graphNodeMetaY(titleLines.length) + 18)
+  return {
+    ...node,
+    x,
+    y,
+    width,
+    height,
+    titleLines,
+  }
+}
+
+function graphNodeMetaY(titleLineCount: number) {
+  return graphNodeTitleStartY + Math.max(0, titleLineCount - 1) * graphNodeTitleLineHeight + 22
+}
+
+function isGraphStudioLinkVisible(link: GraphLink, selectedId: string | null, showAllGraphStudioLinks: boolean) {
+  if (showAllGraphStudioLinks) return true
+  if (link.type === "contains") return true
+  if (!selectedId) return false
+  return link.source === selectedId || link.target === selectedId
 }
 
 function buildSelectedNeighborhood(selectedId: string | null, links: GraphLink[]) {
@@ -383,6 +447,113 @@ function fitGraphStudioViewport(nodes: PositionedNode[]): Viewport {
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value))
+}
+
+function wrapSvgLabel(value: string, maxWidth: number, maxLines: number) {
+  const normalized = value.replace(/\s+/g, " ").trim()
+  if (!normalized) return [""]
+
+  const lines: string[] = []
+  let current = ""
+  let currentWidth = 0
+
+  for (const segment of tokenizeSvgLabel(normalized)) {
+    const segmentWidth = estimateSvgTextWidth(segment)
+    const nextWidth = current ? currentWidth + segmentWidth : segmentWidth
+
+    if (current && nextWidth > maxWidth) {
+      lines.push(current.trimEnd())
+      current = segment.trimStart()
+      currentWidth = estimateSvgTextWidth(current)
+    } else {
+      current += segment
+      currentWidth = nextWidth
+    }
+
+    while (currentWidth > maxWidth && current.length > 1) {
+      const splitIndex = splitLabelAtWidth(current, maxWidth)
+      const nextLine = current.slice(0, splitIndex).trimEnd()
+      const remainder = current.slice(splitIndex).trimStart()
+      lines.push(nextLine)
+      current = remainder
+      currentWidth = estimateSvgTextWidth(current)
+    }
+
+    if (lines.length >= maxLines) break
+  }
+
+  if (lines.length < maxLines && current) {
+    lines.push(current.trimEnd())
+  }
+
+  if (lines.length > maxLines) {
+    lines.length = maxLines
+  }
+
+  const consumed = lines.join("").replace(/\s/g, "").length
+  const total = normalized.replace(/\s/g, "").length
+  if (consumed < total && lines.length) {
+    lines[lines.length - 1] = fitLineWithEllipsis(lines[lines.length - 1], maxWidth)
+  }
+
+  return lines.length ? lines : [""]
+}
+
+function tokenizeSvgLabel(value: string) {
+  const tokens: string[] = []
+  let buffer = ""
+  let bufferKind: "space" | "latin" | "cjk" | "other" | null = null
+
+  for (const char of value) {
+    const kind = svgCharKind(char)
+    if (buffer && kind !== bufferKind) {
+      tokens.push(buffer)
+      buffer = ""
+    }
+    buffer += char
+    bufferKind = kind
+  }
+  if (buffer) tokens.push(buffer)
+  return tokens
+}
+
+function svgCharKind(char: string): "space" | "latin" | "cjk" | "other" {
+  if (/\s/.test(char)) return "space"
+  if (/[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af\u3040-\u30ff\u3400-\u9fff]/.test(char)) return "cjk"
+  if (/[A-Za-z0-9_-]/.test(char)) return "latin"
+  return "other"
+}
+
+function splitLabelAtWidth(value: string, maxWidth: number) {
+  let width = 0
+  for (let index = 0; index < value.length; index += 1) {
+    const nextWidth = width + estimateSvgCharWidth(value[index])
+    if (nextWidth > maxWidth) return Math.max(1, index)
+    width = nextWidth
+  }
+  return value.length
+}
+
+function fitLineWithEllipsis(value: string, maxWidth: number) {
+  const ellipsis = "…"
+  let next = value.trimEnd()
+  while (next.length > 1 && estimateSvgTextWidth(`${next}${ellipsis}`) > maxWidth) {
+    next = next.slice(0, -1).trimEnd()
+  }
+  return `${next}${ellipsis}`
+}
+
+function estimateSvgTextWidth(value: string) {
+  return Array.from(value).reduce((width, char) => width + estimateSvgCharWidth(char), 0)
+}
+
+function estimateSvgCharWidth(char: string) {
+  if (/\s/.test(char)) return 4
+  if (/[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af\u3040-\u30ff\u3400-\u9fff]/.test(char)) return 14
+  if (/[A-Z]/.test(char)) return 8
+  if (/[a-z0-9]/.test(char)) return 7
+  if (/[-_.:]/.test(char)) return 4
+  return 7
 }
 
 function clipLabel(value: string, maxLength: number) {

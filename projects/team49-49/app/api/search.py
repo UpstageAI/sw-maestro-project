@@ -17,9 +17,25 @@ class LLMSearchRequest(BaseModel):
 def search_workspace(
     workspace_id: int,
     q: str = Query(min_length=1),
+    top_k: int = Query(default=5, ge=1, le=20),
+    card_type: str | None = Query(default=None),
+    status: str | None = Query(default=None),
+    confidence: str | None = Query(default=None),
+    source_type: str | None = Query(default=None),
     repository: SQLiteRepository = Depends(get_repository),
 ) -> dict:
-    return RetrievalService(repository).search(workspace_id=workspace_id, query=q)
+    filters = {
+        "card_type": card_type,
+        "status": status,
+        "confidence": confidence,
+        "source_type": source_type,
+    }
+    return RetrievalService(repository).search(
+        workspace_id=workspace_id,
+        query=q,
+        top_k=top_k,
+        filters=filters,
+    )
 
 
 @router.post("/llm")

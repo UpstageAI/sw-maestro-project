@@ -134,10 +134,10 @@ export function LangGraphFlowPanel({
                           <Badge variant="outline">{target?.owner ?? link.target}</Badge>
                         </div>
                         <div className="min-w-0">
-                          <div className="truncate text-sm font-medium">
+                          <div className="break-words text-sm font-medium [overflow-wrap:anywhere]">
                             {source?.name ?? link.source} → {target?.name ?? link.target}
                           </div>
-                          <p className="text-xs text-muted-foreground">{link.label}</p>
+                          <p className="break-words text-xs text-muted-foreground [overflow-wrap:anywhere]">{link.label}</p>
                         </div>
                       </div>
                     )
@@ -172,8 +172,8 @@ function FlowRailNode({
           {wired ? <CheckCircle2 /> : <CircleDashed />}
         </div>
         <div>
-          <div className="truncate text-sm font-semibold">{flow.name}</div>
-          <p className="text-xs text-muted-foreground">{flow.owner}</p>
+          <div className="break-words text-sm font-semibold [overflow-wrap:anywhere]">{flow.name}</div>
+          <p className="break-words text-xs text-muted-foreground [overflow-wrap:anywhere]">{flow.owner}</p>
         </div>
         <Badge variant={wired ? "default" : "secondary"}>{wired ? "wired" : "slot"}</Badge>
         <p className="text-xs text-muted-foreground">현재 신호 {value}</p>
@@ -194,14 +194,14 @@ function FlowCard({ flow }: { flow: WorkflowDefinition }) {
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <CardTitle className="line-clamp-2 text-base">{flow.name}</CardTitle>
-            <CardDescription>{flow.owner} · {flow.workflow_file}</CardDescription>
+            <CardTitle className="break-words text-base [overflow-wrap:anywhere]">{flow.name}</CardTitle>
+            <CardDescription className="break-words [overflow-wrap:anywhere]">{flow.owner} · {flow.workflow_file}</CardDescription>
           </div>
           <Badge variant={wired ? "default" : "outline"}>{flow.status === "remote_connected" ? "remote" : wired ? "implemented" : "extension"}</Badge>
         </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
-        <p className="text-sm text-muted-foreground">{flow.purpose}</p>
+        <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground [overflow-wrap:anywhere]">{flow.purpose}</p>
         <Separator />
         <div className="flex flex-col gap-2">
           <ContractRow label="Input" value={flow.input_contract} />
@@ -213,7 +213,7 @@ function FlowCard({ flow }: { flow: WorkflowDefinition }) {
             <Badge key={node} variant="secondary">{node}</Badge>
           ))}
         </div>
-        <p className="text-xs text-muted-foreground">{flow.notes}</p>
+        <p className="whitespace-pre-wrap break-words text-xs text-muted-foreground [overflow-wrap:anywhere]">{flow.notes}</p>
       </CardContent>
     </Card>
   )
@@ -223,7 +223,7 @@ function ContractRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="grid gap-1 rounded-lg border bg-background p-2">
       <div className="text-xs font-medium uppercase text-muted-foreground">{label}</div>
-      <div className="break-words text-xs">{value}</div>
+      <div className="break-words text-xs [overflow-wrap:anywhere]">{value}</div>
     </div>
   )
 }

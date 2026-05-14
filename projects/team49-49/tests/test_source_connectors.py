@@ -126,6 +126,20 @@ def test_github_connector_fetches_blob_url_with_raw_accept_header():
     assert http.requests[0]["headers"]["Authorization"] == "Bearer ghp_secret"
 
 
+def test_github_connector_fetches_public_blob_without_token_from_raw_url():
+    http = FakeHTTPClient([FakeResponse(text="결정: 공개 GitHub PRD도 데모 소스로 저장한다.")])
+    connector = GitHubConnector(token="", http_client=http)
+
+    result = connector.fetch("https://github.com/org/repo/blob/main/docs/prd.md", "")
+
+    assert result.title == "prd.md"
+    assert result.content == "결정: 공개 GitHub PRD도 데모 소스로 저장한다."
+    assert result.external_id == "org/repo:main:docs/prd.md"
+    assert result.fetched_via == "github_raw"
+    assert http.requests[0]["url"] == "https://raw.githubusercontent.com/org/repo/main/docs/prd.md"
+    assert "Authorization" not in http.requests[0]["headers"]
+
+
 def test_github_connector_fetches_issue_body_and_comments():
     http = FakeHTTPClient(
         [
@@ -143,6 +157,23 @@ def test_github_connector_fetches_issue_body_and_comments():
     assert "mentor: Add evidence quotes." in result.content
     assert http.requests[0]["url"] == "https://api.github.com/repos/org/repo/issues/17"
     assert http.requests[1]["url"] == "https://api.github.com/repos/org/repo/issues/17/comments"
+
+
+def test_github_connector_fetches_public_issue_without_token():
+    http = FakeHTTPClient(
+        [
+            FakeResponse({"title": "Public issue", "body": "Issue body"}),
+            FakeResponse([]),
+        ]
+    )
+    connector = GitHubConnector(token="", http_client=http)
+
+    result = connector.fetch("https://github.com/org/repo/issues/18", "")
+
+    assert result.title == "github-issues-18-public-issue.md"
+    assert "Issue body" in result.content
+    assert "Authorization" not in http.requests[0]["headers"]
+    assert "Authorization" not in http.requests[1]["headers"]
 
 
 def test_linear_connector_fetches_issue_by_identifier():
@@ -266,14 +297,40 @@ def test_mcp_connector_reads_resource_text_content():
     assert http.requests[0]["json"]["method"] == "resources/read"
 
 
+def test_mcp_connector_reads_resource_without_access_token_for_local_servers():
+    http = FakeHTTPClient(
+        [
+            FakeResponse(
+                {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "result": {
+                        "contents": [
+                            {"uri": "file://demo.md", "mimeType": "text/markdown", "text": "결정: 로컬 MCP resource를 저장한다."}
+                        ]
+                    },
+                }
+            )
+        ]
+    )
+    connector = McpConnector(server_url="http://127.0.0.1:3001/mcp", access_token="", http_client=http)
+
+    result = connector.fetch("file://demo.md", "")
+
+    assert result.title == "demo.md"
+    assert result.content == "결정: 로컬 MCP resource를 저장한다."
+    assert "Authorization" not in http.requests[0]["headers"]
+    assert http.requests[0]["headers"]["MCP-Protocol-Version"]
+
+
 def test_web_connector_strips_script_and_style_content():
     http = FakeHTTPClient([FakeResponse(text="<html><style>.x{}</style><body><h1>Title</h1><script>x()</script><p>Body text</p></body></html>")])
     connector = WebConnector(http_client=http)
 
     result = connector.fetch("https://example.com/post", "")
 
-    assert result.title == "post.txt"
-    assert "Title" in result.content
+    assert result.title == "post.md"
+    assert "# Title" in result.content
     assert "Body text" in result.content
     assert "script" not in result.content.lower()
 
@@ -306,8 +363,8 @@ def test_source_connector_registry_does_not_create_http_clients_until_fetch(monk
     registry = build_source_connector_registry(Settings(_env_file=None))
 
     assert {"notion", "github", "slack", "linear", "mcp", "web"} <= set(registry)
-    with pytest.raises(SourceConnectorConfigError, match="ICH_GITHUB_TOKEN"):
-        registry["github"].fetch("https://github.com/org/repo/blob/main/docs/prd.md", "")
+    with pytest.raises(SourceConnectorConfigError, match="ICH_SLACK_TOKEN"):
+        registry["slack"].fetch("slack://channels/C0123/171430.000100", "")
 
 
 def test_token_backed_connectors_report_missing_configuration():

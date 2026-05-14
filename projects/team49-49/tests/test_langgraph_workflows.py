@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 from langgraph.graph.state import CompiledStateGraph
 
@@ -36,6 +37,53 @@ def test_storage_workflow_uses_compiled_langgraph(tmp_path):
     assert result["new_card_ids"] == [1]
     assert result["needs_review_count"] == 0
     assert repository.list_cards(workspace["id"])[0]["card_type"] == "decision"
+
+
+def test_storage_workflow_exposes_card_extraction_studio_input_schema(tmp_path):
+    repository = SQLiteRepository(tmp_path / "ich.sqlite3")
+    repository.initialize()
+    workflow = StorageWorkflow(repository)
+
+    input_schema = workflow.graph.get_input_jsonschema()
+
+    assert set(input_schema["required"]) == {"workspace_id", "filename", "content"}
+    assert {
+        "workspace_id",
+        "filename",
+        "content",
+        "source_type",
+        "source_url",
+        "external_id",
+        "document_id",
+    } == set(input_schema["properties"])
+    assert "stored_chunks" not in input_schema["properties"]
+    assert "new_card_ids" not in input_schema["properties"]
+
+
+def test_storage_workflow_reindexes_existing_document_cards(tmp_path):
+    repository = SQLiteRepository(tmp_path / "ich.sqlite3")
+    repository.initialize()
+    workspace = repository.create_workspace("SOMA 49")
+    document = repository.create_raw_document(
+        workspace_id=workspace["id"],
+        filename="source.md",
+        document_type="md",
+        content="결정: 기존 원문은 SQLite relation 테이블을 우선 사용한다.",
+    )
+
+    workflow = StorageWorkflow(repository)
+    first = workflow.reindex_document(document)
+    assert first["card_count"] == 1
+    assert repository.list_cards(workspace["id"])[0]["card_type"] == "decision"
+
+    updated_document = repository.update_raw_document(document["id"], content="가설: 수정된 원문은 회의 준비 시간을 줄일 수 있다.")
+    second = workflow.reindex_document(updated_document)
+
+    assert second["card_count"] == 1
+    cards = repository.list_cards(workspace["id"])
+    assert len(cards) == 1
+    assert cards[0]["card_type"] == "hypothesis"
+    assert cards[0]["source_document_id"] == document["id"]
 
 
 def test_storage_workflow_loads_existing_relations_once_for_batch(tmp_path):
@@ -166,3 +214,10 @@ def test_workflow_registry_documents_team_extension_contracts():
     assert any(flow["status"] == "implemented" and flow["workflow_file"] == "app/workflows/storage.py" for flow in registry["flows"])
     assert any(flow["status"] == "implemented" and flow["workflow_file"] == "app/workflows/qa.py" for flow in registry["flows"])
     assert all(flow["input_contract"] and flow["output_contract"] for flow in registry["flows"])
+
+
+def test_storage_preprocessing_graph_is_available_for_local_studio():
+    graph_dir = Path(__file__).resolve().parents[1] / "graphs" / "storage_preprocessing"
+
+    assert (graph_dir / "graph.py").exists()
+    assert (graph_dir / "langgraph.json").exists()

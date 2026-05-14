@@ -1,13 +1,18 @@
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
+from pathlib import Path
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Response, UploadFile, status
 from pydantic import BaseModel, Field
 
 from app.api.dependencies import get_repository
+from app.api.lookups import document_or_404
+from app.models.schemas import RawDocumentRead, RawDocumentUpdate
 from app.repositories.sqlite import SQLiteRepository
 from app.services.extraction import DeterministicCardExtractor, LLMCardExtractor
 from app.services.langgraph_remote import RelationLinkingAdapter
 from app.services.llm import NoOpLLMClient
 from app.services.parsing import parse_document
-from app.services.source_connectors import SourceConnectorConfigError, SourceConnectorFetchError, SourceConnectorInputError
+from app.services.source_connectors import SourceConnectorFetchError
+from app.services.sources import SUPPORTED_SOURCE_TYPES, filename_from_source, normalize_source_type
 from app.workflows.source_intake import SourceIntakeWorkflow
 from app.workflows.storage import StorageWorkflow
 
@@ -124,9 +129,19 @@ def _ingest_normalized_tree(
 def _http_error_from_source_error(error: ValueError) -> HTTPException:
     if isinstance(error, SourceConnectorFetchError):
         return HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(error))
-    if isinstance(error, (SourceConnectorConfigError, SourceConnectorInputError)):
-        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
     return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
+
+
+def _persist_and_link(
+    request: Request,
+    workspace_id: int,
+    normalized: dict,
+    repository: SQLiteRepository,
+) -> dict:
+    """Run the storage tree ingestion, then trigger relation linking for new cards."""
+    result = _ingest_normalized_tree(request, normalized, repository)
+    _run_relation_linking(request, workspace_id, result.get("new_card_ids", []), repository)
+    return result
 
 
 @router.post("/text", status_code=status.HTTP_201_CREATED)
@@ -146,10 +161,7 @@ def ingest_text_document(
             source_url=payload.source_url,
             external_id=payload.external_id,
         )
-        result = _ingest_normalized_tree(request, normalized, repository)
-        new_card_ids = result.get("new_card_ids", [])
-        _run_relation_linking(request, workspace_id, new_card_ids, repository)
-        return result
+        return _persist_and_link(request, workspace_id, normalized, repository)
     except ValueError as error:
         raise _http_error_from_source_error(error) from error
 
@@ -175,10 +187,7 @@ async def upload_document(
             source_url=source_url,
             external_id=external_id,
         )
-        result = _ingest_normalized_tree(request, normalized, repository)
-        new_card_ids = result.get("new_card_ids", [])
-        _run_relation_linking(request, workspace_id, new_card_ids, repository)
-        return result
+        return _persist_and_link(request, workspace_id, normalized, repository)
     except ValueError as error:
         raise _http_error_from_source_error(error) from error
 
@@ -200,25 +209,86 @@ def ingest_source_document(
             source_url=payload.source_url,
             external_id=payload.external_id,
         )
-        result = _ingest_normalized_tree(request, normalized, repository)
-        new_card_ids = result.get("new_card_ids", [])
-        _run_relation_linking(request, workspace_id, new_card_ids, repository)
-        return result
+        return _persist_and_link(request, workspace_id, normalized, repository)
     except ValueError as error:
         raise _http_error_from_source_error(error) from error
 
 
-@router.get("")
+@router.get("", response_model=list[RawDocumentRead], summary="List source documents")
 def list_documents(workspace_id: int, repository: SQLiteRepository = Depends(get_repository)) -> list[dict]:
     return repository.list_raw_documents(workspace_id)
 
 
-@router.get("/{document_id}")
+@router.get(
+    "/{document_id}",
+    response_model=RawDocumentRead,
+    summary="Get source document",
+    responses={404: {"description": "Document not found in this workspace."}},
+)
 def get_document(workspace_id: int, document_id: int, repository: SQLiteRepository = Depends(get_repository)) -> dict:
-    document = repository.get_raw_document(document_id)
-    if document["workspace_id"] != workspace_id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
-    return document
+    return document_or_404(repository, workspace_id, document_id)
+
+
+@router.patch(
+    "/{document_id}",
+    response_model=RawDocumentRead,
+    summary="Update source document",
+    responses={
+        400: {"description": "Unsupported source type."},
+        404: {"description": "Document not found in this workspace."},
+    },
+)
+def update_document(
+    request: Request,
+    workspace_id: int,
+    document_id: int,
+    payload: RawDocumentUpdate,
+    repository: SQLiteRepository = Depends(get_repository),
+) -> dict:
+    document = document_or_404(repository, workspace_id, document_id)
+    source_type = document["source_type"]
+    if payload.source_type is not None:
+        source_type = normalize_source_type(payload.source_type, default=document["source_type"])
+        if source_type not in SUPPORTED_SOURCE_TYPES:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unsupported source type: {source_type}")
+
+    filename = document["filename"]
+    if payload.filename is not None:
+        filename = filename_from_source(payload.filename, source_type, payload.source_url if payload.source_url is not None else document["source_url"])
+    document_type = _document_type(filename)
+
+    content_changed = payload.content is not None and payload.content != document["content"]
+    updated = repository.update_raw_document(
+        document_id=document_id,
+        filename=filename,
+        document_type=document_type,
+        source_type=source_type,
+        source_url=payload.source_url if payload.source_url is not None else document["source_url"],
+        external_id=payload.external_id if payload.external_id is not None else document["external_id"],
+        content=payload.content if payload.content is not None else document["content"],
+    )
+
+    if content_changed:
+        result = _storage_workflow(request, repository).reindex_document(updated)
+        _run_relation_linking(request, workspace_id, result.get("new_card_ids", []), repository)
+        updated = repository.get_raw_document(document_id)
+    return updated
+
+
+@router.delete(
+    "/{document_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete source document",
+    responses={404: {"description": "Document not found in this workspace."}},
+)
+def delete_document(
+    workspace_id: int,
+    document_id: int,
+    repository: SQLiteRepository = Depends(get_repository),
+) -> Response:
+    document_or_404(repository, workspace_id, document_id)
+    repository.delete_raw_document(document_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 def _storage_workflow(request: Request, repository: SQLiteRepository) -> StorageWorkflow:
@@ -232,3 +302,7 @@ def _storage_workflow(request: Request, repository: SQLiteRepository) -> Storage
             fallback_extractor=DeterministicCardExtractor(),
         ),
     )
+
+
+def _document_type(filename: str) -> str:
+    return Path(filename).suffix.lower().lstrip(".") or "text"

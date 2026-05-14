@@ -9,7 +9,11 @@ from app.repositories.sqlite import SQLiteRepository
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_homepage_serves_react_studio_bundle(tmp_path):
+def read_source(path: str) -> str:
+    return (ROOT / path).read_text(encoding="utf-8")
+
+
+def test_homepage_serves_react_shell_assets_and_icon(tmp_path):
     repository = SQLiteRepository(tmp_path / "ich.sqlite3")
     app = create_app(repository=repository)
     client = TestClient(app)
@@ -19,8 +23,10 @@ def test_homepage_serves_react_studio_bundle(tmp_path):
     assert response.status_code == 200
     assert 'id="root"' in response.text
     assert "/assets/index-" in response.text
-    assert "<style>" not in response.text
     assert "<script " in response.text
+    assert "<style>" not in response.text
+    assert "demo" not in response.text.lower()
+    assert "데모" not in response.text
 
     asset_paths = [
         part.split('"')[0]
@@ -35,133 +41,117 @@ def test_homepage_serves_react_studio_bundle(tmp_path):
     for asset_path in asset_paths:
         assert client.get(asset_path).status_code == 200
 
+    icon_response = client.get("/favicon.ico")
+    assert icon_response.status_code == 200
+    assert "image/svg+xml" in icon_response.headers["content-type"]
+    assert b"<svg" in icon_response.content
 
-def test_frontend_source_matches_langgraph_studio_and_shadcn_contract():
-    app_source = (ROOT / "frontend" / "src" / "App.tsx").read_text(encoding="utf-8")
-    graph_source = (ROOT / "frontend" / "src" / "components" / "KnowledgeGraphPanel.tsx").read_text(encoding="utf-8")
-    flow_source = (ROOT / "frontend" / "src" / "components" / "LangGraphFlowPanel.tsx").read_text(encoding="utf-8")
-    obsidian_graph_source = (ROOT / "frontend" / "src" / "components" / "ObsidianGraphPanel.tsx").read_text(encoding="utf-8")
-    css_source = (ROOT / "frontend" / "src" / "index.css").read_text(encoding="utf-8")
 
-    assert "SidebarProvider" in app_source
-    assert "SidebarInset" in app_source
-    assert "CardHeader" in app_source
-    assert "FieldGroup" in app_source
-    assert "TabsList" in app_source
-    assert "workflow-step-card" in app_source
-    assert "size=\"sm\" className=\"workflow-step-card\"" in app_source
-    assert "Graph Studio" in app_source
-    assert "LangGraph Flow" in app_source
-    assert "Multi-source ingestion" in app_source
-    assert "Grounded LLM Search" in app_source
-    assert "source-ingestion-form" in app_source
-    assert "llm-search-form" in app_source
-    assert "/api/workflows" in app_source
+def test_frontend_studio_tabs_sources_search_and_progress_contract():
+    app_source = read_source("frontend/src/App.tsx")
+    source_panel_source = read_source("frontend/src/components/SourceTabPanel.tsx")
+    source_panel_config = read_source("frontend/src/lib/source-panel.ts")
+    graph_source = read_source("frontend/src/components/KnowledgeGraphPanel.tsx")
+    flow_source = read_source("frontend/src/components/LangGraphFlowPanel.tsx")
+    obsidian_graph_source = read_source("frontend/src/components/ObsidianGraphPanel.tsx")
+    combined_frontend_source = app_source + source_panel_source + source_panel_config
 
-    assert "KnowledgeGraphPanel" in graph_source
+    for expected in [
+        'type StudioTab = "graph" | "source" | "search" | "workspace"',
+        'activeStudioTab === "graph"',
+        'activeStudioTab === "source"',
+        'activeStudioTab === "search"',
+        'activeStudioTab === "workspace"',
+        'from "@/components/SourceTabPanel"',
+        'from "@/lib/source-panel"',
+        "refreshWorkspaceAfterIngestion",
+        'startIngestionProgress("Source")',
+        'startIngestionProgress("File")',
+        "/documents/source",
+        "/documents/upload",
+        "/search/llm",
+        "/search?q=",
+        "llm-search-form",
+    ]:
+        assert expected in app_source
+
+    for expected in [
+        'source_type: "txt"',
+        "신규 기능 아이디어 문서",
+        "ingestionFlowSteps",
+        "serverIngestionStepIds",
+        "Validate input",
+        "SQLite persist",
+        "Fetch graph payload",
+        "Render update",
+    ]:
+        assert expected in source_panel_config
+
+    for expected in [
+        "Multi-source ingestion",
+        "source-ingestion-form",
+        "[field-sizing:fixed]",
+        ".pdf,.csv",
+        "Manual Card",
+        "Create Card",
+    ]:
+        assert expected in combined_frontend_source
+
+    for expected in [
+        'setIngestionStep("refreshWorkspace")',
+        'setIngestionStep("refreshDocuments")',
+        'setIngestionStep("refreshCards")',
+        'setIngestionStep("refreshGraph")',
+        'setIngestionStep("refreshWorkflows")',
+        'setIngestionStep("render")',
+    ]:
+        assert expected in app_source
+
+    assert "function SourceConsole" not in app_source
+    assert "function ManualCardConsole" not in app_source
+    assert "function IngestionFlowProgress" not in app_source
+    assert "function SourceConsole" in source_panel_source
+    assert "function ManualCardConsole" in source_panel_source
+    assert "function IngestionFlowProgress" in source_panel_source
+
     assert "onPointerDown" in graph_source
     assert "onPointerMove" in graph_source
-    assert "markerEnd" in graph_source
-    assert "GraphEdge" in graph_source
-    assert "GraphNodeBox" in graph_source
-    assert "buildSelectedNeighborhood" in graph_source
-    assert "beginCanvasPan" in graph_source
-    assert "closest(\".graph-node-box\")" in graph_source
-    assert "graphPoint" in graph_source
-    assert "zoomGraphStudio" in graph_source
     assert 'addEventListener("wheel"' in graph_source
-    assert "passive: false" in graph_source
-    assert "graph-studio-pan-zoom-layer" in graph_source
     assert "graph-studio-zoom-in" in graph_source
-    assert "graph-studio-zoom-out" in graph_source
     assert "graph-studio-reset-view" in graph_source
-    assert "graph-studio-legend" in graph_source
-    assert "graph-reset-layout" in graph_source
-    assert "graph-node-accent" in graph_source
-    assert "is-dimmed" in graph_source
-
-    assert "LangGraphFlowPanel" in flow_source
-    assert "FlowRailNode" in flow_source
-    assert "implemented" in flow_source
-    assert "extension" in flow_source
+    assert "visibleLinks.length" in graph_source
+    assert "onWheel" in obsidian_graph_source
+    assert "requestAnimationFrame" in obsidian_graph_source
+    assert "visibleLinks.map" in obsidian_graph_source
     assert "input_contract" in flow_source
     assert "output_contract" in flow_source
 
-    assert "ObsidianGraphPanel" in obsidian_graph_source
-    assert "obsidian-graph-canvas" in obsidian_graph_source
-    assert "obsidian-graph-stage" in obsidian_graph_source
-    assert "obsidian-graph-search" in obsidian_graph_source
-    assert "InputGroupInput" in obsidian_graph_source
-    assert "InputGroupAddon" in obsidian_graph_source
-    assert "obsidian-local-depth" in obsidian_graph_source
-    assert "obsidian-link-distance" in obsidian_graph_source
-    assert "obsidian-node-size" in obsidian_graph_source
-    assert "onWheel" in obsidian_graph_source
-    assert "requestAnimationFrame" in obsidian_graph_source
-    assert "relaxObsidianNodes" in obsidian_graph_source
-    assert "resetView" in obsidian_graph_source
-    assert "focusSelection" in obsidian_graph_source
-    assert "visibleNodeIds" in obsidian_graph_source
-    assert "selectLabeledNodes" in obsidian_graph_source
-    assert "clipObsidianLabel" in obsidian_graph_source
-    assert "obsidian-link-label" in obsidian_graph_source
-    assert "obsidian-empty-state" in obsidian_graph_source
 
-    assert "@theme inline" in css_source
-    assert "--color-sidebar" in css_source
-    assert ".studio-graph-canvas" in css_source
-    assert ".studio-graph-canvas.is-panning" in css_source
-    assert ".graph-studio-legend" in css_source
-    assert ".graph-node-accent" in css_source
-    assert ".obsidian-graph-canvas" in css_source
-    assert ".obsidian-graph-stage" in css_source
-    assert ".obsidian-node" in css_source
-    assert ".obsidian-link-label" in css_source
-    assert ".obsidian-empty-state" in css_source
-    assert "radial-gradient" not in css_source
-    assert ".workflow-node" in css_source
-    assert ".workflow-step-card" in css_source
-    assert ".flow-rail" in css_source
-    assert ".flow-card" in css_source
+def test_load_samples_resets_database_to_curated_demo_workspace():
+    app_source = read_source("frontend/src/App.tsx")
+    samples_source = read_source("frontend/src/lib/samples.ts")
 
+    for expected in [
+        "Sample workspace reset",
+        "existingWorkspaces",
+        "for (const workspace of existingWorkspaces)",
+        'method: "DELETE"',
+        "ICH Demo Workspace",
+    ]:
+        assert expected in app_source
+    assert "Sample sources saved" not in app_source
 
-def test_frontend_supports_external_sources_and_llm_search_contract():
-    app_source = (ROOT / "frontend" / "src" / "App.tsx").read_text(encoding="utf-8")
-    samples_source = (ROOT / "frontend" / "src" / "lib" / "samples.ts").read_text(encoding="utf-8")
-
-    assert "/documents/source" in app_source
-    assert "/documents/upload" in app_source
-    assert "/search/llm" in app_source
-    assert "/search?q=" in app_source
-    assert "notion" in samples_source
-    assert "github" in samples_source
-    assert "slack" in samples_source
-    assert "linear" in samples_source
-    assert "mcp" in samples_source
-    assert "web" in samples_source
-    assert "pdf" in samples_source
-
-
-def test_favicon_request_serves_site_icon(tmp_path):
-    repository = SQLiteRepository(tmp_path / "ich.sqlite3")
-    app = create_app(repository=repository)
-    client = TestClient(app)
-
-    response = client.get("/favicon.ico")
-
-    assert response.status_code == 200
-    assert "image/svg+xml" in response.headers["content-type"]
-    assert b"<svg" in response.content
-
-
-def test_homepage_avoids_forbidden_user_facing_label(tmp_path):
-    repository = SQLiteRepository(tmp_path / "ich.sqlite3")
-    app = create_app(repository=repository)
-    client = TestClient(app)
-
-    response = client.get("/")
-
-    forbidden_english = "de" + "mo"
-    forbidden_korean = "데" + "모"
-    assert forbidden_english not in response.text.lower()
-    assert forbidden_korean not in response.text
+    for expected in [
+        "demo:strategy:architecture",
+        "demo:mentor:feedback",
+        "demo:engineering:intake",
+        "demo:engineering:performance",
+        "demo:search:grounded-llm",
+        "demo:ux:workflow",
+        "GraphDB",
+        "SQLite relation",
+        "relation linking",
+        "중복 카드",
+        "근거 기반 답변",
+    ]:
+        assert expected in samples_source

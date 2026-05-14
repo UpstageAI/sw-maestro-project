@@ -9,22 +9,38 @@ import {
   FileSearch,
   GitBranch,
   Inbox,
-  Link2,
   Loader2,
   MessageSquareText,
   Network,
   PanelRight,
   Play,
   RefreshCw,
+  Save,
   Search,
   ShieldCheck,
   Sparkles,
-  Upload,
+  Trash2,
 } from "lucide-react"
 
 import { KnowledgeGraphPanel } from "@/components/KnowledgeGraphPanel"
 import { LangGraphFlowPanel } from "@/components/LangGraphFlowPanel"
 import { ObsidianGraphPanel } from "@/components/ObsidianGraphPanel"
+import {
+  ManualCardConsole,
+  SourceConsole,
+} from "@/components/SourceTabPanel"
+import {
+  cardStatusOptions,
+  cardTypeOptions,
+  initialCardForm,
+  initialIngestionProgress,
+  initialSourceForm,
+  parseTokens,
+  serializeTokens,
+  serverIngestionStepIds,
+  type IngestionProgress,
+  type IngestionStepId,
+} from "@/lib/source-panel"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -38,9 +54,7 @@ import {
 import {
   Field,
   FieldDescription,
-  FieldGroup,
   FieldLabel,
-  FieldSet,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -69,10 +83,14 @@ import {
   apiFormRequest,
   apiRequest,
   type GraphNode,
+  type IngestionResult,
   type KnowledgeCard,
+  type KnowledgeCardPatch,
+  type KnowledgeCardPayload,
   type KnowledgeGraph,
   type LlmAnswer,
   type RawDocument,
+  type RawDocumentPatch,
   type ReviewResult,
   type SearchResponse,
   type SourcePayload,
@@ -82,13 +100,7 @@ import {
 import { sampleSources, sourceTypes } from "@/lib/samples"
 import { cn, safeDisplayText } from "@/lib/utils"
 
-const initialSourceForm: SourcePayload = {
-  source_type: "notion",
-  source_url: "",
-  external_id: "",
-  title: "",
-  content: "",
-}
+type StudioTab = "graph" | "source" | "search" | "workspace"
 
 function App() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([])
@@ -103,12 +115,15 @@ function App() {
   const [selectedDocument, setSelectedDocument] = useState<RawDocument | null>(null)
   const [selectedCard, setSelectedCard] = useState<KnowledgeCard | null>(null)
   const [sourceForm, setSourceForm] = useState<SourcePayload>(initialSourceForm)
+  const [cardForm, setCardForm] = useState<KnowledgeCardPayload>(initialCardForm)
   const [question, setQuestion] = useState("GraphDB를 제외한 이유와 보완 방법은?")
   const [answer, setAnswer] = useState<LlmAnswer | null>(null)
   const [searchResults, setSearchResults] = useState<SearchResponse | null>(null)
   const [reviewResult, setReviewResult] = useState<ReviewResult | null>(null)
   const [status, setStatus] = useState("Ready")
   const [busy, setBusy] = useState(false)
+  const [activeStudioTab, setActiveStudioTab] = useState<StudioTab>("graph")
+  const [ingestionProgress, setIngestionProgress] = useState<IngestionProgress>(initialIngestionProgress)
   const fileRef = useRef<HTMLInputElement | null>(null)
 
   const activeWorkspace = workspaces.find((workspace) => workspace.id === workspaceId) ?? null
@@ -116,6 +131,20 @@ function App() {
   const sourceCounts = useMemo(() => countBy(documents, "source_type"), [documents])
   const cardCounts = useMemo(() => countBy(cards, "card_type"), [cards])
   const needsValidationCount = cards.filter((card) => card.status === "needs_validation" || card.status === "needs_review").length
+
+  useEffect(() => {
+    if (ingestionProgress.status !== "running") return
+    const timer = window.setTimeout(() => {
+      setIngestionProgress((current) => {
+        if (current.status !== "running") return current
+        const currentIndex = serverIngestionStepIds.findIndex((step) => step === current.activeStep)
+        if (currentIndex < 0) return current
+        const nextStep = serverIngestionStepIds[Math.min(currentIndex + 1, serverIngestionStepIds.length - 1)]
+        return nextStep === current.activeStep ? current : { ...current, activeStep: nextStep }
+      })
+    }, 900)
+    return () => window.clearTimeout(timer)
+  }, [ingestionProgress])
 
   useEffect(() => {
     let mounted = true
@@ -143,6 +172,8 @@ function App() {
         if (!mounted) return
         setWorkspaces(nextWorkspaces.length ? nextWorkspaces : existing[0] ? existing : [workspace])
         setWorkspaceId(workspace.id)
+        setWorkspaceName(workspace.name)
+        setWorkspaceDescription(workspace.description)
         setDocuments(nextDocuments)
         setCards(nextCards)
         setGraph(nextGraph)
@@ -171,10 +202,48 @@ function App() {
       apiRequest<WorkflowRegistry>("/api/workflows"),
     ])
     setWorkspaces(nextWorkspaces)
+    const currentWorkspace = nextWorkspaces.find((workspace) => workspace.id === id)
+    if (currentWorkspace) {
+      setWorkspaceName(currentWorkspace.name)
+      setWorkspaceDescription(currentWorkspace.description)
+    }
     setDocuments(nextDocuments)
     setCards(nextCards)
     setGraph(nextGraph)
     setWorkflowRegistry(nextWorkflowRegistry)
+  }
+
+  const setIngestionStep = (activeStep: IngestionStepId) => {
+    setIngestionProgress((current) => ({ ...current, activeStep }))
+  }
+
+  const refreshWorkspaceAfterIngestion = async (id: number) => {
+    setIngestionStep("refreshWorkspace")
+    const nextWorkspaces = await apiRequest<Workspace[]>("/api/workspaces")
+    setWorkspaces(nextWorkspaces)
+    const currentWorkspace = nextWorkspaces.find((workspace) => workspace.id === id)
+    if (currentWorkspace) {
+      setWorkspaceName(currentWorkspace.name)
+      setWorkspaceDescription(currentWorkspace.description)
+    }
+
+    setIngestionStep("refreshDocuments")
+    const nextDocuments = await apiRequest<RawDocument[]>(`/api/workspaces/${id}/documents`)
+    setDocuments(nextDocuments)
+
+    setIngestionStep("refreshCards")
+    const nextCards = await apiRequest<KnowledgeCard[]>(`/api/workspaces/${id}/cards`)
+    setCards(nextCards)
+
+    setIngestionStep("refreshGraph")
+    const nextGraph = await apiRequest<KnowledgeGraph>(`/api/workspaces/${id}/graph`)
+    setGraph(nextGraph)
+
+    setIngestionStep("refreshWorkflows")
+    const nextWorkflowRegistry = await apiRequest<WorkflowRegistry>("/api/workflows")
+    setWorkflowRegistry(nextWorkflowRegistry)
+
+    setIngestionStep("render")
   }
 
   const createWorkspace = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -189,16 +258,93 @@ function App() {
     })
   }
 
-  const ingestSource = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    await runTask("Source saved and indexed", async () => {
-      await apiRequest(`/api/workspaces/${requireWorkspace()}/documents/source`, {
-        method: "POST",
-        body: JSON.stringify(sourceForm),
+  const updateWorkspace = async () => {
+    await runTask("Workspace updated", async () => {
+      const id = requireWorkspace()
+      await apiRequest<Workspace>(`/api/workspaces/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ name: workspaceName, description: workspaceDescription }),
       })
-      setSourceForm((current) => ({ ...initialSourceForm, source_type: current.source_type }))
+      await refreshWorkspace(id)
+    })
+  }
+
+  const deleteWorkspace = async () => {
+    await runTask("Workspace deleted", async () => {
+      const id = requireWorkspace()
+      await apiRequest<void>(`/api/workspaces/${id}`, { method: "DELETE" })
+      const remaining = await apiRequest<Workspace[]>("/api/workspaces")
+      const next = remaining[0] ?? (await apiRequest<Workspace>("/api/workspaces", {
+        method: "POST",
+        body: JSON.stringify({ name: "Demo Workspace", description: "데모 시연용 workspace" }),
+      }))
+      setWorkspaceId(next.id)
+      setWorkspaceName(next.name)
+      setWorkspaceDescription(next.description)
+      setSelectedNodeId(null)
+      setSelectedDocument(null)
+      setSelectedCard(null)
+      await refreshWorkspace(next.id)
+    })
+  }
+
+  const createManualCard = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    await runTask("Manual card created", async () => {
+      const card = await apiRequest<KnowledgeCard>(`/api/workspaces/${requireWorkspace()}/cards`, {
+        method: "POST",
+        body: JSON.stringify(cardForm),
+      })
+      setCardForm(initialCardForm)
+      setSelectedNodeId(`card:${card.id}`)
+      setSelectedCard(card)
+      setSelectedDocument(null)
       await refreshWorkspace()
     })
+  }
+
+  const updateCard = async (cardId: number, patch: KnowledgeCardPatch) => {
+    await runTask("Card updated", async () => {
+      const card = await apiRequest<KnowledgeCard>(`/api/workspaces/${requireWorkspace()}/cards/${cardId}`, {
+        method: "PATCH",
+        body: JSON.stringify(patch),
+      })
+      setSelectedCard(card)
+      setSelectedNodeId(`card:${card.id}`)
+      setSelectedDocument(null)
+      await refreshWorkspace()
+    })
+  }
+
+  const deleteCard = async (cardId: number) => {
+    await runTask("Card deleted", async () => {
+      await apiRequest<void>(`/api/workspaces/${requireWorkspace()}/cards/${cardId}`, { method: "DELETE" })
+      setSelectedNodeId(null)
+      setSelectedCard(null)
+      setSelectedDocument(null)
+      await refreshWorkspace()
+    })
+  }
+
+  const ingestSource = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    startIngestionProgress("Source")
+    await runTask("Source saved and indexed", async () => {
+      const result = await apiRequest<IngestionResult>(
+        `/api/workspaces/${requireWorkspace()}/documents/source`,
+        {
+          method: "POST",
+          body: JSON.stringify(sourceForm),
+        },
+      )
+      setSourceForm((current) => ({ ...initialSourceForm, source_type: current.source_type }))
+      const id = requireWorkspace()
+      setIngestionStep("persist")
+      await refreshWorkspaceAfterIngestion(id)
+      const summary = summarizeIngestion(result, "Source")
+      completeIngestionProgress(summary)
+      return summary
+    }, { onError: (error) => failIngestionProgress(errorMessage(error)) })
   }
 
   const uploadFile = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -208,28 +354,86 @@ function App() {
       setStatus("업로드할 파일을 선택하세요.")
       return
     }
+    startIngestionProgress("File")
     await runTask("File saved and indexed", async () => {
       const formData = new FormData()
+      const lowerName = file.name.toLowerCase()
+      const sourceType =
+        lowerName.endsWith(".md") || lowerName.endsWith(".markdown")
+          ? "md"
+          : lowerName.endsWith(".pdf")
+            ? "pdf"
+            : lowerName.endsWith(".csv")
+              ? "csv"
+              : "txt"
       formData.append("file", file)
-      formData.append("source_type", sourceForm.source_type || "upload")
+      formData.append("source_type", sourceType)
       formData.append("source_url", sourceForm.source_url)
       formData.append("external_id", sourceForm.external_id)
-      await apiFormRequest(`/api/workspaces/${requireWorkspace()}/documents/upload`, formData)
+      const result = await apiFormRequest<IngestionResult>(
+        `/api/workspaces/${requireWorkspace()}/documents/upload`,
+        formData,
+      )
       if (fileRef.current) fileRef.current.value = ""
+      const id = requireWorkspace()
+      setIngestionStep("persist")
+      await refreshWorkspaceAfterIngestion(id)
+      const summary = summarizeIngestion(result, "File")
+      completeIngestionProgress(summary)
+      return summary
+    }, { onError: (error) => failIngestionProgress(errorMessage(error)) })
+  }
+
+  const updateDocument = async (documentId: number, patch: RawDocumentPatch) => {
+    await runTask("Source updated and re-indexed", async () => {
+      const document = await apiRequest<RawDocument>(`/api/workspaces/${requireWorkspace()}/documents/${documentId}`, {
+        method: "PATCH",
+        body: JSON.stringify(patch),
+      })
+      setSelectedNodeId(`doc:${document.id}`)
+      setSelectedDocument(document)
+      setSelectedCard(null)
+      await refreshWorkspace()
+    })
+  }
+
+  const deleteDocument = async (documentId: number) => {
+    await runTask("Source deleted", async () => {
+      await apiRequest<void>(`/api/workspaces/${requireWorkspace()}/documents/${documentId}`, { method: "DELETE" })
+      setSelectedNodeId(null)
+      setSelectedDocument(null)
+      setSelectedCard(null)
       await refreshWorkspace()
     })
   }
 
   const seedSources = async () => {
-    await runTask("Sample sources saved", async () => {
-      const id = requireWorkspace()
+    await runTask("Sample workspace reset", async () => {
+      const existingWorkspaces = await apiRequest<Workspace[]>("/api/workspaces")
+      for (const workspace of existingWorkspaces) {
+        await apiRequest<void>(`/api/workspaces/${workspace.id}`, { method: "DELETE" })
+      }
+      const workspace = await apiRequest<Workspace>("/api/workspaces", {
+        method: "POST",
+        body: JSON.stringify({
+          name: "ICH Demo Workspace",
+          description: "GraphDB tradeoff, source intake, relation linking, grounded search 시연용 샘플",
+        }),
+      })
       for (const sample of sampleSources) {
-        await apiRequest(`/api/workspaces/${id}/documents/source`, {
+        await apiRequest(`/api/workspaces/${workspace.id}/documents/source`, {
           method: "POST",
           body: JSON.stringify(sample),
         })
       }
-      await refreshWorkspace(id)
+      setWorkspaceId(workspace.id)
+      setSelectedNodeId(null)
+      setSelectedDocument(null)
+      setSelectedCard(null)
+      setAnswer(null)
+      setSearchResults(null)
+      setReviewResult(null)
+      await refreshWorkspace(workspace.id)
     })
   }
 
@@ -278,22 +482,61 @@ function App() {
     }
   }
 
-  const loadSampleIntoForm = (sample: SourcePayload) => {
-    setSourceForm(sample)
-    setStatus(`${sample.title} loaded into source form`)
+  const startIngestionProgress = (kind: "Source" | "File") => {
+    setIngestionProgress({
+      status: "running",
+      activeStep: "validate",
+      summary: `${kind} processing started`,
+      detail: "LangGraph source intake, chunking, card extraction, relation linking, 저장 갱신을 순서대로 실행합니다.",
+    })
   }
 
-  const runTask = async (successMessage: string, task: () => Promise<void>) => {
+  const completeIngestionProgress = (summary: string) => {
+    setIngestionProgress({
+      status: "complete",
+      activeStep: "render",
+      summary,
+      detail: "처리가 끝났고 workspace 데이터와 그래프가 갱신되었습니다.",
+    })
+  }
+
+  const failIngestionProgress = (message: string) => {
+    setIngestionProgress((current) => ({
+      status: "error",
+      activeStep: current.activeStep,
+      summary: "Source ingestion failed",
+      detail: message,
+    }))
+  }
+
+  const runTask = async (
+    successMessage: string,
+    task: () => Promise<string | void>,
+    options: { onError?: (error: unknown) => void } = {},
+  ) => {
     try {
       setBusy(true)
       setStatus("Running")
-      await task()
-      setStatus(successMessage)
+      const dynamicMessage = await task()
+      setStatus(dynamicMessage ?? successMessage)
     } catch (error) {
+      options.onError?.(error)
       setStatus(errorMessage(error))
     } finally {
       setBusy(false)
     }
+  }
+
+  const summarizeIngestion = (result: IngestionResult, kind: "Source" | "File"): string => {
+    const parts = [
+      `${kind} ${result.chunk_count} chunks`,
+      `${result.card_count} cards`,
+    ]
+    if (result.skipped_chunk_count) parts.push(`${result.skipped_chunk_count} skipped`)
+    if (result.needs_review_count) parts.push(`${result.needs_review_count} need review`)
+    if (result.child_document_ids?.length) parts.push(`${result.child_document_ids.length} child docs`)
+    if (result.card_count === 0) parts.push("(no valuable markers detected — chunks stored only)")
+    return parts.join(" · ")
   }
 
   const requireWorkspace = () => {
@@ -312,6 +555,8 @@ function App() {
             setWorkspaceId(id)
             void refreshWorkspace(id)
           }}
+          activeStudioTab={activeStudioTab}
+          onStudioTabChange={setActiveStudioTab}
           documents={documents}
           cards={cards}
           sourceCounts={sourceCounts}
@@ -341,91 +586,123 @@ function App() {
             </Button>
           </header>
 
-          <main className="grid min-h-[calc(100svh-3.5rem)] grid-cols-1 gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_420px]">
-            <section className="flex min-w-0 flex-col gap-4">
-              <WorkflowStrip documents={documents.length} cards={cards.length} links={graph.links.length} />
-              <Tabs defaultValue="studio" className="flex w-full flex-col gap-3">
-                <TabsList>
-                  <TabsTrigger value="studio">Graph Studio</TabsTrigger>
-                  <TabsTrigger value="obsidian">Obsidian Graph</TabsTrigger>
-                  <TabsTrigger value="flows">LangGraph Flow</TabsTrigger>
-                </TabsList>
-                <TabsContent value="studio">
-                  <KnowledgeGraphPanel
-                    graph={graph}
-                    selectedId={selectedNodeId}
-                    onSelectNode={(node) => void selectNode(node)}
-                    onRefresh={() => void refreshWorkspace()}
-                  />
-                </TabsContent>
-                <TabsContent value="obsidian">
-                  <ObsidianGraphPanel
-                    graph={graph}
-                    selectedId={selectedNodeId}
-                    onSelectNode={(node) => void selectNode(node)}
-                    onRefresh={() => void refreshWorkspace()}
-                  />
-                </TabsContent>
-                <TabsContent value="flows">
-                  <LangGraphFlowPanel
-                    registry={workflowRegistry}
-                    documents={documents.length}
-                    cards={cards.length}
-                    links={graph.links.length}
-                    hasAnswer={Boolean(answer)}
-                    onRefresh={() => void refreshWorkspace()}
-                  />
-                </TabsContent>
-              </Tabs>
-              <Tabs defaultValue="sources" className="flex w-full flex-col gap-3">
-                <TabsList>
-                  <TabsTrigger value="sources">Sources</TabsTrigger>
-                  <TabsTrigger value="cards">Cards</TabsTrigger>
-                  <TabsTrigger value="search">LLM Search</TabsTrigger>
-                </TabsList>
-                <TabsContent value="sources" className="mt-3">
-                  <SourceConsole
-                    sourceForm={sourceForm}
-                    setSourceForm={setSourceForm}
-                    onSubmit={ingestSource}
-                    onUpload={uploadFile}
-                    fileRef={fileRef}
-                    onLoadSample={loadSampleIntoForm}
-                    disabled={busy || !workspaceId}
-                  />
-                </TabsContent>
-                <TabsContent value="cards" className="mt-3">
-                  <CardCatalog cards={cards} documents={documents} onSelect={(card) => void selectNode({ id: `card:${card.id}`, type: "card", label: card.title })} />
-                </TabsContent>
-                <TabsContent value="search" className="mt-3">
-                  <RetrievalConsole
-                    question={question}
-                    setQuestion={setQuestion}
-                    answer={answer}
-                    searchResults={searchResults}
-                    onSubmit={runLlmSearch}
-                    disabled={busy || !workspaceId}
-                  />
-                </TabsContent>
-              </Tabs>
-            </section>
+          <main
+            className={cn(
+              "min-h-[calc(100svh-3.5rem)] gap-4 p-4",
+              activeStudioTab === "graph"
+                ? "grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_420px]"
+                : "flex flex-col",
+            )}
+          >
+            {activeStudioTab === "graph" && (
+              <>
+                <section className="flex min-w-0 flex-col gap-4">
+                  <WorkflowStrip documents={documents.length} cards={cards.length} links={graph.links.length} />
+                  <Tabs defaultValue="studio" className="flex w-full flex-col gap-3">
+                    <TabsList>
+                      <TabsTrigger value="studio">Graph Studio</TabsTrigger>
+                      <TabsTrigger value="obsidian">Obsidian Graph</TabsTrigger>
+                      <TabsTrigger value="flows">LangGraph Flow</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="studio">
+                      <KnowledgeGraphPanel
+                        graph={graph}
+                        selectedId={selectedNodeId}
+                        onSelectNode={(node) => void selectNode(node)}
+                        onRefresh={() => void refreshWorkspace()}
+                      />
+                    </TabsContent>
+                    <TabsContent value="obsidian">
+                      <ObsidianGraphPanel
+                        graph={graph}
+                        selectedId={selectedNodeId}
+                        onSelectNode={(node) => void selectNode(node)}
+                        onRefresh={() => void refreshWorkspace()}
+                      />
+                    </TabsContent>
+                    <TabsContent value="flows">
+                      <LangGraphFlowPanel
+                        registry={workflowRegistry}
+                        documents={documents.length}
+                        cards={cards.length}
+                        links={graph.links.length}
+                        hasAnswer={Boolean(answer)}
+                        onRefresh={() => void refreshWorkspace()}
+                      />
+                    </TabsContent>
+                  </Tabs>
+                </section>
 
-            <InspectorPanel
-              selectedNode={selectedGraphNode}
-              selectedDocument={selectedDocument}
-              selectedCard={selectedCard}
-              answer={answer}
-              documents={documents}
-              needsValidationCount={needsValidationCount}
-              reviewResult={reviewResult}
-              onCreateWorkspace={createWorkspace}
-              onRunReview={() => void runQualityReview()}
-              busy={busy || !workspaceId}
-              workspaceName={workspaceName}
-              setWorkspaceName={setWorkspaceName}
-              workspaceDescription={workspaceDescription}
-              setWorkspaceDescription={setWorkspaceDescription}
-            />
+                <InspectorPanel
+                  selectedNode={selectedGraphNode}
+                  selectedDocument={selectedDocument}
+                  selectedCard={selectedCard}
+                  answer={answer}
+                  documents={documents}
+                  needsValidationCount={needsValidationCount}
+                  reviewResult={reviewResult}
+                  onUpdateDocument={(documentId, patch) => void updateDocument(documentId, patch)}
+                  onDeleteDocument={(documentId) => void deleteDocument(documentId)}
+                  onUpdateCard={(cardId, patch) => void updateCard(cardId, patch)}
+                  onDeleteCard={(cardId) => void deleteCard(cardId)}
+                  onRunReview={() => void runQualityReview()}
+                  busy={busy || !workspaceId}
+                />
+              </>
+            )}
+
+            {activeStudioTab === "source" && (
+              <section className="flex min-w-0 flex-col gap-4">
+                <SourceConsole
+                  sourceForm={sourceForm}
+                  setSourceForm={setSourceForm}
+                  ingestionProgress={ingestionProgress}
+                  onSubmit={ingestSource}
+                  onUpload={uploadFile}
+                  fileRef={fileRef}
+                  disabled={busy || !workspaceId}
+                />
+                <ManualCardConsole
+                  cardForm={cardForm}
+                  setCardForm={setCardForm}
+                  onSubmit={createManualCard}
+                  disabled={busy || !workspaceId}
+                />
+              </section>
+            )}
+
+            {activeStudioTab === "search" && (
+              <section className="flex min-w-0 flex-col gap-4">
+                <RetrievalConsole
+                  question={question}
+                  setQuestion={setQuestion}
+                  answer={answer}
+                  searchResults={searchResults}
+                  onSubmit={runLlmSearch}
+                  disabled={busy || !workspaceId}
+                />
+              </section>
+            )}
+
+            {activeStudioTab === "workspace" && (
+              <WorkspaceConsole
+                workspaces={workspaces}
+                activeWorkspace={activeWorkspace}
+                workspaceId={workspaceId}
+                onWorkspaceChange={(id) => {
+                  setWorkspaceId(id)
+                  void refreshWorkspace(id)
+                }}
+                onCreateWorkspace={createWorkspace}
+                onUpdateWorkspace={() => void updateWorkspace()}
+                onDeleteWorkspace={() => void deleteWorkspace()}
+                busy={busy}
+                workspaceName={workspaceName}
+                setWorkspaceName={setWorkspaceName}
+                workspaceDescription={workspaceDescription}
+                setWorkspaceDescription={setWorkspaceDescription}
+              />
+            )}
           </main>
         </SidebarInset>
       </SidebarProvider>
@@ -438,6 +715,8 @@ function AppSidebar({
   activeWorkspace,
   workspaceId,
   onWorkspaceChange,
+  activeStudioTab,
+  onStudioTabChange,
   documents,
   cards,
   sourceCounts,
@@ -447,6 +726,8 @@ function AppSidebar({
   activeWorkspace: Workspace | null
   workspaceId: number | null
   onWorkspaceChange: (id: number) => void
+  activeStudioTab: StudioTab
+  onStudioTabChange: (tab: StudioTab) => void
   documents: RawDocument[]
   cards: KnowledgeCard[]
   sourceCounts: Record<string, number>
@@ -487,21 +768,27 @@ function AppSidebar({
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton isActive>
+                <SidebarMenuButton isActive={activeStudioTab === "graph"} onClick={() => onStudioTabChange("graph")}>
                   <Network />
                   <span>Graph</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton>
+                <SidebarMenuButton isActive={activeStudioTab === "source"} onClick={() => onStudioTabChange("source")}>
                   <Inbox />
-                  <span>Sources</span>
+                  <span>Source</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton>
+                <SidebarMenuButton isActive={activeStudioTab === "search"} onClick={() => onStudioTabChange("search")}>
                   <FileSearch />
-                  <span>Retrieval</span>
+                  <span>Search</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton isActive={activeStudioTab === "workspace"} onClick={() => onStudioTabChange("workspace")}>
+                  <Database />
+                  <span>Workspace</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -568,170 +855,6 @@ function WorkflowStrip({ documents, cards, links }: { documents: number; cards: 
   )
 }
 
-function SourceConsole({
-  sourceForm,
-  setSourceForm,
-  onSubmit,
-  onUpload,
-  fileRef,
-  onLoadSample,
-  disabled,
-}: {
-  sourceForm: SourcePayload
-  setSourceForm: React.Dispatch<React.SetStateAction<SourcePayload>>
-  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void
-  onUpload: (event: React.FormEvent<HTMLFormElement>) => void
-  fileRef: React.RefObject<HTMLInputElement | null>
-  onLoadSample: (sample: SourcePayload) => void
-  disabled: boolean
-}) {
-  const update = (patch: Partial<SourcePayload>) => setSourceForm((current) => ({ ...current, ...patch }))
-
-  return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Link2 data-icon="inline-start" />
-            Multi-source ingestion
-          </CardTitle>
-          <CardDescription>Notion, GitHub, Slack, Linear, MCP 출력, 링크, 파일을 같은 저장 파이프라인으로 넣습니다. 내용이 비어 있으면 서버 설정 토큰으로 자동 가져오기를 시도합니다.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form id="source-ingestion-form" className="flex flex-col gap-5" onSubmit={onSubmit}>
-            <FieldSet>
-              <FieldGroup>
-                <Field>
-                  <FieldLabel>Source Type</FieldLabel>
-                  <Select value={sourceForm.source_type} onValueChange={(value) => update({ source_type: value ?? "manual" })}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue>
-                        {(value) => sourceTypes.find((source) => source.value === value)?.label ?? value ?? "Manual"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {sourceTypes.map((source) => (
-                          <SelectItem key={source.value} value={source.value}>
-                            {source.label}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                  <FieldDescription>{sourceTypes.find((source) => source.value === sourceForm.source_type)?.hint}</FieldDescription>
-                </Field>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Field>
-                    <FieldLabel htmlFor="source-url">Link or MCP URI</FieldLabel>
-                    <Input id="source-url" value={sourceForm.source_url} onChange={(event) => update({ source_url: event.target.value })} placeholder="https://github.com/org/repo/blob/main/prd.md" />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="source-external-id">External ID</FieldLabel>
-                    <Input id="source-external-id" value={sourceForm.external_id} onChange={(event) => update({ external_id: event.target.value })} placeholder="linear:ICH-17 or slack:C0123" />
-                  </Field>
-                </div>
-                <Field>
-                  <FieldLabel htmlFor="source-title">Stored title</FieldLabel>
-                  <Input id="source-title" value={sourceForm.title} onChange={(event) => update({ title: event.target.value })} placeholder="mentor-feedback.md" />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="source-content">Pasted connector content</FieldLabel>
-                  <Textarea id="source-content" className="min-h-44" value={sourceForm.content} onChange={(event) => update({ content: event.target.value })} placeholder="MCP나 export 결과를 붙여넣으면 링크 fetch 없이 바로 저장합니다." />
-                  <FieldDescription>내용이 비어 있으면 링크에서 자동 fetch를 시도합니다. 인증이 필요한 서비스는 서버 .env 토큰이 없으면 설정 오류를 표시합니다.</FieldDescription>
-                </Field>
-              </FieldGroup>
-            </FieldSet>
-            <div className="flex flex-wrap gap-2">
-              <Button type="submit" disabled={disabled}>
-                <FileInput data-icon="inline-start" />
-                Save Source
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setSourceForm(initialSourceForm)}>
-                Reset
-              </Button>
-            </div>
-          </form>
-          <Separator className="my-5" />
-          <form className="flex flex-col gap-3" onSubmit={onUpload}>
-            <Field>
-              <FieldLabel htmlFor="upload-file">File upload</FieldLabel>
-              <Input id="upload-file" ref={fileRef} type="file" accept=".txt,.md,.pdf,.csv" />
-              <FieldDescription>txt, md, pdf, csv 파일은 원본과 source metadata를 함께 저장합니다.</FieldDescription>
-            </Field>
-            <Button type="submit" variant="secondary" disabled={disabled}>
-              <Upload data-icon="inline-start" />
-              Upload File
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Sample Sources</CardTitle>
-          <CardDescription>여러 소스 저장과 링크·그룹핑 확인용 입력입니다.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-2">
-          {sampleSources.map((sample) => (
-            <button key={sample.external_id} className="sample-source-row" onClick={() => onLoadSample(sample)}>
-              <span className="font-medium">{sample.title}</span>
-              <span className="text-xs text-muted-foreground">{sample.source_type} · {sample.external_id}</span>
-            </button>
-          ))}
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
-
-function CardCatalog({
-  cards,
-  documents,
-  onSelect,
-}: {
-  cards: KnowledgeCard[]
-  documents: RawDocument[]
-  onSelect: (card: KnowledgeCard) => void
-}) {
-  if (!cards.length) {
-    return (
-      <Empty className="border">
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <Sparkles />
-          </EmptyMedia>
-          <EmptyTitle>No cards yet</EmptyTitle>
-          <EmptyDescription>소스를 저장하면 아이디어, 가설, 근거, 결정사항 카드가 생성됩니다.</EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    )
-  }
-
-  return (
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-      {cards.map((card) => {
-        const document = documents.find((item) => item.id === card.source_document_id)
-        return (
-          <Card key={card.id} size="sm" className="cursor-pointer transition hover:ring-primary/30" onClick={() => onSelect(card)}>
-            <CardHeader>
-              <CardTitle className="line-clamp-2">{safeDisplayText(card.title)}</CardTitle>
-              <CardDescription>{safeDisplayText(document?.filename) || "unknown source"}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              <p className="line-clamp-3 text-sm text-muted-foreground">{card.summary}</p>
-              <div className="flex flex-wrap gap-1.5">
-                <Badge variant="secondary">{card.card_type}</Badge>
-                <Badge variant="outline">{card.status}</Badge>
-                <Badge variant={card.confidence === "high" ? "default" : "secondary"}>{card.confidence}</Badge>
-              </div>
-            </CardContent>
-          </Card>
-        )
-      })}
-    </div>
-  )
-}
-
 function RetrievalConsole({
   question,
   setQuestion,
@@ -782,15 +905,15 @@ function RetrievalConsole({
           <ScrollArea className="h-[360px] pr-3">
             <div className="flex flex-col gap-3">
               {searchResults?.cards.map((card) => (
-                <div key={card.id} className="rounded-lg border p-3">
-                  <div className="text-sm font-medium">#{card.id} {safeDisplayText(card.title)}</div>
-                  <p className="mt-1 line-clamp-3 text-xs text-muted-foreground">{card.summary}</p>
+                <div key={card.id} className="min-w-0 rounded-lg border p-3">
+                  <div className="break-words text-sm font-medium [overflow-wrap:anywhere]">#{card.id} {safeDisplayText(card.title)}</div>
+                  <p className="mt-1 whitespace-pre-wrap break-words text-xs text-muted-foreground [overflow-wrap:anywhere]">{card.summary}</p>
                 </div>
               ))}
               {searchResults?.chunks.map((chunk) => (
-                <div key={chunk.id} className="rounded-lg border border-dashed p-3">
+                <div key={chunk.id} className="min-w-0 rounded-lg border border-dashed p-3">
                   <div className="text-xs font-medium">chunk #{chunk.id}</div>
-                  <p className="mt-1 line-clamp-4 text-xs text-muted-foreground">{chunk.content}</p>
+                  <p className="mt-1 whitespace-pre-wrap break-words text-xs text-muted-foreground [overflow-wrap:anywhere]">{chunk.content}</p>
                 </div>
               ))}
               {!searchResults && (
@@ -812,6 +935,113 @@ function RetrievalConsole({
   )
 }
 
+function WorkspaceConsole({
+  workspaces,
+  activeWorkspace,
+  workspaceId,
+  onWorkspaceChange,
+  onCreateWorkspace,
+  onUpdateWorkspace,
+  onDeleteWorkspace,
+  busy,
+  workspaceName,
+  setWorkspaceName,
+  workspaceDescription,
+  setWorkspaceDescription,
+}: {
+  workspaces: Workspace[]
+  activeWorkspace: Workspace | null
+  workspaceId: number | null
+  onWorkspaceChange: (id: number) => void
+  onCreateWorkspace: (event: React.FormEvent<HTMLFormElement>) => void
+  onUpdateWorkspace: () => void
+  onDeleteWorkspace: () => void
+  busy: boolean
+  workspaceName: string
+  setWorkspaceName: (value: string) => void
+  workspaceDescription: string
+  setWorkspaceDescription: (value: string) => void
+}) {
+  return (
+    <section className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database data-icon="inline-start" />
+            Workspace
+          </CardTitle>
+          <CardDescription>작업 공간 생성, 이름 수정, 삭제를 이 탭에서 관리합니다.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form className="flex flex-col gap-4" onSubmit={onCreateWorkspace}>
+            <Field>
+              <FieldLabel htmlFor="workspace-name">Workspace name</FieldLabel>
+              <Input id="workspace-name" value={workspaceName} onChange={(event) => setWorkspaceName(event.target.value)} />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="workspace-description">Description</FieldLabel>
+              <Input id="workspace-description" value={workspaceDescription} onChange={(event) => setWorkspaceDescription(event.target.value)} />
+            </Field>
+            <Button type="submit" disabled={busy}>
+              <Database data-icon="inline-start" />
+              Create workspace
+            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" onClick={onUpdateWorkspace} disabled={busy || !workspaceId}>
+                <Save data-icon="inline-start" />
+                Save workspace
+              </Button>
+              <Button type="button" variant="destructive" onClick={onDeleteWorkspace} disabled={busy || !workspaceId}>
+                <Trash2 data-icon="inline-start" />
+                Delete
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Workspace List</CardTitle>
+          <CardDescription>{activeWorkspace ? `${safeDisplayText(activeWorkspace.name)} is selected` : "선택된 workspace가 없습니다."}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="max-h-[420px] pr-3">
+            <div className="flex flex-col gap-2">
+              {workspaces.map((workspace) => (
+                <button
+                  key={workspace.id}
+                  type="button"
+                  className={cn(
+                    "flex min-w-0 flex-col gap-1 rounded-lg border p-3 text-left transition hover:bg-muted/60",
+                    workspace.id === workspaceId && "border-primary bg-muted/60",
+                  )}
+                  onClick={() => onWorkspaceChange(workspace.id)}
+                >
+                  <span className="break-words text-sm font-medium [overflow-wrap:anywhere]">{safeDisplayText(workspace.name)}</span>
+                  <span className="break-words text-xs text-muted-foreground [overflow-wrap:anywhere]">
+                    {safeDisplayText(workspace.description) || "No description"}
+                  </span>
+                </button>
+              ))}
+              {!workspaces.length && (
+                <Empty className="border">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <Database />
+                    </EmptyMedia>
+                    <EmptyTitle>No workspace</EmptyTitle>
+                    <EmptyDescription>이름을 입력해 새 workspace를 생성합니다.</EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              )}
+            </div>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+    </section>
+  )
+}
+
 function InspectorPanel({
   selectedNode,
   selectedDocument,
@@ -820,13 +1050,12 @@ function InspectorPanel({
   documents,
   needsValidationCount,
   reviewResult,
-  onCreateWorkspace,
+  onUpdateDocument,
+  onDeleteDocument,
+  onUpdateCard,
+  onDeleteCard,
   onRunReview,
   busy,
-  workspaceName,
-  setWorkspaceName,
-  workspaceDescription,
-  setWorkspaceDescription,
 }: {
   selectedNode: GraphNode | null
   selectedDocument: RawDocument | null
@@ -835,13 +1064,12 @@ function InspectorPanel({
   documents: RawDocument[]
   needsValidationCount: number
   reviewResult: ReviewResult | null
-  onCreateWorkspace: (event: React.FormEvent<HTMLFormElement>) => void
+  onUpdateDocument: (documentId: number, patch: RawDocumentPatch) => void
+  onDeleteDocument: (documentId: number) => void
+  onUpdateCard: (cardId: number, patch: KnowledgeCardPatch) => void
+  onDeleteCard: (cardId: number) => void
   onRunReview: () => void
   busy: boolean
-  workspaceName: string
-  setWorkspaceName: (value: string) => void
-  workspaceDescription: string
-  setWorkspaceDescription: (value: string) => void
 }) {
   return (
     <aside className="flex min-w-0 flex-col gap-4">
@@ -858,29 +1086,22 @@ function InspectorPanel({
             <TabsList>
               <TabsTrigger value="node">Node</TabsTrigger>
               <TabsTrigger value="answer">Answer</TabsTrigger>
-              <TabsTrigger value="workspace">Workspace</TabsTrigger>
             </TabsList>
             <TabsContent value="node" className="mt-4">
-              <NodeInspector node={selectedNode} document={selectedDocument} card={selectedCard} documents={documents} />
+              <NodeInspector
+                node={selectedNode}
+                document={selectedDocument}
+                card={selectedCard}
+                documents={documents}
+                onUpdateDocument={onUpdateDocument}
+                onDeleteDocument={onDeleteDocument}
+                onUpdateCard={onUpdateCard}
+                onDeleteCard={onDeleteCard}
+                busy={busy}
+              />
             </TabsContent>
             <TabsContent value="answer" className="mt-4">
               {answer ? <AnswerBlock answer={answer} compact /> : <p className="text-sm text-muted-foreground">아직 생성된 답변이 없습니다.</p>}
-            </TabsContent>
-            <TabsContent value="workspace" className="mt-4">
-              <form className="flex flex-col gap-4" onSubmit={onCreateWorkspace}>
-                <Field>
-                  <FieldLabel htmlFor="workspace-name">Workspace name</FieldLabel>
-                  <Input id="workspace-name" value={workspaceName} onChange={(event) => setWorkspaceName(event.target.value)} />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="workspace-description">Description</FieldLabel>
-                  <Input id="workspace-description" value={workspaceDescription} onChange={(event) => setWorkspaceDescription(event.target.value)} />
-                </Field>
-                <Button type="submit">
-                  <Database data-icon="inline-start" />
-                  Create workspace
-                </Button>
-              </form>
             </TabsContent>
           </Tabs>
         </CardContent>
@@ -896,7 +1117,7 @@ function InspectorPanel({
         <CardContent className="grid gap-3">
           <SignalRow label="Needs validation" value={needsValidationCount} />
           <SignalRow label="Sources with links" value={documents.filter((document) => document.source_url).length} />
-          <SignalRow label="MCP/pasted sources" value={documents.filter((document) => document.content.length > 0).length} />
+          <SignalRow label="Pasted sources" value={documents.filter((document) => document.content.length > 0).length} />
           <Button variant="outline" size="sm" onClick={onRunReview} disabled={busy} className="mt-1">
             <ShieldCheck data-icon="inline-start" />
             Run Quality Review
@@ -910,10 +1131,10 @@ function InspectorPanel({
                     <div key={target.card_id} className="rounded-lg border p-2 text-xs min-w-0">
                       <div className="flex items-center gap-1.5 mb-1 min-w-0">
                         <Badge variant="secondary" className="shrink-0">{target.card_type}</Badge>
-                        <span className="font-medium truncate">{safeDisplayText(target.title)}</span>
+                        <span className="break-words font-medium [overflow-wrap:anywhere]">{safeDisplayText(target.title)}</span>
                       </div>
-                      <p className="text-destructive break-words">⚠ {target.issue}</p>
-                      <p className="text-muted-foreground break-words">→ {target.suggestion}</p>
+                      <p className="break-words text-destructive [overflow-wrap:anywhere]">⚠ {target.issue}</p>
+                      <p className="break-words text-muted-foreground [overflow-wrap:anywhere]">→ {target.suggestion}</p>
                     </div>
                   ))}
                 </div>
@@ -931,12 +1152,59 @@ function NodeInspector({
   document,
   card,
   documents,
+  onUpdateDocument,
+  onDeleteDocument,
+  onUpdateCard,
+  onDeleteCard,
+  busy,
 }: {
   node: GraphNode | null
   document: RawDocument | null
   card: KnowledgeCard | null
   documents: RawDocument[]
+  onUpdateDocument: (documentId: number, patch: RawDocumentPatch) => void
+  onDeleteDocument: (documentId: number) => void
+  onUpdateCard: (cardId: number, patch: KnowledgeCardPatch) => void
+  onDeleteCard: (cardId: number) => void
+  busy: boolean
 }) {
+  const [draft, setDraft] = useState<KnowledgeCardPayload>(initialCardForm)
+  const [documentDraft, setDocumentDraft] = useState<RawDocumentPatch>({})
+
+  useEffect(() => {
+    if (!card) {
+      setDraft(initialCardForm)
+      return
+    }
+    setDraft({
+      card_type: card.card_type,
+      title: card.title,
+      summary: card.summary,
+      evidence_quote: card.evidence_quote,
+      keywords: card.keywords,
+      tags: card.tags,
+      status: card.status,
+      confidence: card.confidence,
+    })
+  }, [card])
+
+  useEffect(() => {
+    if (!document) {
+      setDocumentDraft({})
+      return
+    }
+    setDocumentDraft({
+      filename: document.filename,
+      source_type: document.source_type,
+      source_url: document.source_url,
+      external_id: document.external_id,
+      content: document.content,
+    })
+  }, [document])
+
+  const updateDraft = (patch: Partial<KnowledgeCardPayload>) => setDraft((current) => ({ ...current, ...patch }))
+  const updateDocumentDraft = (patch: RawDocumentPatch) => setDocumentDraft((current) => ({ ...current, ...patch }))
+
   if (!node) {
     return (
       <Empty className="border">
@@ -953,18 +1221,86 @@ function NodeInspector({
 
   if (document) {
     return (
-      <div className="flex flex-col gap-3">
+      <div className="flex min-w-0 flex-col gap-3">
         <div className="flex flex-wrap gap-2">
           <Badge>{document.source_type}</Badge>
           <Badge variant="outline">{document.document_type}</Badge>
         </div>
-        <div>
-          <div className="text-sm font-medium">{safeDisplayText(document.filename)}</div>
-          <p className="break-all text-xs text-muted-foreground">{document.source_url || "local input"}</p>
+        <div className="min-w-0">
+          <div className="break-words text-sm font-medium [overflow-wrap:anywhere]">{safeDisplayText(document.filename)}</div>
+          <p className="break-words text-xs text-muted-foreground [overflow-wrap:anywhere]">{document.source_url || "local input"}</p>
         </div>
-        <ScrollArea className="h-[420px] rounded-lg border bg-muted/30 p-3">
-          <pre className="whitespace-pre-wrap text-xs leading-relaxed">{document.content}</pre>
-        </ScrollArea>
+        <form
+          className="flex flex-col gap-3"
+          onSubmit={(event) => {
+            event.preventDefault()
+            onUpdateDocument(document.id, documentDraft)
+          }}
+        >
+          <Field>
+            <FieldLabel htmlFor={`document-filename-${document.id}`}>Stored title</FieldLabel>
+            <Input
+              id={`document-filename-${document.id}`}
+              value={documentDraft.filename ?? ""}
+              onChange={(event) => updateDocumentDraft({ filename: event.target.value })}
+            />
+          </Field>
+          <Field>
+            <FieldLabel>Source Type</FieldLabel>
+            <Select value={documentDraft.source_type ?? document.source_type} onValueChange={(value) => updateDocumentDraft({ source_type: value ?? document.source_type })}>
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  {(value) => sourceTypes.find((source) => source.value === value)?.label ?? value ?? document.source_type}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {sourceTypes.map((source) => (
+                    <SelectItem key={source.value} value={source.value}>
+                      {source.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`document-url-${document.id}`}>Source link</FieldLabel>
+            <Input
+              id={`document-url-${document.id}`}
+              value={documentDraft.source_url ?? ""}
+              onChange={(event) => updateDocumentDraft({ source_url: event.target.value })}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`document-external-${document.id}`}>External ID</FieldLabel>
+            <Input
+              id={`document-external-${document.id}`}
+              value={documentDraft.external_id ?? ""}
+              onChange={(event) => updateDocumentDraft({ external_id: event.target.value })}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`document-content-${document.id}`}>Source Markdown</FieldLabel>
+            <Textarea
+              id={`document-content-${document.id}`}
+              className="min-h-72 whitespace-pre-wrap text-xs leading-relaxed"
+              value={documentDraft.content ?? ""}
+              onChange={(event) => updateDocumentDraft({ content: event.target.value })}
+            />
+            <FieldDescription>원문을 수정하면 chunk와 Knowledge Card를 다시 추출합니다.</FieldDescription>
+          </Field>
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" size="sm" disabled={busy}>
+              <Save data-icon="inline-start" />
+              Save Source
+            </Button>
+            <Button type="button" size="sm" variant="destructive" onClick={() => onDeleteDocument(document.id)} disabled={busy}>
+              <Trash2 data-icon="inline-start" />
+              Delete Source
+            </Button>
+          </div>
+        </form>
       </div>
     )
   }
@@ -972,23 +1308,100 @@ function NodeInspector({
   if (card) {
     const source = documents.find((documentItem) => documentItem.id === card.source_document_id)
     return (
-      <div className="flex flex-col gap-3">
+      <div className="flex min-w-0 flex-col gap-3">
         <div className="flex flex-wrap gap-2">
           <Badge>{card.card_type}</Badge>
           <Badge variant="outline">{card.status}</Badge>
           <Badge variant={card.confidence === "high" ? "default" : "secondary"}>{card.confidence}</Badge>
         </div>
-        <div>
-          <div className="text-sm font-medium">{safeDisplayText(card.title)}</div>
-          <p className="text-xs text-muted-foreground">{safeDisplayText(source?.filename) || "unknown source"}</p>
+        <div className="min-w-0">
+          <div className="break-words text-sm font-medium [overflow-wrap:anywhere]">{safeDisplayText(card.title)}</div>
+          <p className="break-words text-xs text-muted-foreground [overflow-wrap:anywhere]">{safeDisplayText(source?.filename) || "unknown source"}</p>
         </div>
-        <p className="text-sm text-muted-foreground">{card.summary}</p>
-        <div className="rounded-lg border bg-muted/30 p-3 text-sm">"{card.evidence_quote}"</div>
+        <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground [overflow-wrap:anywhere]">{card.summary}</p>
+        <div className="whitespace-pre-wrap break-words rounded-lg border bg-muted/30 p-3 text-sm [overflow-wrap:anywhere]">"{card.evidence_quote}"</div>
         <div className="flex flex-wrap gap-1.5">
           {card.keywords.map((keyword) => (
-            <Badge key={keyword} variant="secondary">{keyword}</Badge>
+            <Badge key={keyword} variant="secondary" className="h-auto min-h-5 max-w-full whitespace-normal text-left break-words [overflow-wrap:anywhere]">{keyword}</Badge>
           ))}
         </div>
+        <Separator />
+        <form
+          className="flex flex-col gap-3"
+          onSubmit={(event) => {
+            event.preventDefault()
+            onUpdateCard(card.id, draft)
+          }}
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field>
+              <FieldLabel>Type</FieldLabel>
+              <Select value={draft.card_type} onValueChange={(value) => updateDraft({ card_type: value ?? card.card_type })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue>{(value) => value ?? draft.card_type}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {cardTypeOptions.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field>
+              <FieldLabel>Status</FieldLabel>
+              <Select value={draft.status} onValueChange={(value) => updateDraft({ status: value ?? card.status })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue>{(value) => value ?? draft.status}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {cardStatusOptions.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </Field>
+          </div>
+          <Field>
+            <FieldLabel htmlFor={`card-title-${card.id}`}>Title</FieldLabel>
+            <Input id={`card-title-${card.id}`} value={draft.title} onChange={(event) => updateDraft({ title: event.target.value })} />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`card-summary-${card.id}`}>Summary</FieldLabel>
+            <Textarea id={`card-summary-${card.id}`} className="min-h-24" value={draft.summary} onChange={(event) => updateDraft({ summary: event.target.value })} />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`card-evidence-${card.id}`}>Evidence Quote</FieldLabel>
+            <Textarea id={`card-evidence-${card.id}`} className="min-h-20" value={draft.evidence_quote} onChange={(event) => updateDraft({ evidence_quote: event.target.value })} />
+          </Field>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field>
+              <FieldLabel htmlFor={`card-keywords-${card.id}`}>Keywords</FieldLabel>
+              <Input id={`card-keywords-${card.id}`} value={serializeTokens(draft.keywords)} onChange={(event) => updateDraft({ keywords: parseTokens(event.target.value) })} />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor={`card-tags-${card.id}`}>Tags</FieldLabel>
+              <Input id={`card-tags-${card.id}`} value={serializeTokens(draft.tags)} onChange={(event) => updateDraft({ tags: parseTokens(event.target.value) })} />
+            </Field>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" size="sm" disabled={busy}>
+              <Save data-icon="inline-start" />
+              Save Card
+            </Button>
+            <Button type="button" size="sm" variant="destructive" onClick={() => onDeleteCard(card.id)} disabled={busy}>
+              <Trash2 data-icon="inline-start" />
+              Delete
+            </Button>
+          </div>
+        </form>
       </div>
     )
   }
@@ -1001,16 +1414,16 @@ function AnswerBlock({ answer, compact = false }: { answer: LlmAnswer; compact?:
     <div className={cn("flex flex-col gap-4 rounded-xl border bg-muted/20 p-4", compact && "p-3")}>
       <div>
         <Badge variant={answer.confidence === "high" ? "default" : "secondary"}>{answer.confidence}</Badge>
-        <p className="mt-3 text-sm leading-relaxed">{answer.answer}</p>
+        <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed [overflow-wrap:anywhere]">{answer.answer}</p>
       </div>
       <div className="flex flex-col gap-2">
         <div className="text-xs font-medium uppercase text-muted-foreground">Evidence Cards</div>
         {answer.evidence_cards.length ? (
           answer.evidence_cards.map((card) => (
-            <div key={card.card_id} className="rounded-lg border bg-background p-3 text-xs">
-              <div className="font-medium">card #{card.card_id} · {safeDisplayText(card.title)}</div>
-              <div className="mt-1 text-muted-foreground">{safeDisplayText(card.source_document)}</div>
-              <p className="mt-2 leading-relaxed">"{card.evidence_quote}"</p>
+            <div key={card.card_id} className="min-w-0 rounded-lg border bg-background p-3 text-xs">
+              <div className="break-words font-medium [overflow-wrap:anywhere]">card #{card.card_id} · {safeDisplayText(card.title)}</div>
+              <div className="mt-1 break-words text-muted-foreground [overflow-wrap:anywhere]">{safeDisplayText(card.source_document)}</div>
+              <p className="mt-2 whitespace-pre-wrap break-words leading-relaxed [overflow-wrap:anywhere]">"{card.evidence_quote}"</p>
             </div>
           ))
         ) : (
@@ -1021,14 +1434,14 @@ function AnswerBlock({ answer, compact = false }: { answer: LlmAnswer; compact?:
         <div className="flex flex-col gap-2">
           <div className="text-xs font-medium uppercase text-muted-foreground">Relation Evidence</div>
           {answer.relation_evidence.map((rel) => (
-            <div key={rel.relation_id} className="rounded-lg border bg-background p-3 text-xs">
+            <div key={rel.relation_id} className="min-w-0 rounded-lg border bg-background p-3 text-xs">
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="font-medium">card #{rel.source_card_id}</span>
                 <Badge variant="secondary">{rel.relation_type}</Badge>
                 <span className="font-medium">card #{rel.target_card_id}</span>
                 <Badge variant={rel.confidence === "high" ? "default" : "secondary"}>{rel.confidence}</Badge>
               </div>
-              {rel.reason && <p className="mt-2 text-muted-foreground">{rel.reason}</p>}
+              {rel.reason && <p className="mt-2 whitespace-pre-wrap break-words text-muted-foreground [overflow-wrap:anywhere]">{rel.reason}</p>}
             </div>
           ))}
         </div>
@@ -1037,15 +1450,15 @@ function AnswerBlock({ answer, compact = false }: { answer: LlmAnswer; compact?:
         <div className="flex flex-col gap-2">
           <div className="text-xs font-medium uppercase text-muted-foreground">Source Chunks</div>
           {answer.evidence_chunks.map((chunk) => (
-            <div key={chunk.chunk_id} className="rounded-lg border border-dashed bg-background p-3 text-xs">
-              <div className="font-medium text-muted-foreground">{safeDisplayText(chunk.source_document)}</div>
-              <p className="mt-2 leading-relaxed">"{chunk.quote}"</p>
+            <div key={chunk.chunk_id} className="min-w-0 rounded-lg border border-dashed bg-background p-3 text-xs">
+              <div className="break-words font-medium text-muted-foreground [overflow-wrap:anywhere]">{safeDisplayText(chunk.source_document)}</div>
+              <p className="mt-2 whitespace-pre-wrap break-words leading-relaxed [overflow-wrap:anywhere]">"{chunk.quote}"</p>
             </div>
           ))}
         </div>
       )}
       {answer.missing_evidence.length > 0 && (
-        <div className="rounded-lg border border-dashed p-3 text-xs text-muted-foreground">
+        <div className="whitespace-pre-wrap break-words rounded-lg border border-dashed p-3 text-xs text-muted-foreground [overflow-wrap:anywhere]">
           {answer.missing_evidence.join(" ")}
         </div>
       )}

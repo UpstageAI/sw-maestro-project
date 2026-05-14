@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Any, TypedDict
 
 from langgraph.graph import END, START, StateGraph
+from pydantic import BaseModel, Field
 
 from app.repositories.sqlite import SQLiteRepository
 from app.services.chunking import chunk_text, filter_reusable_chunks
@@ -9,7 +10,22 @@ from app.services.extraction import DeterministicCardExtractor
 from app.services.parsing import parse_document
 
 
+class StorageInput(BaseModel):
+    workspace_id: int = Field(..., ge=1, description="Workspace id that owns the source document.")
+    filename: str = Field(..., min_length=1, description="Stored source filename.")
+    content: str = Field(..., min_length=1, description="Source text or markdown to chunk and extract cards from.")
+    source_type: str = Field("manual", description="Source type such as manual, md, txt, notion, github, or web.")
+    source_url: str = Field("", description="Original source URL.")
+    external_id: str = Field("", description="Provider-native id or reference.")
+    document_id: int | None = Field(
+        default=None,
+        ge=1,
+        description="Existing raw document id to re-index. Omit to create a new raw document.",
+    )
+
+
 class StorageState(TypedDict, total=False):
+    document_id: int
     workspace_id: int
     filename: str
     content: str
@@ -76,8 +92,23 @@ class StorageWorkflow:
         )
         return state["result"]
 
+    def reindex_document(self, document: dict[str, Any]) -> dict[str, Any]:
+        self.repository.delete_chunks_for_document(document["id"])
+        state = self.graph.invoke(
+            {
+                "document_id": document["id"],
+                "workspace_id": document["workspace_id"],
+                "filename": document["filename"],
+                "content": document["content"],
+                "source_type": document.get("source_type", "manual"),
+                "source_url": document.get("source_url", ""),
+                "external_id": document.get("external_id", ""),
+            }
+        )
+        return state["result"]
+
     def _build_graph(self):
-        graph = StateGraph(StorageState)
+        graph = StateGraph(StorageState, input_schema=StorageInput)
         graph.add_node("save_raw_document", self._save_raw_document)
         graph.add_node("chunk_document", self._chunk_document)
         graph.add_node("extract_cards", self._extract_cards)
@@ -90,6 +121,12 @@ class StorageWorkflow:
         return graph.compile()
 
     def _save_raw_document(self, state: StorageState) -> StorageState:
+        if state.get("document_id"):
+            document = self.repository.get_raw_document(state["document_id"])
+            if document["workspace_id"] != state["workspace_id"]:
+                raise ValueError("Existing document does not belong to the target workspace.")
+            return {"document": document}
+
         filename = state["filename"]
         document_type = Path(filename).suffix.lower().lstrip(".") or "text"
         document = self.repository.create_raw_document(

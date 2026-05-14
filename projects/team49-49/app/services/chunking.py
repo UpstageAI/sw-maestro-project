@@ -1,34 +1,6 @@
 import re
 
 
-VALUABLE_PATTERNS = (
-    "아이디어",
-    "가설",
-    "근거",
-    "결정",
-    "리스크",
-    "위험",
-    "문제",
-    "타깃",
-    "사용자",
-    "기능",
-    "질문",
-    "검증",
-    "멘토",
-    "인터뷰",
-    "피드백",
-    "idea",
-    "hypothesis",
-    "evidence",
-    "decision",
-    "risk",
-    "problem",
-    "feature",
-)
-
-LOW_VALUE_PATTERNS = ("ㅋㅋ", "ㅎㅎ", "감사", "좋아요", "네", "음", "어", "맞아요")
-
-
 def chunk_text(text: str, max_chars: int = 900) -> list[str]:
     paragraphs = _planning_paragraphs(text)
     chunks: list[str] = []
@@ -52,18 +24,7 @@ def chunk_text(text: str, max_chars: int = 900) -> list[str]:
 
 
 def filter_reusable_chunks(chunks: list[str]) -> list[str]:
-    reusable: list[str] = []
-    for chunk in chunks:
-        normalized = chunk.strip().lower()
-        if len(normalized) < 12:
-            continue
-        if any(pattern in normalized for pattern in LOW_VALUE_PATTERNS) and not any(
-            pattern in normalized for pattern in VALUABLE_PATTERNS
-        ):
-            continue
-        if any(pattern in normalized for pattern in VALUABLE_PATTERNS):
-            reusable.append(chunk)
-    return reusable
+    return [chunk for chunk in chunks if len(chunk.strip()) >= 12]
 
 
 def _planning_paragraphs(text: str) -> list[str]:

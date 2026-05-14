@@ -162,3 +162,19 @@ def test_llm_extractor_retries_parse_failure_then_marks_needs_review():
     assert len(client.calls) == 2
     assert cards[0].status == "needs_review"
     assert cards[0].confidence == "low"
+
+
+def test_llm_extractor_falls_back_to_deterministic_cards_after_json_failures():
+    client = FakeLLMClient(["not json", '{"cards": [{"card_type": "unknown"}]}'])
+
+    cards = LLMCardExtractor(client).extract(
+        chunk="결정: LLM JSON 파싱이 실패해도 규칙 기반 카드 추출을 이어간다.",
+        workspace_id=1,
+        source_document_id=2,
+        source_chunk_id=3,
+    )
+
+    assert len(client.calls) == 2
+    assert cards[0].card_type == "decision"
+    assert cards[0].status == "decided"
+    assert "llm_parse_failed" not in cards[0].tags

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c ' *)",
+      "Bash(python -m pytest tests/test_quality_review.py -v)",
+      "Bash(npm run *)",
+      "Bash(python -c \"from app.main import create_app; app = create_app\\(\\); print\\('App created successfully'\\)\")",
+      "Bash(python -c \"print\\('python works'\\)\")"
+    ]
+  }
+}

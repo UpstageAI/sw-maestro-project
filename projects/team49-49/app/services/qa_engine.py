@@ -6,6 +6,7 @@ import httpx
 from app.repositories.sqlite import SQLiteRepository
 
 INSUFFICIENT_CONTEXT_MESSAGE = "현재까지 저장된 팀 컨텍스트에서는 관련된 논의나 근거를 찾을 수 없습니다."
+GENERAL_LLM_MISSING_EVIDENCE_MESSAGE = "저장된 근거 카드 없이 일반 LLM 지식으로 생성된 답변입니다."
 
 _UPSTAGE_BASE_URL = "https://api.upstage.ai/v1"
 _UPSTAGE_MODEL = "solar-pro2"
@@ -51,8 +52,41 @@ _SYSTEM_PROMPT = """\
 }
 """
 
+_GENERAL_SYSTEM_PROMPT = """\
+당신은 제품/프로젝트 설명을 위키처럼 정리해 주는 QA 어시스턴트입니다.
+
+저장된 팀 컨텍스트가 검색되지 않은 경우에도 질문에 직접 답하세요.
+다만 저장 근거가 없다는 사실을 답변 안에서 명확히 구분하고, 확정된 내부 의사결정처럼 쓰지 마세요.
+
+반드시 아래 JSON 형식으로만 응답하세요:
+
+{
+  "answer": "한국어로 작성된 답변",
+  "cited_card_ids": [],
+  "cited_chunk_ids": []
+}
+"""
+
+_GENERAL_PROJECT_CONTEXT = """\
+Ideation Context Hub는 팀의 아이디어와 의사결정 근거를 한곳에 모으는 로컬 데모 앱입니다.
+Notion, GitHub, Slack, Linear, Web, MCP, 직접 입력, 파일 업로드 소스를 수집해 raw document, chunk, knowledge card, relation graph로 정리합니다.
+사용자는 Graph Studio에서 source intake/storage/relation/QA graph 흐름을 확인하고, QA에서 저장된 근거 카드와 원문 청크를 인용한 답변을 받을 수 있습니다.
+"""
+
 
 def _build_user_prompt(question: str, context_str: str) -> str:
+    if not context_str.strip():
+        return f"""## 질문
+{question}
+
+## 저장된 팀 컨텍스트
+검색된 카드나 원문 chunk가 없습니다.
+
+## 기본 프로젝트 설명
+{_GENERAL_PROJECT_CONTEXT.strip()}
+
+저장된 근거가 없음을 전제로, 일반적인 위키형 설명처럼 질문에 답하세요. 참조 카드/청크가 없으므로 `cited_card_ids`와 `cited_chunk_ids`는 빈 배열로 반환하세요."""
+
     return f"""## 질문
 {question}
 
@@ -139,6 +173,7 @@ class LocalQAEngine:
                 "cited_chunk_ids": [],
             }
 
+        effective_system_prompt = system_prompt.strip() or (_SYSTEM_PROMPT if context_str.strip() else _GENERAL_SYSTEM_PROMPT)
         try:
             response = httpx.post(
                 f"{_UPSTAGE_BASE_URL}/chat/completions",
@@ -149,7 +184,7 @@ class LocalQAEngine:
                 json={
                     "model": model or _UPSTAGE_MODEL,
                     "messages": [
-                        {"role": "system", "content": system_prompt.strip() or _SYSTEM_PROMPT},
+                        {"role": "system", "content": effective_system_prompt},
                         {"role": "user", "content": _build_user_prompt(question, context_str)},
                     ],
                     "temperature": temperature,

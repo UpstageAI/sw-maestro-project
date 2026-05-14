@@ -101,6 +101,10 @@ Every product-facing change must pass the following checks before commit:
 16. README with local setup, environment variables, and sample instructions.
 17. LangGraph Studio-style graph inspection for workflow-oriented source/card/relation debugging.
 18. Obsidian-style graph visualization for documents, cards, and one-hop relation links with search, groups, local graph depth, zoom, pan, drag, node sizing, and link distance controls.
+19. Workspace and Knowledge Card CRUD: workspace rename/delete, manual card create from a typed evidence quote, full-field card update, and card delete. Workspace delete cascades to documents, chunks, cards, and relations through SQLite foreign keys.
+20. Local LangGraph Studio is the canonical orchestration surface. `source_intake` runs on port `2025` and `qa_assistant` runs on port `2024`. Remote LangGraph deployment is optional and is not part of the demo path.
+21. Retrieval ranks cards and chunks by score after metadata first-pass filtering (workspace, card type, status, source type), and slices the top-N for context. There is no fixed similarity threshold cutoff.
+22. Quality Review surfaces per-card feedback: each review target carries `card_id`, `issue`, `suggestion`, and `priority`, so a reader can act on individual cards rather than a single workspace-wide summary.
 
 ### Nice To Have, Excluded From MVP
 
@@ -295,6 +299,8 @@ Required fields:
 - Create a workspace.
 - List workspaces.
 - Retrieve workspace detail.
+- Update workspace name and description.
+- Delete a workspace. Delete must cascade to its raw documents, chunks, knowledge cards, and relations through SQLite foreign keys.
 
 ### Ingestion API
 
@@ -328,15 +334,18 @@ The storage preprocessing flow must run in this order:
 - List cards.
 - Filter cards by workspace, type, status, confidence, keyword, or tag.
 - Retrieve card detail with source and relations.
-- Update card status and tags.
+- Create a card. When `source_document_id` and `source_chunk_id` are omitted, the API must create a manual source document and chunk from the evidence quote so every card stays traceable.
+- Update card with full fields: `card_type`, `title`, `summary`, `evidence_quote`, `keywords`, `tags`, `status`, `confidence`. Workspace scope must be enforced.
+- Delete a card. Card deletion cascades through SQLite foreign keys to dependent relations.
 - Retrieve bounded multi-hop relation paths for a selected card.
-- Do not delete cards in MVP.
 
 ### Search API
 
 - Search Knowledge Cards.
 - Search raw chunks.
-- Combine vector similarity and metadata filters.
+- Apply metadata first-pass filtering (workspace, card type, status, confidence, source type) before scoring.
+- Score-rank candidates by similarity and slice the top-N. Do not rely on a fixed similarity threshold.
+- Tie-break on metadata closeness (same source type, same card type) before falling back to creation time.
 - Use direct one-hop relations to enrich search results.
 
 ### Q&A API
@@ -450,6 +459,14 @@ All external model configuration must be optional for local tests.
 - Frontend contract tests must verify that the React/shadcn shell, multi-source ingestion UI, LLM search UI, Graph Studio, and Obsidian Graph controls remain present.
 - Browser QA must verify the real rendered app, not only static source contracts.
 
+### Coaching Feedback Compliance
+
+The 2026-05-10 coaching session set three policies that must be honored:
+
+1. Retrieval result selection must use score-ranked top-N slicing on top of metadata first-pass filters. Static similarity thresholds are not acceptable for ranking decisions.
+2. LangGraph orchestration during the demo must be shown through the local Studio (`source_intake` on port `2025`, `qa_assistant` on port `2024`). Remote LangGraph deployment paths must not be used as the primary demo surface, even when the SDK adapter exists.
+3. Quality Review must surface per-card feedback (one issue and one suggestion per `card_id`). A single workspace-wide quality summary is not enough on its own.
+
 ### Browser QA Acceptance
 
 The local browser acceptance pass must confirm:
@@ -467,6 +484,8 @@ The local browser acceptance pass must confirm:
 - `POST /api/workspaces`
 - `GET /api/workspaces`
 - `GET /api/workspaces/{workspace_id}`
+- `PATCH /api/workspaces/{workspace_id}`
+- `DELETE /api/workspaces/{workspace_id}`
 
 ### Ingestion
 
@@ -478,8 +497,10 @@ The local browser acceptance pass must confirm:
 ### Cards
 
 - `GET /api/workspaces/{workspace_id}/cards`
+- `POST /api/workspaces/{workspace_id}/cards`
 - `GET /api/workspaces/{workspace_id}/cards/{card_id}`
 - `PATCH /api/workspaces/{workspace_id}/cards/{card_id}`
+- `DELETE /api/workspaces/{workspace_id}/cards/{card_id}`
 - `GET /api/workspaces/{workspace_id}/cards/{card_id}/relations`
 - `GET /api/workspaces/{workspace_id}/cards/{card_id}/paths`
 
@@ -593,6 +614,14 @@ If no relevant context exists, the response must say:
 - Run browser QA for Graph Studio, Obsidian Graph, multi-source ingestion, and Grounded LLM Search.
 - Review PRD coverage.
 
+### Phase 9: Demo Hardening (current branch)
+
+- Workspace and Knowledge Card CRUD wiring across API, repository, schemas, and Inspector UI.
+- `LLMCardExtractor` JSON-failure fallback to `DeterministicCardExtractor` so the sample data never collapses to `needs_review` cards.
+- Retrieval ranking aligned with coaching feedback: metadata first-pass filter, score-ranked top-N slice, no fixed similarity threshold.
+- Quality Review per-card issue / suggestion exposed in the Inspector panel.
+- Demo data reset and `Load Samples` rerun before video capture so production cards are clean.
+
 ## 15. Open Decisions
 
 The following decisions are fixed for MVP unless changed later:
@@ -603,7 +632,42 @@ The following decisions are fixed for MVP unless changed later:
 4. Upstage is the default remote LLM provider when configured, with Claude and codex_oauth adapters available by explicit provider selection.
 5. LLM usage is optional in tests and local runs.
 6. External integrations are excluded.
-7. Card deletion is excluded.
+7. Workspace and Knowledge Card CRUD are inside scope for the demo. Workspace and card delete cascade through SQLite foreign keys, and manual card create writes a synthetic source document and chunk so traceability holds.
 8. Obsidian-like graph visualization is included as a local UX surface.
 9. SQLite relation path exploration is bounded to three hops for predictable local execution.
 10. The repository is maintained as a backend/frontend monorepo.
+11. LangGraph orchestration during the demo is shown through the local Studio. The remote LangGraph SDK adapter remains as an extension slot but is not part of the demo path.
+12. Retrieval and search use score-ranked top-N slicing on top of metadata first-pass filtering. Static similarity thresholds are not used as the cut.
+13. Quality Review must surface per-card feedback (issue and suggestion per `card_id`); a single workspace summary is not enough on its own.
+14. When `LLMCardExtractor` cannot parse a JSON response, the storage flow falls back to the `DeterministicCardExtractor` for that chunk before recording a `needs_review` card. The `needs_review` card is reserved for the case when both extractors yield nothing usable.
+
+## 16. Demo Readiness
+
+Demo target was 2026-05-10 with a recorded video as deliverable. The current branch (`codex/notion-child-page-hops`) is in post-demo polish.
+
+### Demo Surfaces
+
+- Web app served by Vite on `http://127.0.0.1:5173`.
+- FastAPI backend on `http://127.0.0.1:8000`.
+- Local LangGraph Studio: `qa_assistant` on `http://127.0.0.1:2024`, `source_intake` on `http://127.0.0.1:2025`.
+
+### Required Demo Walkthrough
+
+The demo must show, in order:
+
+1. Workspace selection and `Load Samples` to populate Notion / manual / web / GitHub fixtures.
+2. Knowledge Card list with non-trivial card types (`decision`, `evidence`, `risk`, `hypothesis`, `feature`, `question`). The sample data must not collapse into `question/needs_review` cards.
+3. Workspace rename / delete and manual Card create / update / delete from the Inspector panel.
+4. Graph Studio and Obsidian Graph navigation with one-hop relations.
+5. Local LangGraph Studio for `source_intake` and `qa_assistant`.
+6. Grounded Q&A with cited evidence cards, chunks, relation evidence, and missing-evidence callouts.
+7. Quality Review with per-card issue / suggestion entries.
+
+### Known Demo-Blocking Risks
+
+These are tracked outside `Implementation Phases` because they are state issues, not new scope:
+
+1. `LLMCardExtractor` must fall back to `DeterministicCardExtractor` on JSON parse failure, otherwise sample ingestion produces only `question/needs_review` cards.
+2. The frontend already calls workspace `PATCH` / `DELETE` and card `POST` / `PATCH` / `DELETE` endpoints. These endpoints must be merged into the demo branch; otherwise InspectorPanel actions return 404.
+3. `frontend:lint` must be clean before recording. Cascading-render setState inside `NodeInspector` `useEffect` causes visible form flicker on card selection.
+4. Demo SQLite (`data/ideation_context_hub.sqlite3`) must be reset before recording when LLM extraction has previously failed, so polluted `needs_review` rows do not appear in the recording.

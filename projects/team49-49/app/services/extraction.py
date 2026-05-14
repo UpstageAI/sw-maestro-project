@@ -236,6 +236,11 @@ class LLMCardExtractor:
                 last_error = str(error)
                 if attempt + 1 >= self.max_attempts:
                     break
+        fallback_cards = self.fallback_extractor.extract(
+            chunk, workspace_id, source_document_id, source_chunk_id
+        )
+        if fallback_cards:
+            return fallback_cards
         return self._needs_review_card(chunk, workspace_id, source_document_id, source_chunk_id)
 
     @staticmethod

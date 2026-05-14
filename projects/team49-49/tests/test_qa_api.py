@@ -8,6 +8,7 @@ from app.services.qa import GroundedQAService, REMOTE_LANGGRAPH_FAILED_MESSAGE
 
 
 INSUFFICIENT_MESSAGE = "현재까지 저장된 팀 컨텍스트에서는 관련된 논의나 근거를 찾을 수 없습니다."
+GENERAL_LLM_MISSING_EVIDENCE = "저장된 근거 카드 없이 일반 LLM 지식으로 생성된 답변입니다."
 
 
 def test_qa_reports_missing_upstage_api_key_and_persists_history(tmp_path):
@@ -43,24 +44,62 @@ def test_qa_reports_missing_upstage_api_key_and_persists_history(tmp_path):
     assert history_response.json()[0]["question"] == "왜 GraphDB를 제외했어?"
 
 
-def test_qa_returns_insufficient_context_when_no_evidence_exists(tmp_path):
+def test_qa_calls_upstage_for_wiki_answer_when_no_evidence_exists(tmp_path):
     repository = SQLiteRepository(tmp_path / "ich.sqlite3")
     app = create_app(repository=repository)
+    app.state.settings.upstage_api_key = "test-key"
+    client = TestClient(app)
+    workspace_id = client.post("/api/workspaces", json={"name": "SOMA 49"}).json()["id"]
+
+    fake_resp = MagicMock()
+    fake_resp.json.return_value = {
+        "choices": [
+            {
+                "message": {
+                    "content": '{"answer": "이 프로젝트는 아이디어 소스를 카드와 그래프로 정리하고 QA하는 도구입니다.", "cited_card_ids": [], "cited_chunk_ids": []}'
+                }
+            }
+        ]
+    }
+
+    with patch("app.services.qa_engine.httpx.post", return_value=fake_resp) as post:
+        response = client.post(
+            f"/api/workspaces/{workspace_id}/qa",
+            json={"question": "이 프로젝트가 뭐하는 프로젝트야?"},
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["answer"] == "이 프로젝트는 아이디어 소스를 카드와 그래프로 정리하고 QA하는 도구입니다."
+    assert body["confidence"] == "low"
+    assert body["evidence_cards"] == []
+    assert body["evidence_chunks"] == []
+    assert body["missing_evidence"] == [GENERAL_LLM_MISSING_EVIDENCE]
+    user_prompt = post.call_args.kwargs["json"]["messages"][1]["content"]
+    assert "검색된 카드나 원문 chunk가 없습니다" in user_prompt
+    assert "Ideation Context Hub" in user_prompt
+    assert "Notion, GitHub, Slack, Linear, Web, MCP" in user_prompt
+
+
+def test_qa_reports_missing_upstage_key_when_no_evidence_exists(tmp_path):
+    repository = SQLiteRepository(tmp_path / "ich.sqlite3")
+    app = create_app(repository=repository)
+    app.state.settings.upstage_api_key = ""
     client = TestClient(app)
     workspace_id = client.post("/api/workspaces", json={"name": "SOMA 49"}).json()["id"]
 
     response = client.post(
         f"/api/workspaces/{workspace_id}/qa",
-        json={"question": "가격 정책은 어떻게 결정했어?"},
+        json={"question": "이 프로젝트가 뭐하는 프로젝트야?"},
     )
 
     assert response.status_code == 200
     body = response.json()
-    assert body["answer"] == INSUFFICIENT_MESSAGE
+    assert body["answer"] == "UPSTAGE_API_KEY가 설정되지 않았습니다."
     assert body["confidence"] == "low"
     assert body["evidence_cards"] == []
     assert body["evidence_chunks"] == []
-    assert body["missing_evidence"] == ["질문과 관련된 저장 컨텍스트가 부족합니다."]
+    assert body["missing_evidence"] == [GENERAL_LLM_MISSING_EVIDENCE]
 
 
 class FakeRemoteLangGraphClient:

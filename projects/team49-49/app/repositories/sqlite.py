@@ -121,6 +121,22 @@ class SQLiteRepository:
             if owns_connection:
                 connection.close()
 
+    def update_workspace(self, workspace_id: int, name: str | None = None, description: str | None = None) -> dict[str, Any]:
+        workspace = self.get_workspace(workspace_id)
+        next_name = name if name is not None else workspace["name"]
+        next_description = description if description is not None else workspace["description"]
+        with self._connect() as connection:
+            connection.execute(
+                "UPDATE workspaces SET name = ?, description = ? WHERE id = ?",
+                (next_name, next_description, workspace_id),
+            )
+            return self.get_workspace(workspace_id, connection=connection)
+
+    def delete_workspace(self, workspace_id: int) -> None:
+        self.get_workspace(workspace_id)
+        with self._connect() as connection:
+            connection.execute("DELETE FROM workspaces WHERE id = ?", (workspace_id,))
+
     def create_raw_document(
         self,
         workspace_id: int,
@@ -162,6 +178,51 @@ class SQLiteRepository:
                 (workspace_id,),
             ).fetchall()
             return [self._row_to_dict(row) for row in rows]
+
+    def update_raw_document(
+        self,
+        document_id: int,
+        filename: str | None = None,
+        document_type: str | None = None,
+        source_type: str | None = None,
+        source_url: str | None = None,
+        external_id: str | None = None,
+        content: str | None = None,
+    ) -> dict[str, Any]:
+        document = self.get_raw_document(document_id)
+        with self._connect() as connection:
+            connection.execute(
+                """
+                UPDATE raw_documents
+                SET filename = ?,
+                    document_type = ?,
+                    source_type = ?,
+                    source_url = ?,
+                    external_id = ?,
+                    content = ?
+                WHERE id = ?
+                """,
+                (
+                    filename if filename is not None else document["filename"],
+                    document_type if document_type is not None else document["document_type"],
+                    source_type if source_type is not None else document["source_type"],
+                    source_url if source_url is not None else document["source_url"],
+                    external_id if external_id is not None else document["external_id"],
+                    content if content is not None else document["content"],
+                    document_id,
+                ),
+            )
+            return self.get_raw_document(document_id, connection=connection)
+
+    def delete_raw_document(self, document_id: int) -> None:
+        self.get_raw_document(document_id)
+        with self._connect() as connection:
+            connection.execute("DELETE FROM raw_documents WHERE id = ?", (document_id,))
+
+    def delete_chunks_for_document(self, document_id: int) -> None:
+        self.get_raw_document(document_id)
+        with self._connect() as connection:
+            connection.execute("DELETE FROM chunks WHERE document_id = ?", (document_id,))
 
     def create_raw_document_link(
         self,
@@ -337,20 +398,76 @@ class SQLiteRepository:
             cards = [card for card in cards if tag in card["tags"]]
         return cards
 
-    def update_card(self, card_id: int, status: str | None = None, tags: list[str] | None = None) -> dict[str, Any]:
+    def update_card(
+        self,
+        card_id: int,
+        card_type: str | None = None,
+        title: str | None = None,
+        summary: str | None = None,
+        evidence_quote: str | None = None,
+        keywords: list[str] | None = None,
+        tags: list[str] | None = None,
+        status: str | None = None,
+        confidence: str | None = None,
+    ) -> dict[str, Any]:
+        return self.update_card_fields(
+            card_id=card_id,
+            card_type=card_type,
+            title=title,
+            summary=summary,
+            evidence_quote=evidence_quote,
+            keywords=keywords,
+            tags=tags,
+            status=status,
+            confidence=confidence,
+        )
+
+    def update_card_fields(
+        self,
+        card_id: int,
+        card_type: str | None = None,
+        title: str | None = None,
+        summary: str | None = None,
+        evidence_quote: str | None = None,
+        keywords: list[str] | None = None,
+        tags: list[str] | None = None,
+        status: str | None = None,
+        confidence: str | None = None,
+    ) -> dict[str, Any]:
         card = self.get_card(card_id)
-        next_status = status or card["status"]
-        next_tags = tags if tags is not None else card["tags"]
         with self._connect() as connection:
             connection.execute(
                 """
                 UPDATE knowledge_cards
-                SET status = ?, tags = ?, updated_at = CURRENT_TIMESTAMP
+                SET card_type = ?,
+                    title = ?,
+                    summary = ?,
+                    evidence_quote = ?,
+                    keywords = ?,
+                    tags = ?,
+                    status = ?,
+                    confidence = ?,
+                    updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
                 """,
-                (next_status, json.dumps(next_tags, ensure_ascii=False), card_id),
+                (
+                    card_type if card_type is not None else card["card_type"],
+                    title if title is not None else card["title"],
+                    summary if summary is not None else card["summary"],
+                    evidence_quote if evidence_quote is not None else card["evidence_quote"],
+                    json.dumps(keywords if keywords is not None else card["keywords"], ensure_ascii=False),
+                    json.dumps(tags if tags is not None else card["tags"], ensure_ascii=False),
+                    status if status is not None else card["status"],
+                    confidence if confidence is not None else card["confidence"],
+                    card_id,
+                ),
             )
             return self.get_card(card_id, connection=connection)
+
+    def delete_card(self, card_id: int) -> None:
+        self.get_card(card_id)
+        with self._connect() as connection:
+            connection.execute("DELETE FROM knowledge_cards WHERE id = ?", (card_id,))
 
     def create_relation(
         self,

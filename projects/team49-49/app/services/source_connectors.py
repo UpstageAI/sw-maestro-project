@@ -168,8 +168,6 @@ class GitHubConnector(_LazyHTTPClientMixin):
         self.timeout = timeout
 
     def fetch(self, source_url: str, external_id: str) -> SourceFetchResult:
-        if not self.token:
-            raise SourceConnectorConfigError("ICH_GITHUB_TOKEN is required for GitHub automatic source ingestion.")
         parsed = urlparse(source_url)
         if parsed.netloc == "raw.githubusercontent.com":
             return self._fetch_raw_url(parsed)
@@ -180,17 +178,21 @@ class GitHubConnector(_LazyHTTPClientMixin):
             raise SourceConnectorInputError("GitHub source_url must include owner and repository.")
         owner, repo = parts[0], parts[1]
         if len(parts) >= 5 and parts[2] == "blob":
-            return self._fetch_file(owner, repo, parts[3], "/".join(parts[4:]))
+            if self.token:
+                return self._fetch_file(owner, repo, parts[3], "/".join(parts[4:]))
+            return self._fetch_public_raw_file(owner, repo, parts[3], "/".join(parts[4:]))
         if len(parts) >= 4 and parts[2] in {"issues", "pull"}:
             return self._fetch_issue_or_pull(owner, repo, parts[2], parts[3])
         raise SourceConnectorInputError("GitHub source_url must point to a blob file, issue, pull request, or raw file.")
 
     def _headers(self, accept: str = "application/vnd.github+json") -> dict[str, str]:
-        return {
-            "Authorization": f"Bearer {self.token}",
+        headers = {
             "Accept": accept,
             "X-GitHub-Api-Version": "2022-11-28",
         }
+        if self.token:
+            headers["Authorization"] = f"Bearer {self.token}"
+        return headers
 
     def _fetch_file(self, owner: str, repo: str, ref: str, path: str) -> SourceFetchResult:
         response = self.http_client.get(
@@ -205,12 +207,24 @@ class GitHubConnector(_LazyHTTPClientMixin):
             raise SourceConnectorFetchError("GitHub file returned no readable content.")
         return SourceFetchResult(title=Path(path).name, content=content.strip(), external_id=f"{owner}/{repo}:{ref}:{path}", fetched_via="github_api")
 
+    def _fetch_public_raw_file(self, owner: str, repo: str, ref: str, path: str) -> SourceFetchResult:
+        response = self.http_client.get(
+            f"https://raw.githubusercontent.com/{owner}/{repo}/{quote(ref, safe='')}/{quote(path, safe='/')}",
+            headers={"Accept": "text/plain, application/octet-stream;q=0.9, */*;q=0.8", "User-Agent": "Ideation-Context-Hub/1.0"},
+            timeout=self.timeout,
+        )
+        _raise_for_status(response, "GitHub raw file fetch failed.")
+        content = _response_text(response)
+        if not content.strip():
+            raise SourceConnectorFetchError("GitHub file returned no readable content.")
+        return SourceFetchResult(title=Path(path).name, content=content.strip(), external_id=f"{owner}/{repo}:{ref}:{path}", fetched_via="github_raw")
+
     def _fetch_raw_url(self, parsed) -> SourceFetchResult:
         parts = [part for part in parsed.path.strip("/").split("/") if part]
         if len(parts) < 4:
             raise SourceConnectorInputError("GitHub raw URL must include owner, repository, ref, and path.")
         owner, repo, ref = parts[0], parts[1], parts[2]
-        return self._fetch_file(owner, repo, ref, "/".join(parts[3:]))
+        return self._fetch_public_raw_file(owner, repo, ref, "/".join(parts[3:]))
 
     def _fetch_issue_or_pull(self, owner: str, repo: str, kind: str, number: str) -> SourceFetchResult:
         endpoint_kind = "pulls" if kind == "pull" else "issues"
@@ -331,20 +345,20 @@ class McpConnector(_LazyHTTPClientMixin):
     def fetch(self, source_url: str, external_id: str) -> SourceFetchResult:
         if not self.server_url:
             raise SourceConnectorConfigError("ICH_MCP_SERVER_URL is required for MCP automatic source ingestion.")
-        if not self.access_token:
-            raise SourceConnectorConfigError("ICH_MCP_ACCESS_TOKEN is required for MCP automatic source ingestion.")
         resource_uri = (source_url or external_id or "").strip()
         if not resource_uri:
             raise SourceConnectorInputError("MCP source requires source_url or external_id resource URI.")
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "MCP-Protocol-Version": MCP_PROTOCOL_VERSION,
+        }
+        if self.access_token:
+            headers["Authorization"] = f"Bearer {self.access_token}"
         data = _json_response(
             self.http_client.post(
                 self.server_url,
-                headers={
-                    "Authorization": f"Bearer {self.access_token}",
-                    "Content-Type": "application/json",
-                    "Accept": "application/json",
-                    "MCP-Protocol-Version": MCP_PROTOCOL_VERSION,
-                },
+                headers=headers,
                 json={"jsonrpc": "2.0", "id": 1, "method": "resources/read", "params": {"uri": resource_uri}},
                 timeout=self.timeout,
             ),
@@ -375,7 +389,7 @@ class WebConnector(_LazyHTTPClientMixin):
         if not content.strip():
             raise SourceConnectorFetchError("Web source returned no readable content.")
         filename = Path(parsed.path).name or parsed.netloc or "web-source"
-        return SourceFetchResult(title=_ensure_extension(filename, "txt"), content=content.strip(), external_id=external_id, fetched_via="web_fetch")
+        return SourceFetchResult(title=_ensure_extension(filename, "md"), content=content.strip(), external_id=external_id, fetched_via="web_fetch")
 
 
 def build_source_connector_registry(settings: Any, http_client: Any | None = None) -> dict[str, SourceConnector]:
@@ -534,8 +548,10 @@ class _ReadableTextParser(HTMLParser):
         super().__init__()
         self._skip_depth = 0
         self.parts: list[str] = []
+        self._tag_stack: list[str] = []
 
     def handle_starttag(self, tag, attrs):
+        self._tag_stack.append(tag)
         if tag in {"script", "style"}:
             self._skip_depth += 1
         if tag in {"p", "div", "br", "li", "h1", "h2", "h3", "tr"}:
@@ -544,12 +560,37 @@ class _ReadableTextParser(HTMLParser):
     def handle_endtag(self, tag):
         if tag in {"script", "style"} and self._skip_depth:
             self._skip_depth -= 1
+        for index in range(len(self._tag_stack) - 1, -1, -1):
+            if self._tag_stack[index] == tag:
+                del self._tag_stack[index]
+                break
         if tag in {"p", "div", "li", "h1", "h2", "h3", "tr"}:
             self.parts.append("\n")
 
     def handle_data(self, data):
         if not self._skip_depth:
-            self.parts.append(data)
+            text = _collapse_ws(data)
+            if not text:
+                return
+            tag = self._current_tag()
+            if tag == "h1":
+                self.parts.append(f"\n# {text}\n")
+            elif tag == "h2":
+                self.parts.append(f"\n## {text}\n")
+            elif tag == "h3":
+                self.parts.append(f"\n### {text}\n")
+            elif tag == "li":
+                self.parts.append(f"\n- {text}")
+            else:
+                if self.parts and not self.parts[-1].endswith(("\n", " ")):
+                    self.parts.append(" ")
+                self.parts.append(text)
+
+    def _current_tag(self) -> str:
+        for tag in reversed(self._tag_stack):
+            if tag not in {"script", "style"}:
+                return tag
+        return ""
 
 
 def _html_to_text(value: str) -> str:

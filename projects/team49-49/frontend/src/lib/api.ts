@@ -17,6 +17,14 @@ export type RawDocument = {
   created_at: string
 }
 
+export type RawDocumentPatch = {
+  filename?: string
+  source_type?: string
+  source_url?: string
+  external_id?: string
+  content?: string
+}
+
 export type KnowledgeCard = {
   id: number
   workspace_id: number
@@ -33,6 +41,21 @@ export type KnowledgeCard = {
   created_at: string
   updated_at: string
 }
+
+export type KnowledgeCardPayload = {
+  source_document_id?: number
+  source_chunk_id?: number
+  card_type: string
+  title: string
+  summary: string
+  evidence_quote: string
+  keywords: string[]
+  tags: string[]
+  status: string
+  confidence: string
+}
+
+export type KnowledgeCardPatch = Partial<KnowledgeCardPayload>
 
 export type GraphNode = {
   id: string
@@ -160,6 +183,17 @@ export type SourcePayload = {
   content: string
 }
 
+export type IngestionResult = {
+  document_id: number
+  chunk_count: number
+  card_count: number
+  skipped_chunk_count: number
+  new_card_ids: number[]
+  needs_review_count: number
+  child_document_ids?: number[]
+  document_link_count?: number
+}
+
 export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(path, {
     headers: {
@@ -172,6 +206,10 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
   if (!response.ok) {
     const detail = await response.text()
     throw new Error(readApiError(detail) || `${response.status} ${response.statusText}`)
+  }
+
+  if (response.status === 204) {
+    return undefined as T
   }
 
   return response.json() as Promise<T>

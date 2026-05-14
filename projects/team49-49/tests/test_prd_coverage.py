@@ -24,8 +24,12 @@ def test_prd_constants_are_available():
 
 def test_prd_routes_are_registered(tmp_path):
     app = create_app(repository=SQLiteRepository(tmp_path / "ich.sqlite3"))
-    paths = {route.path for route in app.routes}
+    methods_by_path: dict[str, set[str]] = {}
+    for route in app.routes:
+        methods = getattr(route, "methods", None) or set()
+        methods_by_path.setdefault(route.path, set()).update(methods)
 
+    paths = set(methods_by_path)
     assert "/" in paths
     assert "/health" in paths
     assert "/api/workspaces" in paths
@@ -42,6 +46,10 @@ def test_prd_routes_are_registered(tmp_path):
     assert "/api/workspaces/{workspace_id}/qa/history" in paths
     assert "/api/workspaces/{workspace_id}/graph" in paths
     assert "/api/workflows" in paths
+
+    assert {"PATCH", "DELETE"} <= methods_by_path["/api/workspaces/{workspace_id}"]
+    assert {"POST"} <= methods_by_path["/api/workspaces/{workspace_id}/cards"]
+    assert {"DELETE"} <= methods_by_path["/api/workspaces/{workspace_id}/cards/{card_id}"]
 
 
 def test_app_initializes_source_connector_registry(tmp_path):
@@ -71,3 +79,11 @@ def test_prd_reflects_current_post_planning_decisions():
     assert "Obsidian-like graph" in prd
     assert "ICH_CHROMA_PATH" not in prd
     assert "Gemini" not in prd
+    assert "Do not delete cards in MVP" not in prd
+    assert "DELETE /api/workspaces/{workspace_id}" in prd
+    assert "DELETE /api/workspaces/{workspace_id}/cards/{card_id}" in prd
+    assert "POST /api/workspaces/{workspace_id}/cards" in prd
+    assert "PATCH /api/workspaces/{workspace_id}" in prd
+    assert "Coaching Feedback Compliance" in prd
+    assert "Demo Readiness" in prd
+    assert "score-ranked top-N" in prd

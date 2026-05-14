@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 from app.repositories.sqlite import SQLiteRepository
 from app.services.context_bundle import build_qa_context_bundle
-from app.services.qa_engine import INSUFFICIENT_CONTEXT_MESSAGE, LocalQAEngine
+from app.services.qa_engine import GENERAL_LLM_MISSING_EVIDENCE_MESSAGE, INSUFFICIENT_CONTEXT_MESSAGE, LocalQAEngine
 from app.services.retrieval import RetrievalService
 
 
@@ -43,6 +43,7 @@ class QAState(TypedDict, total=False):
     evidence_cards: list[dict[str, Any]]
     evidence_chunks: list[dict[str, Any]]
     relation_evidence: list[dict[str, Any]]
+    used_general_knowledge: bool
 
     # format_context 출력
     context_str: str
@@ -100,10 +101,7 @@ class RetrievalQAWorkflow:
         graph.add_node("assess_and_finalize", self._assess_and_finalize)
         graph.add_edge(START, "retrieve_context")
         graph.add_edge("retrieve_context", "expand_context")
-        graph.add_conditional_edges(
-            "expand_context",
-            lambda s: "format_context" if (s.get("cards") or s.get("chunks")) else END,
-        )
+        graph.add_edge("expand_context", "format_context")
         graph.add_edge("format_context", "generate_answer")
         graph.add_edge("generate_answer", "assess_and_finalize")
         graph.add_edge("assess_and_finalize", END)
@@ -146,9 +144,8 @@ class RetrievalQAWorkflow:
                 "evidence_cards": [],
                 "evidence_chunks": [],
                 "relation_evidence": [],
-                "answer": INSUFFICIENT_CONTEXT_MESSAGE,
-                "confidence": "low",
-                "missing_evidence": ["질문과 관련된 저장 컨텍스트가 부족합니다."],
+                "used_general_knowledge": True,
+                "missing_evidence": [GENERAL_LLM_MISSING_EVIDENCE_MESSAGE],
             }
 
         card_ids = [c["id"] for c in cards]
@@ -169,6 +166,7 @@ class RetrievalQAWorkflow:
             "evidence_cards": [self.engine.card_evidence(c) for c in cards],
             "evidence_chunks": [self.engine.chunk_evidence(c) for c in chunks],
             "relation_evidence": [self.engine.relation_evidence(r) for r in expansion["relations"]],
+            "used_general_knowledge": False,
         }
 
     def _format_context(self, state: QAState) -> QAState:
@@ -203,6 +201,11 @@ class RetrievalQAWorkflow:
         )
 
     def _assess_and_finalize(self, state: QAState) -> QAState:
+        if state.get("used_general_knowledge"):
+            return {
+                "confidence": "low",
+                "missing_evidence": state.get("missing_evidence") or [GENERAL_LLM_MISSING_EVIDENCE_MESSAGE],
+            }
         confidence, missing = self.engine.assess_confidence(
             state.get("cards") or [],
             state.get("cited_card_ids") or [],

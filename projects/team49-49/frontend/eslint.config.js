@@ -26,7 +26,12 @@ export default defineConfig([
     },
   },
   {
-    files: ['src/components/KnowledgeGraphPanel.tsx', 'src/components/ObsidianGraphPanel.tsx', 'src/hooks/use-mobile.ts'],
+    files: [
+      'src/App.tsx',
+      'src/components/KnowledgeGraphPanel.tsx',
+      'src/components/ObsidianGraphPanel.tsx',
+      'src/hooks/use-mobile.ts',
+    ],
     rules: {
       'react-hooks/set-state-in-effect': 'off',
     },
