@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.soma.ai13be.discussion.service.DiscussionServiceTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-05-08T09:32:55.742Z" hostname="MINCom" time="0.144">
+  <properties/>
+  <testcase name="runsThreeRoundDiscussionWithSelectedPersonas()" classname="com.soma.ai13be.discussion.service.DiscussionServiceTest" time="0.006"/>
+  <testcase name="usesAllEnabledPersonasWhenPersonaIdsAreMissing()" classname="com.soma.ai13be.discussion.service.DiscussionServiceTest" time="0.002"/>
+  <testcase name="rejectsNullSolarResponseAndRecordsFailure()" classname="com.soma.ai13be.discussion.service.DiscussionServiceTest" time="0.002"/>
+  <testcase name="rejectsWhenLessThanTwoPersonasParticipate()" classname="com.soma.ai13be.discussion.service.DiscussionServiceTest" time="0.001"/>
+  <testcase name="rejectsEmptySolarResponse()" classname="com.soma.ai13be.discussion.service.DiscussionServiceTest" time="0.002"/>
+  <testcase name="rejectsMissingPersonaId()" classname="com.soma.ai13be.discussion.service.DiscussionServiceTest" time="0.0"/>
+  <testcase name="returnsDiscussionMessagesInStoredOrder()" classname="com.soma.ai13be.discussion.service.DiscussionServiceTest" time="0.001"/>
+  <testcase name="rejectsBlankTopic()" classname="com.soma.ai13be.discussion.service.DiscussionServiceTest" time="0.001"/>
+  <testcase name="rejectsSolarTransportFailureAndRecordsFailure()" classname="com.soma.ai13be.discussion.service.DiscussionServiceTest" time="0.002"/>
+  <testcase name="rejectsMissingKnowledgeNode()" classname="com.soma.ai13be.discussion.service.DiscussionServiceTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

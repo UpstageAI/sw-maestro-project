@@ -1,0 +1,16 @@
+[submodule "projects/team12-ainouncer/AI-nouncer-backend"]
+	path = projects/team12-ainouncer/AI-nouncer-backend
+	url = https://github.com/soma17th-ai12/AI-nouncer-backend.git
+[submodule "projects/team12-ainouncer/AI-nouncer-frontend"]
+	path = projects/team12-ainouncer/AI-nouncer-frontend
+	url = https://github.com/soma17th-ai12/AI-nouncer-frontend.git
+[submodule "projects/team30-ai30/workFlow"]
+	path = projects/team30-ai30/workFlow
+	url = https://github.com/soma17th-ai30/workFlow.git
+[submodule "projects/team50-musiccurator"]
+	path = projects/team50-musiccurator
+	url = https://github.com/soma17th-ai50/Music-Curator-AI.git
+[submodule "projects/team60-newspick"]
+	path = projects/team60-newspick
+	url = https://github.com/RiMe-13/sw-maestro-project.git
+	update = none

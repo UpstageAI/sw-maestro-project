@@ -1,0 +1,11 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+chroma_data/
+.pytest_cache/
+.DS_Store
+.scratch/
