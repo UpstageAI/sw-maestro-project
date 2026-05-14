@@ -193,15 +193,3 @@ pnpm dev                           # http://localhost:3000
 - **세션 로컬 저장.** 초기 버전은 서버 세션 스토어 없이 `localStorage` 로 운영 → 인프라 경량화.
 
 ---
-
-## 운영 메모
-
-- Vercel serverless 는 SSE 타임아웃이 짧아 백엔드는 Railway / Fly / Render 등 별도 호스팅 권장.
-- FAISS 인덱스 + 임베딩 메모리 ≈ 2GB. 무료 티어로는 빠듯.
-- 인덱스 파일은 git 미포함 — `build_vector_store.py` 로 재생성.
-
----
-
-## 라이선스
-
-내부 프로젝트 (team25).
