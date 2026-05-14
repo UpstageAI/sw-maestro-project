@@ -1,0 +1,98 @@
+openapi: 3.1.0
+info:
+  title: NewPick Public API (Spring)
+  version: 0.1.0
+  description: |
+    Spring Boot 의 공개 REST API. 본 파일은 BOOT-000 에서 동결되며, 이후 변경은 contract-update step 으로만 가능.
+    SSE 이벤트 스키마는 docs/contracts/sse-events.md 참조.
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /api/feed:
+    get:
+      summary: 홈 피드 (오늘의 기사 목록)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  articles:
+                    type: array
+                    items: { $ref: "./json-schemas/article-summary.json" }
+
+  /api/articles/{id}:
+    get:
+      summary: 기사 상세
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "./json-schemas/article.json" }
+        "404":
+          description: 없음
+
+  /api/report/today:
+    get:
+      summary: 오늘의 데일리 리포트
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "./json-schemas/daily-report.json" }
+        "404":
+          description: 오늘 리포트 미생성
+
+  /api/report/{date}:
+    get:
+      summary: 특정 날짜 리포트
+      parameters:
+        - in: path
+          name: date
+          required: true
+          schema: { type: string, format: date }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "./json-schemas/daily-report.json" }
+        "404":
+          description: 없음
+
+  /api/refresh-stream:
+    get:
+      summary: RSS 수집·AI 요약 진행률 (SSE)
+      description: |
+        text/event-stream. 이벤트 종류와 데이터 형식은 docs/contracts/sse-events.md 참조.
+        본 엔드포인트는 Python `/refresh-stream` 의 SSE 를 그대로 프록시한다.
+      responses:
+        "200":
+          description: SSE stream (`step` / `warn` / `done` / `error`)
+          content:
+            text/event-stream: {}
+
+  /api/chat-stream:
+    get:
+      summary: AI 챗 응답 스트리밍 (SSE)
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: SSE stream (`token` / `done` / `error`)
+          content:
+            text/event-stream: {}

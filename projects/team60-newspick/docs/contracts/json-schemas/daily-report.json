@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "daily-report.json",
+  "title": "DailyReport",
+  "type": "object",
+  "required": ["reportDate", "reportUpdatedAt", "briefing", "headline", "subArticles", "flow", "keywords"],
+  "properties": {
+    "reportDate":       { "type": "string", "format": "date" },
+    "reportUpdatedAt":  { "type": "string", "format": "date-time" },
+    "briefing":         { "type": "string" },
+    "headline": {
+      "type": "object",
+      "required": ["articleId", "category", "title", "headlineSourceCount"],
+      "properties": {
+        "articleId":           { "type": "string" },
+        "category":            { "type": "string" },
+        "title":               { "type": "string" },
+        "previewText":         { "type": "string" },
+        "headlineSourceCount": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "subArticles": {
+      "type": "array",
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["articleId", "category", "title", "sourceCount"],
+        "properties": {
+          "articleId":   { "type": "string" },
+          "category":    { "type": "string" },
+          "title":       { "type": "string" },
+          "sourceCount": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "flow": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["category", "text"],
+        "properties": {
+          "category": { "type": "string" },
+          "text":     { "type": "string" }
+        }
+      }
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["text", "weight"],
+        "properties": {
+          "text":   { "type": "string" },
+          "weight": { "type": "integer", "minimum": 2, "maximum": 9 }
+        }
+      }
+    }
+  }
+}

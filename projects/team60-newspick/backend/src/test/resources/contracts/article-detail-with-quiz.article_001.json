@@ -1,0 +1,31 @@
+{
+  "id": "article_001",
+  "url": "https://example.com/article_001",
+  "title": "제목",
+  "source": "Example",
+  "category": "테크",
+  "publishedAt": "2026-05-12T00:00:00Z",
+  "status": "summarized",
+  "content": "본문 첫 문단\n\n본문 둘째 문단",
+  "rawText": "본문 첫 문단\n\n본문 둘째 문단",
+  "rawTextStatus": null,
+  "summary": ["핵심 요약", "두 번째 요약", "세 번째 요약"],
+  "keywords": [],
+  "importance": null,
+  "context": null,
+  "importanceScore": null,
+  "quiz": [
+    {
+      "id": "quiz_001",
+      "question": "본문 내용은 사실이다",
+      "answer": true,
+      "explanation": "본문 근거"
+    },
+    {
+      "id": "quiz_002",
+      "question": "본문 내용은 사실이 아니다",
+      "answer": false,
+      "explanation": "반대 근거"
+    }
+  ]
+}

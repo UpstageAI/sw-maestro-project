@@ -1,0 +1,8 @@
+event:token
+data:{"text":"오늘 "}
+
+event:token
+data:{"text":"핵심"}
+
+event:done
+data:{"articles":[{"id":"article_001","title":"AI 에이전트 확산","source":"Example","publishedAt":"2026-05-12T00:00:00Z"}]}

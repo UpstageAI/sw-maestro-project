@@ -1,0 +1,7 @@
+  INFO:     127.0.0.1:13873 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5401 - "GET / HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:5401 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5401 - "GET / HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:5401 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3209 - "GET /refresh-stream?categories=tech,issue&runId=5495fe83-b52d-44fd-9c9c-a08f8753f6e2 HTTP/1.1" 200 OK
+    

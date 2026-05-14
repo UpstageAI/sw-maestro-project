@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NewPick Prototype</title>
+    <link rel="stylesheet" href="./styles.css?v=cplus3" />
+  </head>
+  <body>
+    <main class="app-shell" aria-label="NewPick 프로토타입">
+      <section class="phone-frame">
+        <a class="component-link" href="./button-variants.html" aria-label="컴포넌트 화면 보기">
+          UI
+        </a>
+
+        <div class="status-area">
+          <span>9:41</span>
+          <span class="status-icons">5G 100%</span>
+        </div>
+
+        <div class="content screen screen-welcome is-active" id="welcomeScreen">
+          <header class="brand-block">
+            <img
+              class="brand-mark"
+              src="./assets/newspick.png"
+              alt="NewPick 로고"
+            />
+            <h1>NewPick</h1>
+            <p class="intro">
+              AI가 오늘의 뉴스를 골라 짧게 요약하고 퀴즈로 정리해요.
+            </p>
+          </header>
+        </div>
+
+        <section
+          class="content screen screen-category"
+          id="categoryScreen"
+          aria-label="관심 카테고리 선택"
+        >
+          <button class="back-button" type="button" id="backButton" aria-label="이전 화면">
+            ‹
+          </button>
+
+          <header class="category-header">
+            <p class="step-label">맞춤 설정</p>
+            <h2>관심 있는 뉴스를 골라주세요</h2>
+            <p>
+              선택한 분야를 중심으로 요약, 퀴즈, 데일리 리포트를 준비할게요.
+            </p>
+          </header>
+
+          <div class="category-list" role="group" aria-label="뉴스 카테고리">
+            <button class="category-card is-selected" type="button" data-category="테크">
+              <span class="category-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <rect x="6" y="6" width="12" height="12" rx="3"></rect>
+                  <path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"></path>
+                  <path d="M10 12h.01M12 10h.01M14 12h.01"></path>
+                </svg>
+              </span>
+              <span class="category-copy">
+                <strong>테크</strong>
+                <small>AI와 기술 흐름을 한눈에</small>
+              </span>
+              <span class="check-mark" aria-hidden="true">✓</span>
+            </button>
+
+            <button class="category-card" type="button" data-category="경제">
+              <span class="category-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="6.5" cy="17.5" r="3"></circle>
+                  <path d="M4 13l4-4 4 3 6-7"></path>
+                  <path d="M15 5h3v3"></path>
+                </svg>
+              </span>
+              <span class="category-copy">
+                <strong>경제</strong>
+                <small>돈과 시장의 움직임을 쉽게</small>
+              </span>
+              <span class="check-mark" aria-hidden="true">✓</span>
+            </button>
+
+            <button class="category-card" type="button" data-category="정책">
+              <span class="category-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <rect x="3.25" y="3.25" width="17.5" height="17.5" rx="4"></rect>
+                  <path d="M7.25 10.25h5.5"></path>
+                  <path d="M7.25 15.25l2.75 2.75 6.75-7.5"></path>
+                </svg>
+              </span>
+              <span class="category-copy">
+                <strong>정책</strong>
+                <small>정책 변화와 사회 방향을 이해해요</small>
+              </span>
+              <span class="check-mark" aria-hidden="true">✓</span>
+            </button>
+
+            <button class="category-card" type="button" data-category="이슈">
+              <span class="category-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M5 6.5h11a4 4 0 0 1 4 4v1.5a4 4 0 0 1-4 4h-5l-4.5 3v-3H5a4 4 0 0 1-4-4v-1.5a4 4 0 0 1 4-4z"></path>
+                  <circle cx="18.5" cy="5.5" r="2.5"></circle>
+                </svg>
+              </span>
+              <span class="category-copy">
+                <strong>이슈</strong>
+                <small>지금 사람들이 주목하는 이야기</small>
+              </span>
+              <span class="check-mark" aria-hidden="true">✓</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="content screen screen-app" id="appScreen" aria-label="NewPick 앱 화면">
+          <section class="app-page is-active" data-page="home" aria-label="홈">
+            <p class="step-label">Home</p>
+            <h2>오늘의 뉴스</h2>
+            <p>AI가 관심 분야의 주요 뉴스를 정리하고 있어요.</p>
+
+            <div class="home-loading" aria-live="polite">
+              <article class="loading-card" aria-label="뉴스 로딩 상태">
+                <div class="loading-orbit" aria-hidden="true">
+                  <span></span>
+                </div>
+                <div>
+                  <h3>
+                    오늘의 뉴스를 정리 중이에요<span class="typing-dots" aria-hidden="true"></span>
+                  </h3>
+                  <p>잠시만 기다리면 오늘의 핵심을 정리해드릴게요.</p>
+                </div>
+
+                <ol class="loading-steps">
+                  <li class="loading-step" data-step="collect">
+                    <div class="loading-step-main">
+                      <span class="loading-step-label">주요 뉴스 수집</span>
+                      <span class="loading-step-count"><span data-cur>0</span><span class="sep">/</span><span data-total>12</span> 매체</span>
+                    </div>
+                    <div class="loading-step-bar"><span></span></div>
+                  </li>
+                  <li class="loading-step" data-step="summarize">
+                    <div class="loading-step-main">
+                      <span class="loading-step-label">AI 요약 생성</span>
+                      <span class="loading-step-count"><span data-cur>0</span><span class="sep">/</span><span data-total>8</span> 기사</span>
+                    </div>
+                    <div class="loading-step-bar"><span></span></div>
+                  </li>
+                </ol>
+              </article>
+
+              <div class="news-skeletons" aria-hidden="true">
+                <div class="news-skeleton">
+                  <span></span>
+                  <strong></strong>
+                  <p></p>
+                </div>
+                <div class="news-skeleton">
+                  <span></span>
+                  <strong></strong>
+                  <p></p>
+                </div>
+              </div>
+            </div>
+
+            <div class="news-feed" aria-label="오늘의 뉴스 목록">
+              <article class="news-card">
+                <div class="news-meta">
+                  <span class="news-category">테크</span>
+                  <span class="news-source">ZDNet Korea</span>
+                  <time>09:20</time>
+                </div>
+                <h3>오픈AI·앤트로픽, AI 에이전트 경쟁 본격화... 작업 자동화 시대 가시화</h3>
+                <p class="news-summary">
+                  오픈AI와 앤트로픽이 잇따라 에이전트 기능을 공개하며 단순 대화를 넘어 업무 자동화 시장에 진입하고 있어요.
+                  이메일 작성, 코드 실행, 파일 관리 등 실제 작업을 AI가 직접 처리하는 서비스가 빠르게 확산되고 있습니다.
+                </p>
+                <div class="news-keywords" aria-label="핵심 키워드">
+                  <span>AI 에이전트</span>
+                  <span>오픈AI</span>
+                  <span>자동화</span>
+                </div>
+                <div class="news-actions">
+                  <button type="button" data-detail-target="tech">상세 보기</button>
+                </div>
+              </article>
+
+              <article class="news-card">
+                <div class="news-meta">
+                  <span class="news-category">경제</span>
+                  <span class="news-source">한국경제</span>
+                  <time>08:45</time>
+                </div>
+                <h3>미국 관세 인상 여파... 반도체·자동차 수출 기업 비용 부담 가중</h3>
+                <p class="news-summary">
+                  미국이 주요 교역국에 상호관세를 부과하면서 국내 수출 기업들의 원가 부담이 커지고 있어요.
+                  반도체·자동차·배터리 업종을 중심으로 대응책 마련이 시급하다는 목소리가 나오고 있습니다.
+                </p>
+                <div class="news-keywords" aria-label="핵심 키워드">
+                  <span>관세</span>
+                  <span>수출</span>
+                  <span>무역</span>
+                </div>
+                <div class="news-actions">
+                  <button type="button" data-detail-target="economy">상세 보기</button>
+                </div>
+              </article>
+
+              <article class="news-card">
+                <div class="news-meta">
+                  <span class="news-category">이슈</span>
+                  <span class="news-source">연합뉴스</span>
+                  <time>08:10</time>
+                </div>
+                <h3>합계출산율 0.75명 역대 최저... 정부, 인구전략기획부 신설 추진</h3>
+                <p class="news-summary">
+                  통계청이 발표한 지난해 합계출산율이 0.75명으로 역대 최저를 기록했어요.
+                  정부는 저출생·고령화 문제를 국가 위기로 규정하고 전담 부처 신설 등 구조적 대응에 나섰습니다.
+                </p>
+                <div class="news-keywords" aria-label="핵심 키워드">
+                  <span>출산율</span>
+                  <span>저출생</span>
+                  <span>인구정책</span>
+                </div>
+                <div class="news-actions">
+                  <button type="button" data-detail-target="issue">상세 보기</button>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section class="app-page detail-page" data-page="detail" aria-label="기사 상세">
+            <button class="detail-back" type="button" id="detailBackButton" aria-label="뉴스 목록으로 돌아가기">
+              ‹
+            </button>
+
+            <article class="detail-article">
+              <header class="detail-hero">
+                <div class="detail-meta">
+                  <span class="news-category">테크</span>
+                  <span>ZDNet Korea</span>
+                  <time>오늘 09:20</time>
+                </div>
+
+                <h2>오픈AI·앤트로픽, AI 에이전트 경쟁 본격화... 작업 자동화 시대 가시화</h2>
+
+                <div class="news-keywords detail-keywords" aria-label="핵심 키워드">
+                  <span>AI 에이전트</span>
+                  <span>오픈AI</span>
+                  <span>자동화</span>
+                </div>
+
+                <div class="source-strip">
+                  <span>원문 기반 AI 정리</span>
+                  <a href="#" aria-label="원문 기사 보기">원문 보기</a>
+                </div>
+              </header>
+
+              <section class="detail-section summary-section">
+                <p class="detail-label">핵심만 보기</p>
+                <ol class="summary-list">
+                  <li>
+                    <span>1</span>
+                    <p>오픈AI와 앤트로픽이 AI 에이전트 기능을 공개하며 단순 대화를 넘어 실제 업무 처리로 영역을 넓히고 있어요.</p>
+                  </li>
+                  <li>
+                    <span>2</span>
+                    <p>이메일 작성, 코드 실행, 웹 탐색 등 사용자 대신 작업을 수행하는 자율 에이전트 서비스가 빠르게 확산되고 있습니다.</p>
+                  </li>
+                  <li>
+                    <span>3</span>
+                    <p>국내 IT 기업들도 에이전트 연동 서비스 개발에 속도를 내며 시장 선점 경쟁에 뛰어들고 있어요.</p>
+                  </li>
+                </ol>
+              </section>
+
+              <section class="detail-section insight-block">
+                <p class="detail-label">왜 중요해?</p>
+                <p>
+                  AI가 단순히 답변을 생성하는 단계를 넘어, 실제 작업을 대신 처리하는 방향으로 진화하고 있어요.
+                  업무 자동화가 일상화되면 일하는 방식 자체가 바뀔 수 있습니다.
+                </p>
+              </section>
+
+              <section class="detail-section context-section">
+                <p class="detail-label">조금 더 알기</p>
+                <div class="context-list">
+                  <div>
+                    <strong>배경</strong>
+                    <span>챗GPT 등장 이후 AI는 대화형 도우미에서 자율 행동 에이전트로 빠르게 발전하고 있어요.</span>
+                  </div>
+                  <div>
+                    <strong>영향</strong>
+                    <span>반복 업무 자동화로 생산성이 높아지는 반면, 일부 직군의 역할 변화도 예상됩니다.</span>
+                  </div>
+                </div>
+              </section>
+
+              <button class="detail-quiz-button" type="button" id="openInlineQuizButton">퀴즈로 이해도 확인하기</button>
+
+              <section class="inline-quiz" id="inlineQuiz" aria-label="기사 이해도 OX 퀴즈" hidden>
+                <div class="inline-quiz-head">
+                  <div>
+                    <p class="detail-label">읽은 내용 확인하기</p>
+                    <small>기사 핵심을 가볍게 체크해볼게요.</small>
+                  </div>
+                  <div class="quiz-dots" id="quizStepDots" aria-label="현재 퀴즈 진행">
+                    <span class="is-active"></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+
+                <div class="quiz-question-block">
+                  <span id="quizQuestionLabel">Q1</span>
+                  <strong id="quizQuestion">
+                    오픈AI와 앤트로픽은 AI 에이전트 기능을 공개하며 업무 자동화 시장에 진입하고 있다.
+                  </strong>
+                </div>
+
+                <div class="ox-actions" aria-label="O 또는 X 선택">
+                  <button type="button" data-answer="O">O</button>
+                  <button type="button" data-answer="X">X</button>
+                </div>
+
+                <div class="quiz-feedback" id="quizFeedback" hidden>
+                  <strong id="quizFeedbackTitle">맞았어요</strong>
+                  <p id="quizFeedbackText">
+                    기사에서 두 회사가 에이전트 기능을 공개하며 자동화 시장에 진입하고 있다고 설명했어요.
+                  </p>
+                </div>
+
+                <button class="quiz-next-button" type="button" id="quizNextButton" hidden>다음 문제</button>
+
+                <div class="quiz-result-summary" id="quizResultSummary" hidden></div>
+              </section>
+            </article>
+          </section>
+
+          <section class="app-page" data-page="report" aria-label="리포트">
+            <div class="report-top">
+              <h1 class="report-date">5월 10일</h1>
+              <span class="report-update">09:30 업데이트</span>
+            </div>
+            <p class="report-day">화요일 · 데일리 리포트</p>
+
+            <div class="report-briefing-v2">
+              <span class="briefing-icon" aria-hidden="true">AI</span>
+              <div>
+                <span class="briefing-label">BRIEFING</span>
+                <p>AI 자동화와 통상 압박, 인구 위기가 동시에 부상한 하루였습니다.</p>
+              </div>
+            </div>
+
+            <div class="tl-head">
+              <span>가장 많이 다뤄진 순</span>
+              <span class="tl-head-line"></span>
+              <span class="tl-head-count">3건</span>
+            </div>
+
+            <div class="timeline">
+              <div class="tl-rail" aria-hidden="true"></div>
+
+              <div class="tl-item tl-item--big">
+                <div class="tl-node tl-node--big" style="--c:#ff8a3d"></div>
+                <span class="tl-time">오늘 09:20 · 가장 많이 다뤄진 이슈</span>
+                <article class="tl-card tl-card--big">
+                  <div class="tl-cat" style="--c:#ff8a3d">● 테크</div>
+                  <h3>오픈AI·앤트로픽, AI 에이전트 경쟁 본격화... 작업 자동화 시대 가시화</h3>
+                  <p>이메일 작성, 코드 실행, 파일 관리 등 실제 작업을 AI가 직접 처리하는 서비스가 빠르게 확산되고 있어요.</p>
+                  <span class="src-tag">
+                    <span class="src-dots" style="--c:#ff8a3d"><span></span><span></span><span></span><span></span></span>
+                    4개 매체가 동시에 보도
+                  </span>
+                </article>
+              </div>
+
+              <div class="tl-item">
+                <div class="tl-node" style="--c:#4f9cf9"></div>
+                <span class="tl-time">오늘 08:45</span>
+                <article class="tl-card">
+                  <div class="tl-cat" style="--c:#4f9cf9">● 경제</div>
+                  <div class="tl-title">미국 관세 인상 여파... 반도체·자동차 수출 기업 부담 가중</div>
+                  <div class="tl-meta">3개 매체 보도</div>
+                </article>
+              </div>
+
+              <div class="tl-item">
+                <div class="tl-node" style="--c:#9b7cf8"></div>
+                <span class="tl-time">오늘 08:10</span>
+                <article class="tl-card">
+                  <div class="tl-cat" style="--c:#9b7cf8">● 이슈</div>
+                  <div class="tl-title">합계출산율 0.75명 역대 최저... 인구전략기획부 신설 추진</div>
+                  <div class="tl-meta">2개 매체 보도</div>
+                </article>
+              </div>
+            </div>
+
+            <div class="flow-head">
+              <span>오늘의 흐름</span>
+              <span class="flow-head-line"></span>
+              <span class="flow-head-sub">카테고리별 한 줄</span>
+            </div>
+            <div class="flow-list-v2">
+              <div class="flow-row"><span class="flow-cat" style="--c:#ff8a3d">테크</span><span class="flow-text">AI 에이전트 경쟁이 업무 자동화 시장으로 본격 확산</span></div>
+              <div class="flow-row"><span class="flow-cat" style="--c:#4f9cf9">경제</span><span class="flow-text">미국 관세 여파로 반도체·자동차 수출 기업 부담 가중</span></div>
+              <div class="flow-row"><span class="flow-cat" style="--c:#9b7cf8">이슈</span><span class="flow-text">합계출산율 역대 최저, 정부 전담 부처 신설로 대응</span></div>
+            </div>
+
+            <div class="kw-title">오늘의 키워드</div>
+            <div class="kw-cloud-v2">
+              <span data-w="9">AI 에이전트</span>
+              <span data-w="7">미국 관세</span>
+              <span data-w="6">오픈AI</span>
+              <span data-w="5">출산율</span>
+              <span data-w="4">자동화</span>
+              <span data-w="3">수출</span>
+              <span data-w="3">저출생</span>
+              <span data-w="2">반도체</span>
+            </div>
+
+            <div class="report-footer-mark">
+              <span class="footer-check" aria-hidden="true">✓</span>
+              <span>오늘 따라잡기 끝 — 내일 09:30에 다시 만나요</span>
+            </div>
+          </section>
+
+          <!-- 챗 페이지 -->
+          <section class="app-page chat-page" data-page="chat" aria-label="AI 어시스턴트">
+            <header class="chat-header">
+              <div class="chat-header-info">
+                <span class="chat-header-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2a8 8 0 0 1 8 8c0 5-8 12-8 12S4 15 4 10a8 8 0 0 1 8-8z"/>
+                    <circle cx="12" cy="10" r="2.5" fill="currentColor" stroke="none"/>
+                  </svg>
+                </span>
+                <div>
+                  <p class="chat-header-title">AI 어시스턴트</p>
+                  <p class="chat-header-sub">기사·리포트 검색</p>
+                </div>
+              </div>
+              <button class="chat-reset-btn" type="button" id="chatResetBtn" aria-label="대화 초기화" hidden>
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M15.5 4.5A7.5 7.5 0 1 1 5.5 14"/>
+                  <path d="M5 10V5.5H9.5"/>
+                </svg>
+              </button>
+            </header>
+
+            <div class="chat-body" id="chatBody">
+              <!-- 초기 상태 -->
+              <div class="chat-intro" id="chatIntro">
+                <div class="chat-intro-icon" aria-hidden="true">
+                  <svg viewBox="0 0 40 40" fill="none">
+                    <circle cx="20" cy="20" r="20" fill="#fff0e7"/>
+                    <path d="M12 20c0-4.4 3.6-8 8-8s8 3.6 8 8-3.6 8-8 8" stroke="#ff8a3d" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="20" cy="20" r="2.5" fill="#ff8a3d"/>
+                  </svg>
+                </div>
+                <p class="chat-intro-title">뉴스가 궁금하면 물어보세요</p>
+                <p class="chat-intro-desc">수집된 기사와 리포트를 바탕으로<br>답변해 드릴게요.</p>
+                <div class="chat-suggestions">
+                  <button class="chat-suggestion-chip" type="button" data-msg="어제 테크 뉴스 뭐 있었어?">어제 테크 뉴스 뭐 있었어?</button>
+                  <button class="chat-suggestion-chip" type="button" data-msg="AI 관련 기사 찾아줘">AI 관련 기사 찾아줘</button>
+                  <button class="chat-suggestion-chip" type="button" data-msg="이번주 경제 흐름은?">이번주 경제 흐름은?</button>
+                  <button class="chat-suggestion-chip" type="button" data-msg="오픈AI가 최근에 뭐 발표했어?">오픈AI가 최근에 뭐 발표했어?</button>
+                </div>
+              </div>
+
+              <!-- 메시지는 JS로 동적 생성 -->
+              <div class="chat-messages" id="chatMessages" hidden></div>
+            </div>
+
+            <div class="chat-input-bar">
+              <input class="chat-input" type="text" placeholder="궁금한 뉴스를 물어보세요" id="chatInput" autocomplete="off"/>
+              <button class="chat-send-btn" type="button" id="chatSendBtn" aria-label="전송">
+                <svg viewBox="0 0 20 20" fill="none">
+                  <path d="M17 10 3 4l3 6-3 6 14-6z" fill="currentColor"/>
+                </svg>
+              </button>
+            </div>
+          </section>
+        </section>
+
+        <footer class="welcome-actions" id="appActions">
+          <button class="primary-button" type="button" id="startButton">
+            서비스 시작하기
+          </button>
+          <p class="action-helper" id="actionHelper"></p>
+        </footer>
+
+        <nav class="bottom-nav" id="bottomNav" aria-label="하단 내비게이션" hidden>
+          <button class="nav-item is-active" type="button" data-target="home">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 10.5 12 4l8 6.5"></path>
+                <path d="M6.5 10v9h11v-9"></path>
+                <path d="M10 19v-5h4v5"></path>
+              </svg>
+            </span>
+            홈
+          </button>
+          <button class="nav-item nav-item--chat" type="button" data-target="chat">
+            <span class="nav-icon nav-icon--chat" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </span>
+          </button>
+          <button class="nav-item" type="button" data-target="report">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <rect x="6" y="4" width="12" height="16" rx="3"></rect>
+                <path d="M9 9h6"></path>
+                <path d="M9 13h6"></path>
+                <path d="M9 17h4"></path>
+              </svg>
+            </span>
+            리포트
+          </button>
+        </nav>
+      </section>
+    </main>
+
+    <script src="./script.js?v=quizresult2"></script>
+  </body>
+</html>

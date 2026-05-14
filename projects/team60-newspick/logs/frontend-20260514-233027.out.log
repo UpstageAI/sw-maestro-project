@@ -1,0 +1,13 @@
+[ERROR] Command failed with exit code 1: pnpm install
+
+pnpm: Command failed with exit code 1: pnpm install
+    at getFinalError (file:///C:/Users/juns0720/AppData/Local/node/corepack/v1/pnpm/11.1.1/dist/pnpm.mjs:28661:14)
+    at makeError (file:///C:/Users/juns0720/AppData/Local/node/corepack/v1/pnpm/11.1.1/dist/pnpm.mjs:30968:21)
+    at getSyncResult (file:///C:/Users/juns0720/AppData/Local/node/corepack/v1/pnpm/11.1.1/dist/pnpm.mjs:32812:10)
+    at spawnSubprocessSync (file:///C:/Users/juns0720/AppData/Local/node/corepack/v1/pnpm/11.1.1/dist/pnpm.mjs:32772:14)
+    at execaCoreSync (file:///C:/Users/juns0720/AppData/Local/node/corepack/v1/pnpm/11.1.1/dist/pnpm.mjs:32702:23)
+    at callBoundExeca (file:///C:/Users/juns0720/AppData/Local/node/corepack/v1/pnpm/11.1.1/dist/pnpm.mjs:35230:23)
+    at boundExeca (file:///C:/Users/juns0720/AppData/Local/node/corepack/v1/pnpm/11.1.1/dist/pnpm.mjs:35207:49)
+    at sync (file:///C:/Users/juns0720/AppData/Local/node/corepack/v1/pnpm/11.1.1/dist/pnpm.mjs:35362:14)
+    at runPnpmCli (file:///C:/Users/juns0720/AppData/Local/node/corepack/v1/pnpm/11.1.1/dist/pnpm.mjs:211041:5)
+    at runDepsStatusCheck (file:///C:/Users/juns0720/AppData/Local/node/corepack/v1/pnpm/11.1.1/dist/pnpm.mjs:212745:7)

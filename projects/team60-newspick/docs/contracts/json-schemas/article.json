@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "article.json",
+  "title": "Article",
+  "type": "object",
+  "required": ["id", "url", "title", "source", "category", "publishedAt", "status"],
+  "properties": {
+    "id":              { "type": "string" },
+    "url":             { "type": "string", "format": "uri" },
+    "title":           { "type": "string" },
+    "source":          { "type": "string" },
+    "category":        { "type": "string", "enum": ["테크", "경제", "정책", "이슈"] },
+    "publishedAt":     { "type": "string", "format": "date-time" },
+    "rawText":         { "type": ["string", "null"] },
+    "rawTextStatus":   { "type": ["string", "null"], "enum": ["full_text", "description_only", null] },
+    "summary":         { "type": "array", "items": { "type": "string" }, "minItems": 3, "maxItems": 5 },
+    "keywords":        { "type": "array", "items": { "type": "string" } },
+    "importance":      { "type": ["string", "null"] },
+    "context":         { "type": ["string", "null"] },
+    "importanceScore": { "type": ["integer", "null"], "minimum": 1, "maximum": 10 },
+    "quiz": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["question", "answer", "explanation"],
+        "properties": {
+          "question":    { "type": "string" },
+          "answer":      { "type": "boolean" },
+          "explanation": { "type": "string" }
+        }
+      }
+    },
+    "status":          { "type": "string", "enum": ["collected", "summarized", "review_required", "skip", "description_only"] }
+  }
+}

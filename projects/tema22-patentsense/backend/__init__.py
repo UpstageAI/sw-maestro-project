@@ -1,1 +1,0 @@
-"""PatentSense backend package."""

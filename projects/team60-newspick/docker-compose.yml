@@ -1,0 +1,62 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: newspick-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-newspick}
+      POSTGRES_USER: ${DB_USER:-newspick}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-newspick}
+    ports:
+      - "5432:5432"
+    volumes:
+      - newspick_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-newspick} -d ${DB_NAME:-newspick}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  ai:
+    build: ./ai
+    container_name: newspick-ai
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./ai/.env
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-newspick}:${DB_PASSWORD:-newspick}@db:5432/${DB_NAME:-newspick}
+      LANGCHAIN_TRACING_V2: "false"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  backend:
+    build: ./backend
+    container_name: newspick-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-newspick}
+      DB_USER: ${DB_USER:-newspick}
+      DB_PASSWORD: ${DB_PASSWORD:-newspick}
+      AI_SERVICE_URL: http://ai:8000
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: newspick-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+    depends_on:
+      - backend
+
+volumes:
+  newspick_pgdata:

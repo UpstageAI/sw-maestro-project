@@ -1,0 +1,40 @@
+[project]
+name = "newspick-ai"
+version = "0.0.1"
+description = "NewPick AI pipeline (FastAPI + LangGraph + Solar)"
+readme = "README.md"
+authors = [
+    { name = "junseo Lee", email = "74139368+juns0720@users.noreply.github.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "langgraph>=0.2",
+    "langchain-upstage>=0.3",
+    "hdbscan>=0.8.40",
+    "numpy>=1.26",
+    "asyncpg>=0.30",
+    "pgvector>=0.3",
+    "feedparser>=6.0",
+    "httpx>=0.27",
+    "apscheduler>=3.10",
+    "json-repair>=0.30",
+    "kiwipiepy>=0.19",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "vcrpy>=6.0",
+    "testcontainers[postgres]>=4.9",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.12,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
