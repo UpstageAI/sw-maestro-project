@@ -149,7 +149,17 @@ def _action_for_failed_check(
         slot = missing[0]
         return Action(type=ActionType.ADD, target_slot=slot.value, to=_target_item(context, slot))
 
-    if failed_check.id in {"A3", "A4", "B1"}:
+    if failed_check.id == "A3":
+        slot = GarmentSlot.SHOES
+        current = _primary_garment(outfit, slot)
+        return Action(
+            type=ActionType.SWAP,
+            target_slot=slot.value,
+            from_=_current_item(current),
+            to=_target_item(context, slot),
+        )
+
+    if failed_check.id in {"A4", "B1"}:
         slot = _lowest_formality_slot(outfit) or GarmentSlot.SHOES
         current = _primary_garment(outfit, slot)
         return Action(
@@ -222,6 +232,12 @@ def _rationale_facts(
         facts.append(f"adding {_target_name(action)} completes required slots")
     elif action.type == ActionType.RECOLOR:
         facts.append(f"preferred_tones={_fmt_list(context.dress_code.color_guidance.preferred_tones)}")
+    elif action.type == ActionType.SWAP:
+        current_avg = _current_formality_avg(outfit)
+        next_avg = _simulated_formality_avg(outfit, action)
+        facts.append(f"swapping {action.target_slot} raises outfit_formality_avg from {current_avg} to {next_avg}")
+    elif action.type == ActionType.ADD:
+        facts.append(f"adding {_target_name(action)} completes required slots for {action.target_slot}")
 
     return _unique(facts)
 
@@ -250,8 +266,10 @@ def _target_item(context: ContextResponse, slot: GarmentSlot) -> str:
 
 
 def _preferred_category(categories: list[str], slot: GarmentSlot) -> str:
-    if slot == GarmentSlot.SHOES and "loafers" in categories:
-        return "loafers"
+    if slot == GarmentSlot.SHOES:
+        for preferred in ("로퍼", "loafers"):
+            if preferred in categories:
+                return preferred
     return categories[0] if categories else slot.value
 
 

@@ -84,6 +84,19 @@ def pack_response_node(state: Any) -> dict[str, Any]:
     without touching the route.
     """
     session_id = state_get(state, "session_id")
+
+    outfit = state_get(state, "outfit")
+    if outfit is not None:
+        agent_meta = getattr(outfit, "agent_meta", None)
+        log.info(
+            "vision_done",
+            session_id=session_id,
+            steps_taken=agent_meta.steps_taken if agent_meta else None,
+            vlm_calls=agent_meta.vlm_calls if agent_meta else None,
+            warnings_count=len(getattr(outfit, "warnings", [])),
+            verifiers_failed=agent_meta.verifiers_failed if agent_meta else [],
+        )
+
     log.info(
         "graph_done",
         session_id=session_id,
