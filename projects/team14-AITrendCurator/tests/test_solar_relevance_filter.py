@@ -1,8 +1,12 @@
 import pytest
 
-from app.agents.solar_relevance_filter import SolarMiniLLMRelevanceFilter
+from app.agents.relevance_filter import SolarMiniRelevanceFilter
+from app.agents.solar_relevance_filter import (
+    SolarMiniLLMRelevanceFilter,
+    build_solar_mini_relevance_filter,
+)
 from app.core.models import NormalizedDocument
-from app.core.settings import SolarSettings
+from app.core.settings import Settings, SolarSettings
 
 
 class FakeSolarJsonClient:
@@ -55,6 +59,28 @@ def test_solar_mini_llm_relevance_filter_uses_configured_model():
     assert decision.score == 0.93
     assert client.calls[0]["model"] == "solar-mini-test"
     assert "판정 기준" in client.calls[0]["messages"][0].content
+
+
+def test_solar_mini_llm_relevance_filter_logs_request_and_result(caplog):
+    client = FakeSolarJsonClient(
+        {
+            "is_relevant": True,
+            "score": 0.93,
+            "matched_keywords": ["langgraph"],
+            "reason": "LangGraph agent workflow를 다룹니다.",
+        }
+    )
+    settings = SolarSettings(api_key="test-key", mini_model="solar-mini-test")
+    filter_ = SolarMiniLLMRelevanceFilter(client=client, settings=settings)
+
+    with caplog.at_level("INFO", logger="app.agents.solar_relevance_filter"):
+        filter_.filter([make_document()])
+
+    messages = [record.getMessage() for record in caplog.records]
+    assert any("solar relevance: batch start count=1 model=solar-mini-test" in message for message in messages)
+    assert any("solar relevance: request doc_id=doc_001" in message for message in messages)
+    assert any("solar relevance: result doc_id=doc_001" in message for message in messages)
+    assert any("solar relevance: batch done count=1 relevant_count=1" in message for message in messages)
 
 
 def test_solar_mini_llm_relevance_filter_reuses_system_prompt(monkeypatch):
@@ -288,3 +314,26 @@ def test_solar_mini_llm_relevance_filter_uses_fallback_for_non_finite_score():
     fallback = filter_.fallback_filter.evaluate(document)
 
     assert decision.score == fallback.score
+
+
+def test_build_solar_mini_relevance_filter_uses_llm_filter_when_api_key_is_configured():
+    settings = Settings(
+        solar_api_key="test-key",
+        solar_base_url="https://example.com/v1",
+        solar_mini_model="solar-mini-test",
+    )
+
+    relevance_filter = build_solar_mini_relevance_filter(settings)
+
+    assert isinstance(relevance_filter, SolarMiniLLMRelevanceFilter)
+    assert relevance_filter.settings.api_key == "test-key"
+    assert relevance_filter.settings.base_url == "https://example.com/v1"
+    assert relevance_filter.settings.mini_model == "solar-mini-test"
+
+
+def test_build_solar_mini_relevance_filter_uses_local_filter_without_api_key():
+    settings = Settings(solar_api_key="")
+
+    relevance_filter = build_solar_mini_relevance_filter(settings)
+
+    assert isinstance(relevance_filter, SolarMiniRelevanceFilter)

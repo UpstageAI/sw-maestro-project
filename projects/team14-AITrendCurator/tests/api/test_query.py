@@ -40,6 +40,15 @@ class FailingSearchClient:
         raise RuntimeError("SOLAR_API_KEY is missing")
 
 
+class EmptySearchClient:
+    def __init__(self) -> None:
+        self.calls = []
+
+    def search(self, **kwargs):
+        self.calls.append(kwargs)
+        return []
+
+
 class FakeIntentRouter:
     def __init__(self, intent="GENERAL_QA") -> None:
         self.intent = intent
@@ -51,14 +60,15 @@ class FakeIntentRouter:
 
 
 class FakeQueryRewriter:
-    def __init__(self) -> None:
+    def __init__(self, sources=None) -> None:
         self.calls = []
+        self.sources = sources or ["huggingface", "hackernews"]
 
     async def rewrite(self, query):
         self.calls.append(query)
         return QueryRewriterResult(
             optimized_queries=["optimized LangGraph workflow query"],
-            search_filter={"sources": ["huggingface", "hackernews"]},
+            search_filter={"sources": self.sources},
         )
 
 
@@ -131,6 +141,47 @@ def test_query_api_returns_empty_answer_when_search_fails():
     assert payload["data"]["warnings"]
 
 
+def test_query_api_warns_when_search_returns_no_documents():
+    app.dependency_overrides[get_query_runner] = lambda: QueryGraphRunner(search_client=EmptySearchClient())
+    try:
+        client = TestClient(app)
+        response = client.post(
+            "/api/v1/query",
+            json={"question": "오늘 트렌드 요약해줘", "top_k": 3, "date_to": "2026-05-14"},
+        )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["success"] is True
+    assert payload["data"]["sources"] == []
+    assert "Search returned no documents" in payload["data"]["warnings"][0]
+    assert "date_to=2026-05-14" in payload["data"]["warnings"][0]
+
+
+def test_query_api_answers_small_talk_without_search():
+    search_client = EmptySearchClient()
+    app.dependency_overrides[get_query_runner] = lambda: QueryGraphRunner(search_client=search_client)
+    try:
+        client = TestClient(app)
+        response = client.post(
+            "/api/v1/query",
+            json={"question": "안녕", "top_k": 3, "date_to": "2026-05-14"},
+        )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["success"] is True
+    assert payload["data"]["intent"] == "general_query"
+    assert "안녕하세요" in payload["data"]["answer"]
+    assert payload["data"]["sources"] == []
+    assert payload["data"]["warnings"] == []
+    assert search_client.calls == []
+
+
 def test_query_graph_uses_intent_router_and_query_rewriter():
     router = FakeIntentRouter(intent="GENERAL_QA")
     rewriter = FakeQueryRewriter()
@@ -157,6 +208,27 @@ def test_query_graph_uses_intent_router_and_query_rewriter():
     assert search_client.calls[0]["sources"] == ["huggingface", "hackernews"]
 
 
+def test_query_graph_ignores_invalid_rewriter_source_filters():
+    router = FakeIntentRouter(intent="GENERAL_QA")
+    rewriter = FakeQueryRewriter(sources=["web"])
+    search_client = FakeSearchClient()
+    runner = QueryGraphRunner(
+        search_client=search_client,
+        intent_router=router,
+        query_rewriter=rewriter,
+    )
+
+    state = runner.run(
+        question="오늘 트렌드 요약해줘",
+        top_k=3,
+        base_date=date(2026, 5, 14),
+    )
+
+    assert "sources" in search_client.calls[0]
+    assert search_client.calls[0]["sources"] is None
+    assert state["warnings"] == ["QueryRewriter ignored invalid source filters: ['web']"]
+
+
 def test_query_graph_uses_date_range_parser_and_period_retriever():
     router = FakeIntentRouter(intent="TREND_COMPARISON")
     parser = FakeDateRangeParser()
@@ -179,3 +251,33 @@ def test_query_graph_uses_date_range_parser_and_period_retriever():
     assert state["intent"] == "TREND_COMPARISON"
     assert state["comparison_metadata"]["period_a"]["start"] == "2026-04-27"
     assert state["comparison_metadata"]["period_b"]["end"] == "2026-05-10"
+
+
+def test_short_period_disclaimer_added_for_1day_vs_1day():
+    """비교 기간이 너무 짧으면(예: 1일 vs 1일) 답변 머리에 디스클레이머가 붙는다."""
+    from app.graphs.query_graph import _short_period_disclaimer
+
+    disclaimer = _short_period_disclaimer({
+        "period_a": {"start": "2026-05-13", "end": "2026-05-13"},
+        "period_b": {"start": "2026-05-14", "end": "2026-05-14"},
+    })
+    assert "표본이 적습니다" in disclaimer
+
+
+def test_short_period_disclaimer_skipped_for_normal_7day_window():
+    """기본 7일 윈도우에서는 디스클레이머가 붙지 않는다."""
+    from app.graphs.query_graph import _short_period_disclaimer
+
+    disclaimer = _short_period_disclaimer({
+        "period_a": {"start": "2026-04-27", "end": "2026-05-03"},
+        "period_b": {"start": "2026-05-04", "end": "2026-05-10"},
+    })
+    assert disclaimer == ""
+
+
+def test_short_period_disclaimer_skipped_when_metadata_missing():
+    """기간 메타가 비어 있으면 빈 문자열을 반환한다."""
+    from app.graphs.query_graph import _short_period_disclaimer
+
+    assert _short_period_disclaimer({}) == ""
+    assert _short_period_disclaimer({"period_a": {}, "period_b": {}}) == ""

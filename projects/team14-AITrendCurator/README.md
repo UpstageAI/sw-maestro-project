@@ -71,6 +71,71 @@ TrendCurator는 AI 에이전트 관련 최신 정보를 자동 수집하고, 검
 - `SKILLS.md`: 팀 공통 개발 규칙과 아키텍처 기준을 정의합니다.
 - `CONTRIBUTING.md`: 브랜치, PR, 리뷰, 커밋 규칙을 정의합니다.
 
+## 처음 실행 (초기 설정)
+
+1. 레포지토리 클론
+
+   ```bash
+   git clone https://github.com/soma17th-ai14/TrendCurator.git
+   cd TrendCurator
+   ```
+
+2. Python 가상환경 생성 및 활성화 (Python 3.11 이상)
+
+   ```bash
+   # macOS / Linux
+   python3 -m venv .venv
+   source .venv/bin/activate
+
+   # Windows PowerShell
+   python -m venv .venv
+   .venv\Scripts\Activate.ps1
+   ```
+
+3. 의존성 설치
+
+   런타임만 필요한 경우:
+
+   ```bash
+   pip install -e .
+   ```
+
+   테스트까지 실행하려면 dev 의존성을 함께 설치합니다.
+
+   ```bash
+   pip install -e ".[dev]"
+   ```
+
+4. 환경변수 파일 생성
+
+   `.env.example` 을 복사해 레포 루트에 `.env` 파일을 만들고, 발급받은 Upstage API 키를 채웁니다. 자세한 키 목록은 아래 [로컬 환경변수 설정](#로컬-환경변수-설정) 참고.
+
+   ```bash
+   cp .env.example .env
+   ```
+
+5. 백엔드 + 프론트엔드 실행
+
+   터미널 두 개에서 각각 실행합니다.
+
+   ```bash
+   # 터미널 1 — FastAPI 백엔드
+   uvicorn app.main:app --reload
+
+   # 터미널 2 — Streamlit 프론트엔드
+   streamlit run frontend/streamlit_app.py
+   ```
+
+   기본 주소: 백엔드 `http://localhost:8000`, 프론트엔드 `http://localhost:8501`.
+
+6. (선택) 테스트 실행
+
+   ```bash
+   python -m pytest
+   ```
+
+Docker Compose 로 한 번에 실행하려면 아래 [Docker Compose 실행](#docker-compose-실행) 섹션을 참고하세요. 가상환경 없이 컨테이너만 띄우면 됩니다.
+
 ## 로컬 환경변수 설정
 
 Solar API를 사용하는 모듈은 환경변수에서 키와 모델 설정을 읽습니다. 공개 레포에는 실제 API 키를 커밋하지 않습니다.
@@ -120,7 +185,27 @@ SCHEDULER_ENABLED=true
 SCHEDULER_TIME=09:00
 SCHEDULER_TIMEZONE=Asia/Seoul
 SCHEDULER_SOURCES=huggingface,hackernews
+SCHEDULER_AUTOSTART=1            # 앱 부팅 시 스케줄러 루프와 효력 일자 다이제스트 자동 생성 시작
+CHROMA_RESET_ON_STARTUP=1        # 데모/시연용: 부팅 시 벡터DB 컬렉션 청소 (기본 비활성)
+DEMO_BOOTSTRAP_ON_STARTUP=1      # 데모 전용: 부팅 시 직전 N일치 수집과 Digest 생성
+DEMO_BOOTSTRAP_DAYS=5
 ```
+
+`CHROMA_RESET_ON_STARTUP=1` 은 시연 환경에서 깨끗한 상태로 시작할 때 사용하며, 부팅 시 다음
+세 가지를 모두 비웁니다.
+
+- 벡터DB(ChromaDB) 컬렉션
+- 다이제스트 파일 (`data/digests/digest_*.json`)
+- 수집 상태 파일 (`data/collection_status.json`)
+
+`SCHEDULER_AUTOSTART=1` 과 함께 사용하면, 청소 직후 효력 일자 다이제스트가 새로 생성됩니다.
+평소 개발 환경에서는 비활성으로 두는 것을 권장합니다. 중복 문서 자체는 `chunk_id` 기준 upsert
+로 갱신되므로, 이 옵션 없이도 동일 문서 재수집이 중복 row 를 만들지는 않습니다.
+
+`DEMO_BOOTSTRAP_ON_STARTUP=1` 은 시연 준비용 옵션입니다. 앱 부팅 직후 효력 일자 직전
+`DEMO_BOOTSTRAP_DAYS`일치 데이터를 순차 수집하고, 누락된 Digest를 백그라운드에서 생성합니다.
+이미 저장된 `digest_YYYYMMDD` 파일은 건너뜁니다. 실제 외부 수집, 임베딩, Solar Mini/Pro 호출 비용이
+발생하므로 데모 준비 시에만 켜는 것을 권장합니다.
 
 ## 팀 역할 분담
 
@@ -139,26 +224,26 @@ SCHEDULER_SOURCES=huggingface,hackernews
 5. 비교
 6. UI
 
-## UI / integration / validation / deployment notes
+## UI · 통합 · 검증 · 배포
 
-This repository now includes the UI and integration layer for the education assignment:
+레포지토리에는 다음 UI/통합 계층이 포함되어 있습니다.
 
-- Streamlit UI in `frontend/streamlit_app.py`
-- FastAPI integration endpoints for dashboard, query, digest generation, and groundedness checks
-- LangGraph-based query orchestration with a sequential fallback before dependencies are installed
-- Groundedness Check service with an injectable RAGAS evaluator contract and a deterministic fallback scorer
-- Docker Compose services for the FastAPI backend and Streamlit frontend
+- `frontend/streamlit_app.py` 의 Streamlit UI
+- 대시보드, 질의, 다이제스트 생성, Groundedness 검사를 위한 FastAPI 통합 엔드포인트
+- LangGraph 기반 질의 워크플로우 (의존성 미설치 환경에서는 순차 실행 fallback 으로 동작)
+- 외부 평가기(RAGAS 등) 를 주입할 수 있는 인터페이스를 가진 Groundedness Check 서비스. 평가기가 없을 때는 결정적 키워드 겹침 스코어로 fallback 합니다.
+- FastAPI 백엔드와 Streamlit 프론트엔드를 함께 실행하는 Docker Compose 구성
 
-### Local run
+### 로컬 실행
 
 ```bash
 uvicorn app.main:app --reload
 streamlit run frontend/streamlit_app.py
 ```
 
-Streamlit calls `http://localhost:8000` by default. Override it with `TRENDCURATOR_API_BASE_URL`.
+Streamlit 은 기본적으로 `http://localhost:8000` 의 API 를 호출합니다. 다른 주소를 쓰려면 `TRENDCURATOR_API_BASE_URL` 환경변수로 덮어쓰면 됩니다.
 
-### Docker Compose run
+### Docker Compose 실행
 
 ```bash
 docker compose up --build
@@ -167,9 +252,11 @@ docker compose up --build
 - FastAPI: `http://localhost:8000`
 - Streamlit: `http://localhost:8501`
 
-Set `SOLAR_API_KEY` before running when real Solar generation or embedding calls are needed. Without the key, the UI and fallback groundedness/demo paths remain available.
+실제 Solar 생성/임베딩 호출이 필요할 때는 `SOLAR_API_KEY` 를 먼저 설정하세요. 키가 없어도 UI 와 Groundedness 키워드 fallback, 데모 경로는 정상 동작합니다.
 
-### Added API surface
+수집 파이프라인의 관련성 필터는 `SOLAR_API_KEY` 가 설정된 경우 Solar Mini API 로 문서 관련성을 판정하고, 키가 없거나 호출이 실패하면 로컬 키워드 기반 판정으로 fallback 합니다.
+
+### 추가된 API 엔드포인트
 
 - `GET /health`
 - `GET /api/v1/dashboard`
@@ -177,16 +264,16 @@ Set `SOLAR_API_KEY` before running when real Solar generation or embedding calls
 - `POST /api/v1/groundedness/check`
 - `POST /api/v1/digest/generate`
 
-### Query orchestration
+### 질의 워크플로우
 
-`POST /api/v1/query` uses the query agents from the earlier integration work:
+`POST /api/v1/query` 는 다음 흐름으로 질의를 처리합니다.
 
 ```text
 IntentRouter
 -> GENERAL_QA: QueryRewriter -> Retriever
 -> TREND_COMPARISON: DateRangeParser -> PeriodRetriever
--> answer generation
+-> 답변 생성
 -> GroundednessChecker
 ```
 
-If the Solar API key or VectorDB search is unavailable, the workflow returns a warning and an empty-source response instead of failing with a 500 error.
+Solar API 키가 없거나 VectorDB 검색이 실패하면 500 에러 대신 경고와 빈 출처 응답을 돌려줍니다.

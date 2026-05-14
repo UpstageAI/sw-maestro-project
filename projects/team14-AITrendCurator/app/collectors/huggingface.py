@@ -29,9 +29,14 @@ class HuggingFaceDailyPapersCollector(BaseCollector):
     source_name: ClassVar[str] = "huggingface"
 
     async def fetch(self, target_date: date) -> list[RawItem]:
-        async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
+        async with httpx.AsyncClient(timeout=HTTP_TIMEOUT, follow_redirects=True) as client:
             daily_url = DAILY_URL_TEMPLATE.format(date=target_date.isoformat())
             daily_response = await client.get(daily_url)
+
+            # 400: 해당 날짜 페이퍼가 아직 게시되지 않은 경우 빈 결과 반환
+            if daily_response.status_code == 400:
+                return []
+
             daily_response.raise_for_status()
 
             arxiv_ids = self._extract_arxiv_ids(daily_response.text)

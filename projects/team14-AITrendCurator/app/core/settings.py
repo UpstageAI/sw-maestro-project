@@ -47,6 +47,9 @@ class Settings(BaseSettings):
     solar_embedding_passage_model: str = "embedding-passage"
     chroma_data_path: str = "./chroma_data"
     chroma_collection_name: str = "trendcurator"
+    digest_data_path: str = "./data/digests"
+    profile_data_path: str = "./data/profile.json"
+    collection_status_path: str = "./data/collection_status.json"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 

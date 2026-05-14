@@ -50,6 +50,7 @@ class DailyDigestRetrievalRequest(BaseModel):
     keywords: list[str] = Field(default_factory=list)
     sources: list[Source] = Field(default_factory=list)
     min_relevance_score: float = Field(default=0.18, ge=0.0, le=1.0)
+    exclude_document_ids: list[str] = Field(default_factory=list)
 
 
 class DailyDigestRetrievalResult(BaseModel):
@@ -97,7 +98,9 @@ class SolarProDigestGenerationResult(BaseModel):
     date: date
     title: str
     items: list[DigestItem] = Field(default_factory=list)
-    groundedness_score: float = Field(ge=0.0, le=1.0)
+    # LLM 단계에서는 비워두고, Groundedness 검사 단계에서 채워 넣습니다.
+    # 어댑터로 넘어가기 전에는 반드시 float 값이 들어와야 합니다.
+    groundedness_score: float | None = Field(default=None, ge=0.0, le=1.0)
 
 
 class DigestGenerationRunResult(BaseModel):

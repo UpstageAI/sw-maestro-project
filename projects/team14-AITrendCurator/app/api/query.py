@@ -13,6 +13,7 @@ from app.agents.intent_router import IntentRouter
 from app.agents.query_rewriter import QueryRewriter
 from app.agents.retriever import Retriever
 from app.api.documents import get_retriever
+from app.api.responses import ErrorResponse, error_response
 from app.core.solar_client import SolarClient
 from app.core.solar_llm_client import SolarLLMClient
 from app.core.settings import get_solar_settings
@@ -40,7 +41,7 @@ class QueryData(BaseModel):
 class QueryResponse(BaseModel):
     success: bool
     data: QueryData | None = None
-    error: str | None = None
+    error: ErrorResponse | None = None
 
 
 def get_query_runner(retriever: Retriever = Depends(get_retriever)) -> QueryGraphRunner:
@@ -50,6 +51,7 @@ def get_query_runner(retriever: Retriever = Depends(get_retriever)) -> QueryGrap
         intent_router=agents.get("intent_router"),
         query_rewriter=agents.get("query_rewriter"),
         date_range_parser=agents.get("date_range_parser"),
+        llm_client=agents.get("answer_llm_client"),
     )
 
 
@@ -65,7 +67,10 @@ def run_query(
             base_date=request.date_to,
         )
     except Exception as exc:
-        return QueryResponse(success=False, error=str(exc))
+        return QueryResponse(
+            success=False,
+            error=error_response("QUERY_FAILED", str(exc)),
+        )
 
     return QueryResponse(
         success=True,
@@ -100,7 +105,13 @@ def _build_query_agents() -> dict[str, object]:
         temperature=0.0,
         response_format={"type": "json_object"},
     )
+    answer_llm_client = SolarLLMClient(
+        solar_client=solar_client,
+        model=settings.digest_model,
+        temperature=0.3,
+    )
     return {
+        "answer_llm_client": answer_llm_client,
         "intent_router": IntentRouter(
             llm_client=llm_client,
             prompt_template=(
@@ -120,7 +131,16 @@ def _build_query_agents() -> dict[str, object]:
             prompt_template=(
                 "Rewrite the user question into 1-2 concise vector-search queries.\n"
                 "Return JSON with optimized_queries and search_filter.sources.\n"
-                "sources must be a list containing 'huggingface', 'hackernews', or both.\n"
+                "\n"
+                "Rules for search_filter.sources:\n"
+                "- Default: return an EMPTY list [] so search spans ALL sources.\n"
+                "- Only set sources to ['huggingface'] if the question EXPLICITLY mentions "
+                "papers, arxiv, huggingface, or '논문'.\n"
+                "- Only set sources to ['hackernews'] if the question EXPLICITLY mentions "
+                "hackernews, HN, kernel, Linux, system-level topics, or '해커뉴스'.\n"
+                "- When unsure, ALWAYS return []. Do NOT narrow sources based on topic hints.\n"
+                "- General questions about AI/ML/agents/RAG/LLM must return [].\n"
+                "\n"
                 "Question: {query}"
             ),
         ),

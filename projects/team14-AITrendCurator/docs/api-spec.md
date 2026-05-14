@@ -83,11 +83,19 @@ Response
 {
   "success": true,
   "data": {
-    "message": "Profile updated"
+    "message": "프로필이 저장되었습니다. 키워드가 변경되었으므로, 새 키워드를 반영하려면 오늘의 Digest 재생성 버튼을 눌러주세요. 기존 다이제스트는 자동으로 갱신되지 않습니다.",
+    "keywords_changed": true
   },
   "error": null
 }
 ```
+
+응답 필드:
+
+- `data.keywords_changed` (boolean): 직전에 저장돼 있던 프로필의 `keywords` 와 비교해 값이 달라졌으면 `true`. 신규 프로필 생성 시에도 빈 리스트에서 값이 들어왔다면 `true` 가 됩니다.
+- `data.message` (string): 사용자에게 표시할 한국어 안내 문구. `keywords_changed` 가 `true` 면 다이제스트 재생성을 안내하는 문구로 바뀝니다.
+
+기존 다이제스트는 키워드 변경만으로 자동 재생성되지 않습니다. 새 키워드를 반영하려면 다음 스케줄 사이클까지 기다리거나, 클라이언트에서 다이제스트 재생성 API/UI를 호출해야 합니다.
 
 ## 3. 데이터 수집 파이프라인 API
 
@@ -113,11 +121,14 @@ Request
 ```text
 Collector (HuggingFace + HackerNews 병렬)
 -> Normalizer
--> Relevance Filter (SolarMini)
+-> Relevance Filter (Solar Mini API, 로컬 키워드 fallback)
 -> Chunker
 -> Embedder
 -> ChromaDB 저장
 ```
+
+관련성 필터는 `SOLAR_API_KEY`가 설정된 환경에서 Solar Mini API로 문서별 관련성을 판정합니다.
+API 키가 없거나 Solar Mini 호출/응답 파싱이 실패하면 기존 로컬 키워드 기반 판정으로 fallback합니다.
 
 Response
 
@@ -251,8 +262,8 @@ Response
         "summary": "핵심 요약",
         "key_points": ["핵심 내용 1", "핵심 내용 2"],
         "contribution": "주요 기여",
-        "benchmark": "성능 수치 또는 실험 결과",
-        "critique": "기존 기술 대비 차별점 및 한계",
+        "benchmark": "성능 수치 또는 실험 설정",
+        "critique": "문서가 명시한 한계, 적용 조건, 또는 비교 baseline",
         "tags": ["multi-agent", "rag"],
         "evidence_document_ids": ["doc_001"],
         "llm_model": "solar-pro-3"
@@ -408,6 +419,8 @@ Response
       "date": "2026-05-06",
       "item_count": 10
     },
+    "effective_date": "2026-05-06",
+    "has_effective_digest": true,
     "collection_status": {
       "last_collected_at": "2026-05-06T09:00:00",
       "collected_count": 86,
@@ -431,6 +444,12 @@ Response
   "error": null
 }
 ```
+
+- `effective_date`: 스케줄러 발행 시각(`SCHEDULER_TIME`) 기준 "오늘의 다이제스트" 효력 일자.
+  발행 시각 이전(예: `09:00` 일 때 `00:00 ~ 08:59`)에는 어제 일자를, 이후에는 오늘 일자를
+  반환한다. HuggingFace Daily Papers 등 일부 외부 소스가 새벽엔 당일 데이터를 공개하지
+  않는 점을 보정해 UI가 일관되게 "최근 완성된 다이제스트"를 가리킬 수 있도록 한다.
+- `has_effective_digest`: `effective_date` 일자 다이제스트가 저장돼 있는지 여부.
 
 ## 9. 스케줄러 API
 
@@ -552,21 +571,21 @@ Response
 
 ## 11. 주요 에러 코드
 
-| Code                           | 설명                                    |
-| ------------------------------ | --------------------------------------- |
-| `PROFILE_NOT_FOUND`            | 관심사 프로필이 설정되지 않음           |
-| `HUGGINGFACE_COLLECTOR_FAILED` | HuggingFace Daily Papers 수집 실패      |
-| `HACKERNEWS_COLLECTOR_FAILED`  | HackerNews 수집 실패                    |
-| `NORMALIZATION_FAILED`         | 공통 Document 스키마 변환 실패          |
-| `VECTOR_DB_ERROR`              | ChromaDB 저장 또는 검색 실패            |
-| `INSUFFICIENT_DATA`            | 트렌드 비교에 필요한 기간별 데이터 부족 |
-| `GROUNDING_FAILED`             | Groundedness Check 기준 미달            |
-| `LLM_GENERATION_FAILED`        | LLM 응답 생성 실패                      |
-| `INVALID_DATE_RANGE`           | 날짜 범위 입력 오류                     |
-| `SCHEDULER_ERROR`              | 정기 발행 스케줄러 오류                 |
-| `RELEVANCE_FILTER_FAILED`      | Solar Mini 관련성 판정 실패             |
-| `DIGEST_RETRIEVAL_FAILED`      | Daily Digest 후보 문서 검색 실패        |
-| `DIGEST_GENERATION_FAILED`     | Solar Pro 3 Digest 요약/비평 생성 실패  |
+현재 구현에서 실제 반환되는 에러 코드는 다음과 같습니다.
+
+| Code                       | 발생 위치                       | 설명                                                  |
+| -------------------------- | ------------------------------- | ----------------------------------------------------- |
+| `PROFILE_NOT_FOUND`        | `GET/PUT /profile`              | 관심사 프로필이 설정되지 않았거나 저장소 접근 실패    |
+| `SCHEDULER_ERROR`          | `GET/PUT /scheduler`            | 스케줄러 초기화 또는 설정 갱신 실패                   |
+| `DIGEST_GENERATION_FAILED` | `POST /digest/generate`         | Solar Pro 다이제스트 생성 또는 재조회 실패            |
+| `DIGEST_STORE_ERROR`       | `POST /digest/generate`, `GET /digest` | 다이제스트 파일 저장소 입출력 실패           |
+| `DIGEST_NOT_FOUND`         | `GET /digest/{digest_id}`       | 요청한 다이제스트가 존재하지 않음                     |
+| `DASHBOARD_UNAVAILABLE`    | `GET /dashboard`                | 대시보드 데이터를 조립할 수 없음                      |
+| `COLLECTION_FAILED`        | `POST /pipeline/collect`        | 모든 소스 수집 실패 또는 파이프라인 단계 예외         |
+| `CONTEXT_LOOKUP_FAILED`    | `POST /groundedness/check`      | 검증에 사용할 컨텍스트 조회 실패                      |
+| `QUERY_FAILED`             | `POST /query`                   | 질의 워크플로우 실행 중 예기치 못한 예외 발생         |
+
+`POST /pipeline/collect`, `POST /query`, `POST /groundedness/check`, `POST /documents/search` 는 성공/부분 성공 응답 안에 `warnings` 배열이나 부분 점수를 담아 돌려주는 방식을 우선하며, 별도의 에러 코드 없이 `success: true` 로 응답하는 경우가 많습니다. 호출 측은 응답 본문의 `warnings` 와 결과 카운트도 함께 검사해야 합니다.
 
 ## 12. 역할 분담 기준 API 매핑
 

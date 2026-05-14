@@ -10,21 +10,17 @@ from pydantic import BaseModel
 
 from app.agents.chunker import Chunker
 from app.agents.embedder import Embedder
-from app.agents.relevance_filter import SolarMiniRelevanceFilter
-from app.collectors.hackernews import HackerNewsCollector
-from app.collectors.huggingface import HuggingFaceDailyPapersCollector
+from app.agents.solar_relevance_filter import build_solar_mini_relevance_filter
+from app.api.responses import ErrorResponse, error_response
 from app.core.chroma_client import ChromaClient
 from app.core.embedding_client import EmbeddingClient
 from app.core.settings import Settings, get_settings
+from app.services.collection_status_store import CollectionStatusStore
 from app.services.ingestion import IngestionService
 from app.services.normalizer import normalize_documents
+from app.services.scheduled_pipeline import COLLECTORS, fetch_all_documents
 
 router = APIRouter()
-
-_COLLECTORS = [
-    HuggingFaceDailyPapersCollector(),
-    HackerNewsCollector(),
-]
 
 
 class CollectRequest(BaseModel):
@@ -43,7 +39,7 @@ class CollectData(BaseModel):
 class CollectResponse(BaseModel):
     success: bool
     data: CollectData | None = None
-    error: str | None = None
+    error: ErrorResponse | None = None
 
 
 def _build_ingestion_service(settings: Settings) -> IngestionService:
@@ -54,38 +50,27 @@ def _build_ingestion_service(settings: Settings) -> IngestionService:
     )
 
 
-async def _fetch_all(target_date: date) -> tuple[list, list[str]]:
-    tasks = [collector.fetch(target_date) for collector in _COLLECTORS]
-    results = await asyncio.gather(*tasks, return_exceptions=True)
-
-    documents = []
-    warnings = []
-    for collector, result in zip(_COLLECTORS, results):
-        if isinstance(result, Exception):
-            warnings.append(f"{collector.__class__.__name__} 수집 실패: {result}")
-            continue
-        for item in result:
-            documents.append(collector.normalize(item))
-    return documents, warnings
-
-
 @router.post("/pipeline/collect", response_model=CollectResponse)
 def collect(
     request: CollectRequest,
     settings: Settings = Depends(get_settings),
 ) -> CollectResponse:
     try:
-        documents, fetch_warnings = asyncio.run(_fetch_all(request.date))
+        documents, fetch_warnings = asyncio.run(fetch_all_documents(request.date))
 
-        if not documents and fetch_warnings:
+        # 모든 소스가 예외로 실패한 경우에만 전체 실패 처리
+        if len(fetch_warnings) == len(COLLECTORS):
             return CollectResponse(
                 success=False,
-                error="모든 소스 수집 실패: " + "; ".join(fetch_warnings),
+                error=error_response(
+                    "COLLECTION_FAILED",
+                    "모든 소스 수집 실패: " + "; ".join(fetch_warnings),
+                ),
             )
 
         normalized = normalize_documents(documents)
 
-        relevance_filter = SolarMiniRelevanceFilter()
+        relevance_filter = build_solar_mini_relevance_filter(settings)
         decisions = relevance_filter.filter(normalized)
 
         ingestion_service = _build_ingestion_service(settings)
@@ -95,7 +80,16 @@ def collect(
         skipped = sum(1 for r in results if r.skipped)
 
     except Exception as exc:
-        return CollectResponse(success=False, error=str(exc))
+        return CollectResponse(
+            success=False,
+            error=error_response("COLLECTION_FAILED", str(exc)),
+        )
+
+    collected_at = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    try:
+        CollectionStatusStore(settings.collection_status_path).save_collected_at(collected_at)
+    except Exception:
+        pass
 
     return CollectResponse(
         success=True,
@@ -104,7 +98,7 @@ def collect(
             filtered_count=len(decisions),
             ingested_count=ingested,
             skipped_count=skipped,
-            collected_at=datetime.utcnow().isoformat(timespec="seconds") + "Z",
+            collected_at=collected_at,
             warnings=fetch_warnings,
         ),
     )

@@ -43,6 +43,14 @@ class DigestGenerationAdapter:
         )
         source_document_ids = [candidate.document_id for candidate in retrieval_result.candidates]
 
+        # Groundedness 검사 단계에서 generation_result.groundedness_score 를 채워야 합니다.
+        # 검사가 누락된 채 어댑터로 진입하는 것은 호출 측 버그이므로 명시적으로 막습니다.
+        if generation_result.groundedness_score is None:
+            raise ValueError(
+                "Digest 생성 결과의 groundedness_score 가 비어 있습니다. "
+                "Groundedness 검사 후 어댑터를 호출해야 합니다."
+            )
+
         return DigestGenerationRunResult(
             digest_id=generation_result.digest_id,
             date=generation_result.date,
@@ -63,12 +71,15 @@ class DigestGenerationAdapter:
         if generation_result.date != retrieval_result.digest_date:
             raise ValueError("Digest 생성 결과 date가 검색 결과 digest_date와 다릅니다.")
 
-        candidate_ids = [candidate.document_id for candidate in retrieval_result.candidates]
-        item_ids = [item.document_id for item in generation_result.items]
-        if item_ids != candidate_ids:
-            raise ValueError("Digest 생성 결과 item 순서가 검색 후보 문서와 일치하지 않습니다.")
+        candidate_id_set = {candidate.document_id for candidate in retrieval_result.candidates}
+        unknown_item_ids = [
+            item.document_id
+            for item in generation_result.items
+            if item.document_id not in candidate_id_set
+        ]
+        if unknown_item_ids:
+            raise ValueError("Digest 생성 결과 item의 document_id가 검색 후보 문서에 없습니다.")
 
-        candidate_id_set = set(candidate_ids)
         unknown_evidence_ids = [
             evidence_id
             for item in generation_result.items
