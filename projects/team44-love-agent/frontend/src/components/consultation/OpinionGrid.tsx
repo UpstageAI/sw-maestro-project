@@ -9,7 +9,7 @@ interface OpinionGridProps {
 
 export function OpinionGrid({ agents, opinions }: OpinionGridProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       {opinions.map((opinion, i) => {
         const agent = agents.find((a) => a.id === opinion.agentId);
         if (!agent) return null;

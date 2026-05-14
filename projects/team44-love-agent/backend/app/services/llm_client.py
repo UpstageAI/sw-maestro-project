@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 import os
@@ -8,15 +7,12 @@ import re
 from collections.abc import Callable
 from typing import Protocol, TypeVar
 
-LLM_CALL_TIMEOUT_SECONDS = 30.0
-
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
-from app.logging_utils import redact_for_log
 from app.schemas.consultation import (
+    AGENT_NAMES,
     AgentFinalPosition,
     AgentId,
-    AGENT_NAMES,
     AgentOpinion,
     AgentRebuttal,
     AgreementType,
@@ -24,6 +20,8 @@ from app.schemas.consultation import (
     ClassifiedItem,
     ErrorCode,
     FinalPayload,
+    PunchlinePayload,
+    PunchlineVibe,
     QuestionAnalysis,
     StanceType,
     Summary1Payload,
@@ -65,8 +63,8 @@ def _validate_items_max_length(values: list[str], *, max_length: int, field_name
 
 
 class AgentOpinionDraft(BaseModel):
-    advice: str = Field(min_length=1, max_length=700)
-    rationale: str = Field(min_length=1, max_length=300)
+    advice: str = Field(min_length=1, max_length=400)
+    rationale: str = Field(min_length=1, max_length=400)
     stance: StanceType
     confidence: float = Field(ge=0.0, le=1.0)
     key_points: list[str] = Field(min_length=1, max_length=3)
@@ -80,14 +78,14 @@ class AgentOpinionDraft(BaseModel):
 class AgentRebuttalDraft(BaseModel):
     targets: list[TargetReference] = Field(min_length=1, max_length=3)
     statement: str = Field(min_length=1, max_length=500)
-    rationale: str = Field(min_length=1, max_length=300)
+    rationale: str = Field(min_length=1, max_length=400)
     updated_position: StanceType | None = None
     new_evidence: list[str] = Field(default_factory=list, max_length=3)
 
 
 class AgentFinalPositionDraft(BaseModel):
     final_stance: StanceType
-    final_advice: str = Field(min_length=1, max_length=700)
+    final_advice: str = Field(min_length=1, max_length=400)
     changed_from_round_1: bool
     change_reason: str | None = Field(default=None, max_length=200)
     action_items: list[str] = Field(default_factory=list, max_length=3)
@@ -127,7 +125,8 @@ class LLMClient(Protocol):
         user_question: str,
         analysis: QuestionAnalysis,
         summary_1: SupervisorNote,
-        round_1_opinions: list[AgentOpinion],
+        target_opinion: AgentOpinion,
+        target: TargetReference,
         prior_rebuttals: list[AgentRebuttal],
     ) -> AgentRebuttalDraft:
         ...
@@ -163,6 +162,13 @@ class LLMClient(Protocol):
     ) -> FinalPayload:
         ...
 
+    async def create_punchline(
+        self,
+        user_question: str,
+        final: FinalPayload,
+    ) -> PunchlinePayload:
+        ...
+
 
 class MockLLMClient:
     """Schema-conformant mock used for local workflow/API/SSE validation."""
@@ -181,20 +187,38 @@ class MockLLMClient:
         self, agent_id: AgentId, user_question: str, analysis: QuestionAnalysis
     ) -> AgentOpinionDraft:
         templates = {
-            AgentId.REALIST: ("관계의 신호를 행동 기준으로 확인하세요.", StanceType.CLARIFY),
-            AgentId.EMPATH: ("불안을 혼자 키우지 말고 감정을 먼저 정리하세요.", StanceType.PAUSE),
-            AgentId.ANALYST: ("패턴을 더 보고 단정은 피하세요.", StanceType.MIXED),
-            AgentId.ACTOR: ("짧고 명확하게 만남이나 대화를 제안하세요.", StanceType.CLARIFY),
-            AgentId.MEDIATOR: ("상대의 상황과 내 감정을 함께 고려하세요.", StanceType.MIXED),
-            AgentId.FRIEND: ("너무 어렵게 돌리지 말고 편하게 물어봐도 됩니다.", StanceType.CLARIFY),
+            AgentId.PLAYBOY: (
+                "에휴, 내가 이런 거 100번은 봤다. 너무 매달리지 말고 한 발만 빼봐. 상대가 따라오면 게임 시작이고, 안 따라오면 다음 사람 보면 돼.",
+                "이런 패턴은 늘 같아. 매달릴수록 가치 떨어지는 거 모르나.",
+                StanceType.PAUSE,
+                ["밀당의 정석", "거리감 = 가치", "다음 카드 준비"],
+            ),
+            AgentId.ICE: (
+                "감정 변수 제거. 답장 빈도 변화 폭과 시점 데이터를 2주간 수집. 표본 부족 상태에서의 결론은 통계적 의미 없음.",
+                "현재 정보 표본 크기가 1~2 이하로 추정됨. 통계적 유의성 부재.",
+                StanceType.MIXED,
+                ["표본 부족", "변수 통제", "데이터 수집 우선"],
+            ),
+            AgentId.CONFESSOR: (
+                "지금 바로 고백해!!! 답장 늦는 거 신경 쓸 시간에 마음 던져버려! 차여도 데이터 하나 추가야!! 고고고!",
+                "고민하는 시간 자체가 손해다. 거절은 데이터, 수락은 보너스.",
+                StanceType.PROCEED,
+                ["즉시 행동", "거절도 데이터", "오늘 안에"],
+            ),
+            AgentId.BESTIE: (
+                "야 ㅋㅋ 그냥 카톡 한 번 보내봐. '오늘 뭐해?' 이렇게. 답장 늦는 거 가지고 너무 머리 굴리지 마, 그냥 물어보면 끝나는 거야.",
+                "친구 시점에서 보면 답 빤한데 본인이 자꾸 어렵게 만들어.",
+                StanceType.CLARIFY,
+                ["걍 카톡", "복잡하게 X", "쉽게 가자"],
+            ),
         }
-        advice, stance = templates[agent_id]
+        advice, rationale, stance, key_points = templates[agent_id]
         return AgentOpinionDraft(
             advice=advice,
-            rationale=f"질문 핵심은 '{analysis.key_issues[0]}'이며, 지금은 정보가 부족합니다.",
+            rationale=rationale,
             stance=stance,
-            confidence=0.72,
-            key_points=["단정 금지", "직접 확인", "감정 보호"],
+            confidence=0.7,
+            key_points=key_points,
         )
 
     async def summarize_round_1(
@@ -216,92 +240,16 @@ class MockLLMClient:
         user_question: str,
         analysis: QuestionAnalysis,
         summary_1: SupervisorNote,
-        round_1_opinions: list[AgentOpinion],
+        target_opinion: AgentOpinion,
+        target: TargetReference,
         prior_rebuttals: list[AgentRebuttal],
     ) -> AgentRebuttalDraft:
-        templates = {
-            AgentId.REALIST: {
-                "target_agent_id": AgentId.EMPATH,
-                "agreement": AgreementType.PARTIAL,
-                "statement": "{target_name}님의 감정을 먼저 돌보자는 의견은 필요합니다. 다만 지금은 위로만으로 끝내면 답장 간격이나 만남 제안에 대한 실제 반응을 놓칠 수 있으니, 사용자가 확인할 행동 기준까지 함께 정해야 합니다.",
-                "rationale": "감정 보호와 사실 확인이 같이 있어야 사용자가 같은 불안을 반복하지 않습니다.",
-                "updated_position": StanceType.CLARIFY,
-                "new_evidence": ["연락 빈도와 실제 만남 반응을 함께 확인", "위로와 행동 기준을 함께 제시"],
-            },
-            AgentId.ANALYST: {
-                "target_agent_id": AgentId.ACTOR,
-                "agreement": AgreementType.EXTEND,
-                "statement": "{target_name}님의 바로 대화를 제안하자는 의견은 실행력이 있다는 점에서 좋습니다. 다만 최근 연락 빈도, 답장 톤, 만남 약속의 변화가 함께 정리되지 않으면 행동이 너무 급하게 느껴질 수 있습니다.",
-                "rationale": "대화 제안 전에 관찰된 패턴을 정리하면 상대의 반응을 더 정확하게 해석할 수 있습니다.",
-                "updated_position": StanceType.MIXED,
-                "new_evidence": ["최근 패턴 비교 후 확인", "행동 전에 관찰 근거 정리"],
-            },
-            AgentId.MEDIATOR: {
-                "target_agent_id": AgentId.REALIST,
-                "agreement": AgreementType.PARTIAL,
-                "statement": "{target_name}님의 행동 기준을 세우자는 의견은 현실적입니다. 하지만 그 기준이 상대를 평가하는 체크리스트처럼 들리면 대화가 방어적으로 흐를 수 있으니, 내 감정과 상대 상황을 함께 묻는 표현으로 바꿔야 합니다.",
-                "rationale": "확인 질문이 한쪽의 책임 추궁처럼 들리지 않아야 서로의 사정을 같이 볼 수 있습니다.",
-                "updated_position": StanceType.MIXED,
-                "new_evidence": ["내 감정과 상대 상황을 함께 묻기", "평가보다 대화 중심 표현 사용"],
-            },
-            AgentId.EMPATH: {
-                "target_agent_id": AgentId.ANALYST,
-                "agreement": AgreementType.EXTEND,
-                "statement": "{target_name}님의 패턴을 더 보자는 의견은 성급한 판단을 막아줍니다. 그런데 기다리는 시간이 길어질수록 사용자의 불안이 커질 수 있으니, 관찰 기간과 함께 마음을 진정시키는 기준도 같이 정해야 합니다.",
-                "rationale": "분석만 계속하면 사용자가 더 지칠 수 있어 감정 소모를 줄이는 장치가 필요합니다.",
-                "updated_position": StanceType.PAUSE,
-                "new_evidence": ["기다리는 동안의 감정 소모 관리", "관찰 기간을 미리 제한"],
-            },
-            AgentId.ACTOR: {
-                "target_agent_id": AgentId.MEDIATOR,
-                "agreement": AgreementType.DISAGREE,
-                "statement": "{target_name}님의 양쪽을 함께 보자는 의견은 조심스럽고 안전합니다. 하지만 너무 오래 균형만 잡다 보면 결정을 미루게 되니, 오늘 보낼 수 있는 짧은 확인 메시지처럼 바로 실행할 행동이 필요합니다.",
-                "rationale": "불확실성이 길어질수록 사용자의 에너지가 더 많이 소모되므로 작은 행동으로 상황을 움직여야 합니다.",
-                "updated_position": StanceType.CLARIFY,
-                "new_evidence": ["짧은 확인 메시지 작성", "오늘 실행 가능한 행동 선택"],
-            },
-            AgentId.FRIEND: {
-                "target_agent_id": AgentId.ACTOR,
-                "agreement": AgreementType.PARTIAL,
-                "statement": "{target_name}님의 명확하게 대화를 제안하자는 의견은 답답함을 줄여줍니다. 다만 말이 너무 진지하게 시작되면 상대가 부담을 느낄 수 있으니, 평소 말투로 가볍게 근황과 마음을 물어보는 편이 자연스럽습니다.",
-                "rationale": "관계가 아직 애매할수록 부담 없는 톤이 대화를 시작하기 쉽고, 상대도 방어적으로 반응할 가능성이 낮습니다.",
-                "updated_position": StanceType.CLARIFY,
-                "new_evidence": ["평소 말투로 가볍게 확인", "진지한 추궁보다 자연스러운 질문"],
-            },
-        }
-        template = templates[agent_id]
-        preferred_target_agent_id = template["target_agent_id"]
-        target_opinion = next(
-            (
-                opinion
-                for opinion in round_1_opinions
-                if opinion.agent_id == preferred_target_agent_id
-            ),
-            None,
-        )
-        target_opinion = target_opinion or next(
-            (opinion for opinion in round_1_opinions if opinion.agent_id != agent_id),
-            round_1_opinions[0] if round_1_opinions else None,
-        )
-        if target_opinion is None:
-            raise LLMOutputError(
-                code=ErrorCode.SCHEMA_VIOLATION,
-                task=f"round_2.{agent_id.value}",
-                detail="round_1_opinions is empty; cannot build a target reference",
-            )
-        target_name = AGENT_NAMES[target_opinion.agent_id]
         return AgentRebuttalDraft(
-            targets=[
-                TargetReference(
-                    target_message_id=target_opinion.id,
-                    target_agent_id=target_opinion.agent_id,
-                    agreement=template["agreement"],
-                )
-            ],
-            statement=template["statement"].format(target_name=target_name),
-            rationale=template["rationale"],
-            updated_position=template["updated_position"],
-            new_evidence=template["new_evidence"],
+            targets=[target],
+            statement="그 관점은 타당하지만, 사용자의 불안이 커지지 않도록 확인 방식까지 정해야 합니다.",
+            rationale="좋은 조언도 실행 방식이 모호하면 사용자가 다시 망설일 수 있습니다.",
+            updated_position=StanceType.CLARIFY,
+            new_evidence=["실행 방식의 구체성 필요"],
         )
 
     async def classify_round_2(
@@ -335,57 +283,34 @@ class MockLLMClient:
         own_rebuttal: AgentRebuttal | None,
         prior_positions: list[AgentFinalPosition],
     ) -> AgentFinalPositionDraft:
-        templates = {
-            AgentId.REALIST: {
-                "final_stance": StanceType.CLARIFY,
-                "final_advice": "최종적으로는 감정 추측보다 확인 가능한 행동을 기준으로 보세요. 답장 속도, 만남 제안에 대한 반응, 대화의 구체성을 함께 보고 짧게 확인 질문을 던지는 것이 가장 현실적입니다.",
-                "changed_from_round_1": False,
-                "change_reason": None,
-                "action_items": ["최근 연락 패턴 적기", "짧은 확인 질문 보내기", "반응 기준 정하기"],
-            },
-            AgentId.EMPATH: {
-                "final_stance": StanceType.PAUSE,
-                "final_advice": "최종 입장은 먼저 마음을 안정시킨 뒤 확인하자는 쪽입니다. 상대 반응을 기다리는 동안 불안을 키우지 않도록 내 감정을 정리하고, 대화는 비난보다 솔직한 감정 공유로 시작하세요.",
-                "changed_from_round_1": False,
-                "change_reason": None,
-                "action_items": ["불안한 지점 적기", "비난 없는 문장 만들기", "기다릴 시간 정하기"],
-            },
-            AgentId.ANALYST: {
-                "final_stance": StanceType.MIXED,
-                "final_advice": "최종적으로는 바로 단정하지 말고 최근 패턴을 근거로 판단해야 합니다. 답장이 느려진 기간, 말투 변화, 약속을 잡으려는 태도를 함께 비교한 뒤 확인 대화를 하는 편이 안전합니다.",
-                "changed_from_round_1": False,
-                "change_reason": None,
-                "action_items": ["최근 변화 비교하기", "확인할 질문 정리하기", "단정 표현 피하기"],
-            },
-            AgentId.ACTOR: {
-                "final_stance": StanceType.CLARIFY,
-                "final_advice": "최종 의견은 작은 행동으로 상황을 움직여보자는 것입니다. 계속 기다리기보다 부담 없는 톤으로 근황을 묻고, 가능하면 짧은 만남이나 통화 제안을 해 반응을 확인하세요.",
-                "changed_from_round_1": False,
-                "change_reason": None,
-                "action_items": ["오늘 보낼 문장 쓰기", "가벼운 만남 제안하기", "답변 후 다음 행동 정하기"],
-            },
-            AgentId.MEDIATOR: {
-                "final_stance": StanceType.MIXED,
-                "final_advice": "최종 입장은 내 감정과 상대의 사정을 함께 확인하자는 것입니다. 대화할 때는 왜 늦냐고 몰아붙이기보다, 요즘 바쁜지와 내가 느낀 불안을 같이 말해 균형을 잡으세요.",
-                "changed_from_round_1": False,
-                "change_reason": None,
-                "action_items": ["상대 상황 묻기", "내 감정 한 문장으로 말하기", "서로 가능한 연락 방식 정하기"],
-            },
-            AgentId.FRIEND: {
-                "final_stance": StanceType.CLARIFY,
-                "final_advice": "최종 조언은 너무 무겁게 끌고 가지 말고 자연스럽게 확인해보자는 것입니다. 평소 말투로 요즘 좀 바쁜지 물어보고, 답을 들은 뒤 마음이 계속 불편하면 그때 진지하게 이야기하세요.",
-                "changed_from_round_1": False,
-                "change_reason": None,
-                "action_items": ["평소 말투로 묻기", "상대 답변 여유 두기", "불편함이 남으면 다시 대화하기"],
-            },
-        }
-        template = templates[agent_id]
         return AgentFinalPositionDraft(
-            final_stance=template["final_stance"],
-            final_advice=template["final_advice"],
-            changed_from_round_1=template["changed_from_round_1"],
-            change_reason=template["change_reason"],
-            action_items=template["action_items"],
+            final_stance=StanceType.CLARIFY,
+            final_advice="감정을 몰아붙이지 않는 짧은 질문으로 상대의 의도를 확인하세요.",
+            changed_from_round_1=False,
+            action_items=["상황을 한 문장으로 정리하기", "부담 없는 확인 메시지 보내기"],
+        )
+
+    async def create_punchline(
+        self,
+        user_question: str,
+        final: FinalPayload,
+    ) -> PunchlinePayload:
+        # 재미 우선 3명(playboy/confessor/bestie) 중 advice 길이 해시로 선택. ice는 mock에서 피함.
+        idx = len(final.final_advice) % 3
+        templates = [
+            (AgentId.PLAYBOY, "거리둬!", PunchlineVibe.HARSH,
+             "이런 패턴은 100번 봤다. 매달리지 말고 한 발 빼는 게 답."),
+            (AgentId.CONFESSOR, "직진해!", PunchlineVibe.HOPEFUL,
+             "고민 길어질수록 손해. 일단 던지면 답이 온다."),
+            (AgentId.BESTIE, "그냥 해!", PunchlineVibe.CHAOTIC,
+             "친구 시점에서 답 빤한데 본인이 자꾸 어렵게 만듦."),
+        ]
+        agent_id, one_liner, vibe, rationale = templates[idx]
+        return PunchlinePayload(
+            chosen_agent_id=agent_id,
+            one_liner=one_liner,
+            vibe=vibe,
+            rationale=rationale,
         )
 
     async def create_final_summary(
@@ -413,10 +338,7 @@ class MockLLMClient:
                     timing="short_term",
                 ),
             ],
-            caveats=[
-                "상대의 의도는 현재 정보만으로 확정할 수 없습니다.",
-                FINAL_CAVEAT_DISCLAIMER,
-            ],
+            caveats=["상대의 의도는 현재 정보만으로 확정할 수 없습니다."],
         )
 
 
@@ -474,25 +396,14 @@ class UpstageLLMClient:
                 "Shorten every Korean text value if needed. Do not include raw newline characters "
                 "inside JSON string values. Finish the closing braces."
             )
-        try:
-            response = await asyncio.wait_for(
-                self._client.chat.completions.create(
-                    model=self._model,
-                    messages=[
-                        {"role": "system", "content": system},
-                        {"role": "user", "content": prompt},
-                    ],
-                    stream=False,
-                    timeout=LLM_CALL_TIMEOUT_SECONDS,
-                ),
-                timeout=LLM_CALL_TIMEOUT_SECONDS,
-            )
-        except asyncio.TimeoutError as exc:
-            raise LLMOutputError(
-                code=ErrorCode.LLM_TIMEOUT,
-                task=task,
-                detail=f"LLM call exceeded {LLM_CALL_TIMEOUT_SECONDS:.0f}s timeout",
-            ) from exc
+        response = await self._client.chat.completions.create(
+            model=self._model,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": prompt},
+            ],
+            stream=False,
+        )
         choice = response.choices[0]
         content = choice.message.content or "{}"
         finish_reason = getattr(choice, "finish_reason", None)
@@ -597,8 +508,8 @@ class UpstageLLMClient:
             "\n".join(
                 [
                     "{",
-                    '  "advice": "2 Korean paragraphs from your persona, each paragraph separated by \\n\\n, each paragraph 2-3 sentences, total 150-300 chars",',
-                    '  "rationale": "1 to 2 Korean sentences explaining why",',
+                    '  "advice": "1 to 3 Korean sentences, max 400 chars",',
+                    '  "rationale": "1 to 3 Korean sentences, max 400 chars",',
                     '  "stance": "proceed|pause|withdraw|clarify|mixed",',
                     '  "confidence": 0.0 to 1.0,',
                     '  "key_points": ["1 to 3 Korean strings, each max 60 chars"]',
@@ -647,20 +558,26 @@ class UpstageLLMClient:
         user_question: str,
         analysis: QuestionAnalysis,
         summary_1: SupervisorNote,
-        round_1_opinions: list[AgentOpinion],
+        target_opinion: AgentOpinion,
+        target: TargetReference,
         prior_rebuttals: list[AgentRebuttal],
     ) -> AgentRebuttalDraft:
-        valid_id_to_agent: dict[str, AgentId] = {
-            opinion.id: opinion.agent_id for opinion in round_1_opinions
-        }
         return await self._validated_json_completion(
-            f"Generate one round_2 rebuttal/complement for agent_id={agent_id.value}.",
+            (
+                f"Generate one round_2 rebuttal/complement for agent_id={agent_id.value} "
+                f"(이 에이전트의 풀네임: {AGENT_NAMES[agent_id]}). "
+                "IMPORTANT: In Korean 'statement' and 'rationale' text, when referring to OTHER agents, "
+                "you MUST use their full Korean agent_name (예: '지옥에서 온 바람둥이', '냉혈한 얼음 연애 분석가', "
+                "'행동파 연쇄고백마', '리얼 찐친 연애 박사'). "
+                "NEVER use English agent_id (playboy/ice/confessor/bestie) or short forms (바람둥이/분석가) in the body text. "
+                "The target_agent_id field still uses the English id."
+            ),
             "\n".join(
                 [
                     "{",
-                    '  "targets": [{"target_message_id": "id copied from round_1_opinions", "target_agent_id": "agent_id matching that opinion", "agreement": "agree|partial|disagree|extend"}] (1 to 3 items, pick those most relevant to your persona),',
-                    '  "statement": "Korean statement, 2 to 3 sentences engaging with the target opinion directly, max 300 chars",',
-                    '  "rationale": "1 to 2 Korean sentences",',
+                    '  "targets": [{"target_message_id": "copy from input", "target_agent_id": "copy from input", "agreement": "agree|partial|disagree|extend"}],',
+                    '  "statement": "Korean statement, max 500 chars",',
+                    '  "rationale": "Korean rationale, max 400 chars",',
                     '  "updated_position": "proceed|pause|withdraw|clarify|mixed or null",',
                     '  "new_evidence": ["0 to 3 Korean strings"]',
                     "}",
@@ -672,18 +589,17 @@ class UpstageLLMClient:
                     "question": user_question,
                     "analysis": analysis.model_dump(mode="json"),
                     "summary_1": summary_1.model_dump(mode="json"),
-                    "round_1_opinions": [
-                        opinion.model_dump(mode="json") for opinion in round_1_opinions
-                    ],
+                    "target": target.model_dump(mode="json"),
+                    "target_opinion": target_opinion.model_dump(mode="json"),
                     "prior_round_2_rebuttals": [
                         rebuttal.model_dump(mode="json") for rebuttal in prior_rebuttals
                     ],
                 }
             ),
             guidance=self._prompts.agent_round_prompt(agent_id, 2),
-            validator=lambda data: _validate_rebuttal_targets_against_opinions(
+            validator=lambda data: _validate_rebuttal_target_copy(
                 _agent_rebuttal_from_llm(data),
-                valid_id_to_agent=valid_id_to_agent,
+                expected=target,
             ),
         )
 
@@ -733,12 +649,19 @@ class UpstageLLMClient:
         prior_positions: list[AgentFinalPosition],
     ) -> AgentFinalPositionDraft:
         return await self._validated_json_completion(
-            f"Generate one round_3 final position for agent_id={agent_id.value}.",
+            (
+                f"Generate one round_3 final position for agent_id={agent_id.value} "
+                f"(이 에이전트의 풀네임: {AGENT_NAMES[agent_id]}). "
+                "IMPORTANT: In Korean 'final_advice' and 'change_reason' text, when referring to OTHER agents, "
+                "you MUST use full Korean agent_name (예: '지옥에서 온 바람둥이', '냉혈한 얼음 연애 분석가', "
+                "'행동파 연쇄고백마', '리얼 찐친 연애 박사'). "
+                "NEVER use English agent_id or short forms in body text."
+            ),
             "\n".join(
                 [
                     "{",
                     '  "final_stance": "proceed|pause|withdraw|clarify|mixed",',
-                    '  "final_advice": "2 Korean paragraphs from your persona, each paragraph separated by \\n\\n, each paragraph 2-3 sentences, total 150-300 chars",',
+                    '  "final_advice": "Korean final advice, max 400 chars",',
                     '  "changed_from_round_1": true or false,',
                     '  "change_reason": "Korean reason, max 200 chars, or null",',
                     '  "action_items": ["0 to 3 Korean strings, each max 80 chars"]',
@@ -777,7 +700,13 @@ class UpstageLLMClient:
         round_2_rebuttals: list[AgentRebuttal],
     ) -> FinalPayload:
         return await self._validated_json_completion(
-            "Create the supervisor final integrated consultation answer.",
+            (
+                "Create the supervisor final integrated consultation answer. "
+                "IMPORTANT: In Korean 'situation', 'final_advice', 'disagreements', etc., when referring to agents, "
+                "you MUST use their full Korean agent_name "
+                "('지옥에서 온 바람둥이', '냉혈한 얼음 연애 분석가', '행동파 연쇄고백마', '리얼 찐친 연애 박사'). "
+                "NEVER use English agent_id or short forms."
+            ),
             "\n".join(
                 [
                     "{",
@@ -805,6 +734,74 @@ class UpstageLLMClient:
             ),
             guidance=self._prompts.final_summary_prompt(),
             validator=_final_payload_from_llm,
+        )
+
+    async def create_punchline(
+        self,
+        user_question: str,
+        final: FinalPayload,
+    ) -> PunchlinePayload:
+        guidance = (
+            "당신은 오케스트라(슈퍼바이저)다. 최종 보고서를 읽고 4명의 에이전트 중 사용자에게 가장 어울리는 한 명을 골라 "
+            "그 에이전트 톤으로 **극도로 짧고 임팩트 있는** 한 줄 조언을 던진다.\n"
+            "최우선 목표: **가장 웃기고 재미있고 인상적인 답변**. 진지함보다 캐릭터 임팩트가 절대 우선이다.\n\n"
+            "에이전트 페르소나 (재미·웃김 정도):\n"
+            "- playboy (지옥에서 온 바람둥이): ★★★★ 시니컬한 한숨 + 잘난 척. '에휴~ 류'. vibe=harsh\n"
+            "- ice (냉혈한 얼음 연애 분석가): ★ 건조한 데이터 톤. 거의 안 웃김. **상황이 정말로 데이터 부족이 핵심일 때만** 선택. vibe=cold\n"
+            "- confessor (행동파 연쇄고백마): ★★★★★ 들떠있고 무모. '!!!' 폭격. 매우 웃김. vibe=hopeful\n"
+            "- bestie (리얼 찐친 연애 박사): ★★★★★ 반말 + ㅋㅋ. 친구 톤 직설. 매우 웃김. vibe=chaotic\n\n"
+            "선택 규칙 (중요):\n"
+            "- 기본적으로 playboy / confessor / bestie 중에서 고른다.\n"
+            "- ice는 사용자가 '아무 정보도 없고 데이터를 모아야 한다'는 게 핵심 결론일 때만 선택. 90% 이상은 ice를 피한다.\n"
+            "- 같은 답을 반복해서 내지 말고, 사용자 상황의 분위기와 가장 잘 맞는 캐릭터를 골라 재미있게 한 방.\n\n"
+            "one_liner 포맷 (엄격히 따른다):\n"
+            "- **명령형 동사 + 느낌표(!) 형식**이 기본. 사용자에게 즉시 행동을 명령하는 톤.\n"
+            "- **3~8자 한국어** 단문. 8자 넘기지 않는다 (예외적으로 12자까지 허용).\n"
+            "- 동사 어간 + '해!/지내!/떠!/내!/줘!/봐!/가!/와!' 등 명령형 종결.\n"
+            "- 좋은 예 (이 패턴을 따른다):\n"
+            "  · '헤어져!'\n"
+            "  · '떨어져 지내!'\n"
+            "  · '사과해!'\n"
+            "  · '사과 받아내!'\n"
+            "  · '맞짱떠!'\n"
+            "  · '붙잡아!'\n"
+            "  · '도망쳐!'\n"
+            "  · '확인해!'\n"
+            "  · '잊어버려!'\n"
+            "  · '정리해!'\n"
+            "  · '직진해!'\n"
+            "  · '그만해!'\n"
+            "  · '거리둬!'\n"
+            "  · '대화해!'\n"
+            "- 나쁜 예 (절대 금지):\n"
+            "  · '상대방과 신중하게 대화를 시도해보세요' (너무 길고 정중)\n"
+            "  · '잘 생각해봐' (명령 약함, 모호함)\n"
+            "  · '데이터를 모아 결정해' (설명형, 임팩트 부족)\n\n"
+            "출력 필드:\n"
+            "- chosen_agent_id: playboy|ice|confessor|bestie 중 하나 (supervisor 금지)\n"
+            "- vibe: chosen_agent의 기본 vibe 그대로 (playboy=harsh, ice=cold, confessor=hopeful, bestie=chaotic)\n"
+            "- rationale: 1~2문장 한국어. 왜 이 에이전트·한마디가 가장 웃기고 어울리는지."
+        )
+        return await self._validated_json_completion(
+            "Create a single punchy one-liner advice in the chosen agent's tone.",
+            "\n".join(
+                [
+                    "{",
+                    '  "chosen_agent_id": "playboy|ice|confessor|bestie",',
+                    '  "one_liner": "2 to 30 chars Korean single sentence",',
+                    '  "vibe": "harsh|hopeful|chaotic|cold",',
+                    '  "rationale": "1 to 2 Korean sentences, max 200 chars"',
+                    "}",
+                ]
+            ),
+            _json_dumps(
+                {
+                    "user_question": user_question,
+                    "final_report": final.model_dump(mode="json"),
+                }
+            ),
+            guidance=guidance,
+            validator=lambda d: PunchlinePayload.model_validate(d),
         )
 
 
@@ -850,8 +847,7 @@ def _log_llm_retry(task: str, *, attempt: int, max_attempts: int, reason: str) -
             "task": task,
             "attempt": attempt,
             "max_attempts": max_attempts,
-            "reason_length": len(reason or ""),
-            "reason": redact_for_log(reason, max_len=200),
+            "reason": reason[:500],
         },
     )
 
@@ -882,10 +878,10 @@ def _question_analysis_from_llm(data: dict, *, consultation_id: str) -> Question
 
 def _agent_opinion_from_llm(data: dict) -> AgentOpinionDraft:
     repaired = dict(data)
-    repaired["advice"] = _trim_text(repaired.get("advice"), 700, fallback="상황을 더 확인하세요.")
+    repaired["advice"] = _trim_text(repaired.get("advice"), 400, fallback="상황을 더 확인하세요.")
     repaired["rationale"] = _trim_text(
         repaired.get("rationale"),
-        300,
+        400,
         fallback="현재 정보만으로는 단정하기 어렵습니다.",
     )
     repaired["key_points"] = _string_list(
@@ -931,7 +927,7 @@ def _agent_rebuttal_from_llm(data: dict) -> AgentRebuttalDraft:
     )
     repaired["rationale"] = _trim_text(
         repaired.get("rationale"),
-        300,
+        400,
         fallback="추측만으로는 관계 상태를 판단하기 어렵습니다.",
     )
     repaired["new_evidence"] = _string_list(
@@ -954,7 +950,7 @@ def _agent_final_position_from_llm(data: dict) -> AgentFinalPositionDraft:
     repaired = dict(data)
     repaired["final_advice"] = _trim_text(
         repaired.get("final_advice"),
-        700,
+        400,
         fallback="상황을 단정하지 말고 부드럽게 확인하세요.",
     )
     if repaired.get("change_reason") is not None:
@@ -966,18 +962,6 @@ def _agent_final_position_from_llm(data: dict) -> AgentFinalPositionDraft:
         fallback=[],
     )
     return AgentFinalPositionDraft(**repaired)
-
-
-FINAL_CAVEAT_DISCLAIMER = "이 답변은 전문 심리상담을 대체하지 않습니다."
-
-
-def _ensure_disclaimer(caveats: list[str]) -> list[str]:
-    if any(FINAL_CAVEAT_DISCLAIMER in caveat for caveat in caveats):
-        return caveats
-    if len(caveats) >= 3:
-        # FinalPayload caps caveats at 3; replace the last so the disclaimer always survives.
-        return [*caveats[:2], FINAL_CAVEAT_DISCLAIMER]
-    return [*caveats, FINAL_CAVEAT_DISCLAIMER]
 
 
 def _final_payload_from_llm(data: dict) -> FinalPayload:
@@ -997,9 +981,7 @@ def _final_payload_from_llm(data: dict) -> FinalPayload:
         800,
         fallback="답장 속도만으로 단정하지 말고 상대방의 상황과 메시지 패턴을 함께 확인하세요.",
     )
-    repaired["caveats"] = _ensure_disclaimer(
-        _string_list(repaired.get("caveats"), max_items=3, fallback=[])
-    )
+    repaired["caveats"] = _string_list(repaired.get("caveats"), max_items=3, fallback=[])
     action_items = repaired.get("action_items")
     normalized_action_items = []
     if isinstance(action_items, list):
@@ -1028,28 +1010,20 @@ def _final_payload_from_llm(data: dict) -> FinalPayload:
     return FinalPayload(**repaired)
 
 
-def _validate_rebuttal_targets_against_opinions(
+def _validate_rebuttal_target_copy(
     draft: AgentRebuttalDraft,
     *,
-    valid_id_to_agent: dict[str, AgentId],
+    expected: TargetReference,
 ) -> AgentRebuttalDraft:
-    if not valid_id_to_agent:
-        raise ValueError(
-            "round_1_opinions is empty; round_2 rebuttal cannot reference any target"
-        )
-    valid_ids_sorted = sorted(valid_id_to_agent.keys())
     for target in draft.targets:
-        expected_agent_id = valid_id_to_agent.get(target.target_message_id)
-        if expected_agent_id is None:
+        if (
+            target.target_message_id != expected.target_message_id
+            or target.target_agent_id != expected.target_agent_id
+        ):
             raise ValueError(
-                "targets[*].target_message_id must reference an id from round_1_opinions. "
-                f"received={target.target_message_id}; valid={valid_ids_sorted}"
-            )
-        if expected_agent_id != target.target_agent_id:
-            raise ValueError(
-                "targets[*].target_agent_id does not match the round_1_opinion's agent_id. "
-                f"target_message_id={target.target_message_id} "
-                f"expected={expected_agent_id.value} received={target.target_agent_id.value}"
+                "targets must copy target_message_id and target_agent_id from input target. "
+                f"expected=({expected.target_message_id}, {expected.target_agent_id.value}) "
+                f"received=({target.target_message_id}, {target.target_agent_id.value})"
             )
     return draft
 

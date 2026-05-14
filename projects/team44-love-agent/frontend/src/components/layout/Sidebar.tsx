@@ -36,7 +36,6 @@ export function Sidebar({ agents }: SidebarProps) {
       router.push('/');
       return;
     }
-
     if (item.href) {
       router.push(item.href);
     }
@@ -55,7 +54,9 @@ export function Sidebar({ agents }: SidebarProps) {
         className="flex items-center gap-2 px-4 py-4 text-left transition-opacity hover:opacity-80"
       >
         <Image src="/logo.png" alt="로고" width={28} height={28} className="rounded-md" />
-        <span className="text-xs font-semibold leading-tight text-foreground">연애상담 멀티 에이전트</span>
+        <span className="text-xs font-semibold leading-tight text-foreground">
+          연애상담 멀티 에이전트
+        </span>
       </button>
 
       <Separator />
@@ -64,7 +65,8 @@ export function Sidebar({ agents }: SidebarProps) {
       <nav className="flex flex-col gap-0.5 px-2 py-2">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
-          const isActive = item.action === 'route' ? pathname === item.href : pathname === '/';
+          const isActive =
+            item.action === 'route' ? pathname === item.href : pathname === '/';
           return (
             <button
               key={item.label}
@@ -91,7 +93,13 @@ export function Sidebar({ agents }: SidebarProps) {
         <div className="flex flex-col gap-0.5">
           {agents.map((agent) => (
             <div key={agent.id} className="flex items-center gap-3 rounded-md px-3 py-2">
-              <AgentAvatar agentId={agent.id} name={agent.name} colorKey={agent.colorKey} size="sm" />
+              <AgentAvatar
+                agentId={agent.id}
+                name={agent.name}
+                colorKey={agent.colorKey}
+                image={agent.image}
+                size="sm"
+              />
               <div className="flex min-w-0 flex-col">
                 <span className="truncate text-sm font-medium">{agent.name}</span>
                 <span className="truncate text-xs text-muted-foreground">{agent.tone}</span>

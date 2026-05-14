@@ -6,7 +6,29 @@ export type ConsultationStep =
   | 'loading'
   | 'opinions'
   | 'discussion'
-  | 'result';
+  | 'result'
+  | 'final_advice';
+
+// 슈퍼바이저가 최종 보고를 토대로 4명 중 한 명을 골라 던지는 한 줄 조언.
+export type PunchlineVibe = 'harsh' | 'hopeful' | 'chaotic' | 'cold';
+
+export interface Punchline {
+  chosenAgentId: string;
+  oneLiner: string;
+  vibe: PunchlineVibe;
+  rationale: string;
+}
+
+// 상담 기록 항목 — localStorage에 영속화돼 새 상담을 시작해도 사라지지 않는다.
+export interface ConsultationHistoryEntry {
+  consultationId: string;
+  userInput: string;
+  startedAt: string;
+  completedAt: string | null;
+  status: string;
+  session: ConsultationSession;
+  punchline: Punchline | null;
+}
 
 // 1라운드 stance — 스키마 §2.2
 export type StanceType = 'proceed' | 'pause' | 'withdraw' | 'clarify' | 'mixed';
@@ -19,13 +41,12 @@ export type MessageType = 'opinion' | 'rebuttal' | 'deepdive';
 
 export const MESSAGE_TYPE_LABEL: Record<MessageType, string> = {
   opinion: '의견',
-  rebuttal: '반박 & 추가 의견',
-  deepdive: '심화 의견',
+  rebuttal: '뚜까팸',
+  deepdive: '최종 한 방',
 };
 
 // 1라운드 에이전트 의견
 export interface AgentOpinion {
-  id?: string;
   agentId: AgentId;
   advice: string;
   rationale: string;
@@ -34,7 +55,6 @@ export interface AgentOpinion {
 
 // 토론 발언 한 줄
 export interface DiscussionMessage {
-  id?: string;
   agentId: AgentId;
   content: string;
   messageType?: MessageType;

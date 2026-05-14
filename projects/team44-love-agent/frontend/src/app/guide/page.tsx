@@ -50,7 +50,9 @@ export default function GuidePage() {
                   <article key={note.title} className="rounded-xl bg-muted p-4">
                     <Icon className="size-5 text-muted-foreground" />
                     <h3 className="mt-3 text-sm font-semibold">{note.title}</h3>
-                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{note.description}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                      {note.description}
+                    </p>
                   </article>
                 );
               })}

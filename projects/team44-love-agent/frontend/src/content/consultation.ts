@@ -28,7 +28,7 @@ export const consultationContent = {
   // StepBar 전용 라벨 — 짧은 제목 + 한 줄 설명
   steps: {
     analysis: { title: '고민 분석', subtitle: '상황과 감정을 파악해요' },
-    round1: { title: '첫 의견', subtitle: '6명이 각자 의견을 내요' },
+    round1: { title: '첫 의견', subtitle: '4명이 각자 의견을 내요' },
     round2: { title: '토론 과정', subtitle: '의견을 비교하고 보완해요' },
     round3: { title: '최종 입장', subtitle: '마지막 입장을 정리해요' },
     result: { title: '최종 조언', subtitle: '균형 잡힌 결론을 드려요' },

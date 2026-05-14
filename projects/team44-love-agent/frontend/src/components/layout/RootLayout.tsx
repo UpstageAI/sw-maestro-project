@@ -12,7 +12,6 @@ interface RootLayoutProps {
   currentRound: number;
   opinions: AgentOpinion[];
   isLastRound: boolean;
-  canGoNext: boolean;
   onNext: () => void;
   showSidebar?: boolean;
   showRightPanel?: boolean;
@@ -25,7 +24,6 @@ export function RootLayout({
   currentRound,
   opinions,
   isLastRound,
-  canGoNext,
   onNext,
   showSidebar = true,
   showRightPanel = true,
@@ -52,7 +50,6 @@ export function RootLayout({
                 agents={agents}
                 opinions={opinions}
                 isLastRound={isLastRound}
-                canGoNext={canGoNext}
                 currentRound={currentRound}
                 onNext={onNext}
               />

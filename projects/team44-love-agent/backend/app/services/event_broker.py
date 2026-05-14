@@ -71,4 +71,8 @@ class EventBroker:
 
 
 def _is_terminal(event: StreamEvent) -> bool:
-    return event.event_type == "completed"
+    if event.event_type == "completed":
+        return True
+    if event.event_type == "error_occurred":
+        return True
+    return False

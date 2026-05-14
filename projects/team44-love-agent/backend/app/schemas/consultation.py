@@ -29,41 +29,34 @@ def _validate_items_max_length(values: list[str], *, max_length: int, field_name
 
 
 class AgentId(str, Enum):
-    REALIST = "realist"
-    EMPATH = "empath"
-    ANALYST = "analyst"
-    ACTOR = "actor"
-    MEDIATOR = "mediator"
-    FRIEND = "friend"
+    PLAYBOY = "playboy"
+    ICE = "ice"
+    CONFESSOR = "confessor"
+    BESTIE = "bestie"
     SUPERVISOR = "supervisor"
 
 
 AGENT_NAMES: dict[AgentId, str] = {
-    AgentId.REALIST: "현실주의자",
-    AgentId.EMPATH: "공감형 감성론자",
-    AgentId.ANALYST: "신중한 분석가",
-    AgentId.ACTOR: "행동파 조언자",
-    AgentId.MEDIATOR: "균형형 중재자",
-    AgentId.FRIEND: "친구형 상담자",
+    AgentId.PLAYBOY: "지옥에서 온 바람둥이",
+    AgentId.ICE: "냉혈한 얼음 연애 분석가",
+    AgentId.CONFESSOR: "행동파 연쇄고백마",
+    AgentId.BESTIE: "리얼 찐친 연애 박사",
     AgentId.SUPERVISOR: "슈퍼바이저",
 }
 
 ROUND_1_AGENT_ORDER = [
-    AgentId.REALIST,
-    AgentId.EMPATH,
-    AgentId.ANALYST,
-    AgentId.ACTOR,
-    AgentId.MEDIATOR,
-    AgentId.FRIEND,
+    AgentId.PLAYBOY,
+    AgentId.ICE,
+    AgentId.CONFESSOR,
+    AgentId.BESTIE,
 ]
 
+# 순차 라운드(2·3) 호출 순서. 분석→경험→행동→친근 흐름으로 후반에 톤이 풀리게.
 SEQUENTIAL_AGENT_ORDER = [
-    AgentId.REALIST,
-    AgentId.ANALYST,
-    AgentId.MEDIATOR,
-    AgentId.EMPATH,
-    AgentId.ACTOR,
-    AgentId.FRIEND,
+    AgentId.ICE,
+    AgentId.PLAYBOY,
+    AgentId.CONFESSOR,
+    AgentId.BESTIE,
 ]
 
 
@@ -196,8 +189,8 @@ class AgentOpinion(TimestampedMessage):
     round: Literal["round_1"] = "round_1"
     agent_id: AgentId
     agent_name: str
-    advice: str = Field(min_length=1, max_length=700)
-    rationale: str = Field(min_length=1, max_length=300)
+    advice: str = Field(min_length=1, max_length=400)
+    rationale: str = Field(min_length=1, max_length=400)
     stance: StanceType
     confidence: float = Field(ge=0.0, le=1.0)
     key_points: list[str] = Field(min_length=1, max_length=3)
@@ -221,7 +214,7 @@ class AgentRebuttal(TimestampedMessage):
     agent_name: str
     targets: list[TargetReference] = Field(min_length=1, max_length=3)
     statement: str = Field(min_length=1, max_length=500)
-    rationale: str = Field(min_length=1, max_length=300)
+    rationale: str = Field(min_length=1, max_length=400)
     updated_position: StanceType | None = None
     new_evidence: list[str] = Field(default_factory=list, max_length=3)
 
@@ -232,7 +225,7 @@ class AgentFinalPosition(TimestampedMessage):
     agent_id: AgentId
     agent_name: str
     final_stance: StanceType
-    final_advice: str = Field(min_length=1, max_length=700)
+    final_advice: str = Field(min_length=1, max_length=400)
     changed_from_round_1: bool
     change_reason: str | None = Field(default=None, max_length=200)
     action_items: list[str] = Field(default_factory=list, max_length=3)
@@ -310,6 +303,24 @@ class Termination(SchemaModel):
     notes: str | None = None
 
 
+# ─── 최종 조언 (Punchline) ───────────────────────────────────
+# 최종 검토를 기반으로 슈퍼바이저가 4명 중 가장 어울리는 에이전트를 골라
+# 한 줄짜리 임팩트 있는 조언을 내놓는 별도 단계.
+
+class PunchlineVibe(str, Enum):
+    HARSH = "harsh"        # "헤어져!" 류 — 정리 권유
+    HOPEFUL = "hopeful"    # "붙잡아!" 류 — 진전 권유
+    CHAOTIC = "chaotic"    # "니 맘대로 해!" 류 — 즉흥적
+    COLD = "cold"          # "데이터로 결정해" 류 — 분석적
+
+
+class PunchlinePayload(SchemaModel):
+    chosen_agent_id: AgentId           # supervisor 제외, playboy|ice|confessor|bestie
+    one_liner: str = Field(min_length=2, max_length=30)
+    vibe: PunchlineVibe
+    rationale: str = Field(min_length=1, max_length=200)
+
+
 class PublicError(SchemaModel):
     code: ErrorCode
     user_message_key: str
@@ -350,6 +361,7 @@ class ConsultationResponse(SchemaModel):
     final: PublicFinalSummary | None = None
     termination: PublicTermination | None = None
     errors: list[PublicError] = Field(default_factory=list)
+    punchline: PunchlinePayload | None = None  # 사용자가 "최종 조언" 버튼 누르면 채워짐
 
 
 class ConsultationState(SchemaModel):
@@ -371,3 +383,4 @@ class ConsultationState(SchemaModel):
     skipped_agents: list[SkippedAgent] = Field(default_factory=list)
     termination: Termination | None = None
     completed_at: str | None = None
+    punchline: PunchlinePayload | None = None

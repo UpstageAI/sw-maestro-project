@@ -5,22 +5,27 @@ interface AgentAvatarProps {
   agentId: AgentId;
   name: string;
   colorKey: string;
-  size?: 'xs' | 'sm' | 'md' | 'lg';
+  image?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
 const sizeClass = {
-  xs: 'size-4 text-[10px]',
   sm: 'size-7 text-xs',
-  md: 'size-9 text-sm',
-  lg: 'size-11 text-base',
+  md: 'size-10 text-sm',
+  lg: 'size-12 text-base',
+  xl: 'size-16 text-lg',
 };
 
-export function AgentAvatar({ agentId, name, colorKey, size = 'md' }: AgentAvatarProps) {
-  const avatarUrl = `https://api.dicebear.com/9.x/avataaars/svg?seed=${agentId}&backgroundColor=transparent`;
+export function AgentAvatar({ agentId, name, colorKey, image, size = 'md' }: AgentAvatarProps) {
+  // 우선 순위: 명시된 이미지 > public/agents/{id}.png 추정 경로 > 외부 dicebear.
+  const src = image ?? `/agents/${agentId}.png`;
 
   return (
-    <Avatar className={sizeClass[size]}>
-      <AvatarImage src={avatarUrl} alt={name} />
+    <Avatar
+      className={sizeClass[size]}
+      style={{ outline: `2px solid color-mix(in oklch, var(--${colorKey}) 60%, white)` }}
+    >
+      <AvatarImage src={src} alt={name} className="object-cover" />
       <AvatarFallback
         className="font-medium text-white"
         style={{ backgroundColor: `var(--${colorKey})` }}

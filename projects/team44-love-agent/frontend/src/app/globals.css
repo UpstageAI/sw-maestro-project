@@ -48,12 +48,10 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 
   /* 에이전트 색상 */
-  --color-agent-realist: var(--agent-realist);
-  --color-agent-empath: var(--agent-empath);
-  --color-agent-analyst: var(--agent-analyst);
-  --color-agent-actor: var(--agent-actor);
-  --color-agent-mediator: var(--agent-mediator);
-  --color-agent-friend: var(--agent-friend);
+  --color-agent-playboy: var(--agent-playboy);
+  --color-agent-ice: var(--agent-ice);
+  --color-agent-confessor: var(--agent-confessor);
+  --color-agent-bestie: var(--agent-bestie);
 
   /* 스탠스 색상 */
   --color-stance-agree: var(--stance-agree);
@@ -90,13 +88,11 @@
   --sidebar-border: oklch(0.91 0.01 285);
   --sidebar-ring: oklch(0.54 0.22 293);
 
-  /* 에이전트 색상 — 나중에 디자인 확정 시 수정 */
-  --agent-realist: oklch(0.55 0.18 250);       /* 현실주의자: 파랑 */
-  --agent-empath: oklch(0.62 0.18 355);        /* 공감형 감성론자: 로즈 */
-  --agent-analyst: oklch(0.55 0.14 155);       /* 신중한 분석가: 초록 */
-  --agent-actor: oklch(0.65 0.18 50);          /* 행동파 조언자: 주황 */
-  --agent-mediator: oklch(0.54 0.22 293);      /* 균형형 중재자: 보라 */
-  --agent-friend: oklch(0.62 0.15 195);        /* 친구형 상담자: 민트 */
+  /* 에이전트 색상 */
+  --agent-playboy: oklch(0.58 0.22 15);        /* 바람둥이: 짙은 레드 */
+  --agent-ice: oklch(0.62 0.15 220);           /* 얼음 분석가: 차가운 블루 */
+  --agent-confessor: oklch(0.7 0.2 60);        /* 연쇄고백마: 활기찬 오렌지 */
+  --agent-bestie: oklch(0.62 0.15 155);        /* 찐친: 친근한 그린 */
 
   /* 스탠스 색상 */
   --stance-agree: oklch(0.55 0.15 145);        /* 찬성: 초록 */

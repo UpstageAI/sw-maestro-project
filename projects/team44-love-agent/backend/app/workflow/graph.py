@@ -1,17 +1,13 @@
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 from app.services.event_broker import EventBroker
 from app.services.llm_client import LLMClient
 from app.store.memory import MemoryStore
 from app.workflow.classification import should_skip_to_final
-from app.workflow.nodes import WorkflowNodes, WorkflowTimeoutError
+from app.workflow.nodes import WorkflowNodes
 from app.workflow.state import ConsultationGraphState
-
-
-WORKFLOW_TIMEOUT_SECONDS = 300.0
 
 
 class WorkflowRunner:
@@ -21,14 +17,7 @@ class WorkflowRunner:
 
     async def run(self, consultation_id: str, initial_state: dict[str, Any]) -> None:
         try:
-            await asyncio.wait_for(
-                self.graph.ainvoke(initial_state),
-                timeout=WORKFLOW_TIMEOUT_SECONDS,
-            )
-        except asyncio.TimeoutError:
-            await self.nodes.handle_failure(
-                consultation_id, WorkflowTimeoutError(WORKFLOW_TIMEOUT_SECONDS)
-            )
+            await self.graph.ainvoke(initial_state)
         except Exception as exc:
             await self.nodes.handle_failure(consultation_id, exc)
 

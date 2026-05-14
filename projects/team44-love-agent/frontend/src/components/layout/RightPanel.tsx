@@ -2,7 +2,7 @@
 
 // 우측 패널 — 단계에 따라 다른 패널 렌더링
 import { motion } from 'framer-motion';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Circle, Loader2 } from 'lucide-react';
 import { RoundSummaryPanel } from './RoundSummaryPanel';
 import type { AgentOpinion, Agent, ConsultationStep } from '@/types';
 
@@ -18,12 +18,11 @@ interface RightPanelProps {
   agents: Agent[];
   opinions: AgentOpinion[];
   isLastRound: boolean;
-  canGoNext: boolean;
   currentRound: number;
   onNext: () => void;
 }
 
-export function RightPanel({ step, agents, opinions, isLastRound, canGoNext, currentRound, onNext }: RightPanelProps) {
+export function RightPanel({ step, agents, opinions, isLastRound, currentRound, onNext }: RightPanelProps) {
   if (step === 'discussion' || step === 'opinions') {
     return (
       <RoundSummaryPanel
@@ -31,7 +30,6 @@ export function RightPanel({ step, agents, opinions, isLastRound, canGoNext, cur
         opinions={opinions}
         onNext={onNext}
         isLastRound={isLastRound}
-        canGoNext={canGoNext}
         currentRound={currentRound}
         step={step}
       />

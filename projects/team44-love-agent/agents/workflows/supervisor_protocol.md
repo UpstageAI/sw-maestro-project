@@ -19,13 +19,11 @@ START
 [analyze_question]                ── 슈퍼바이저 호출 #1
   │
   ▼
-[round_1_fanout]                  ── 6개 에이전트 병렬 호출
-  │   ├── agent_realist
-  │   ├── agent_empath
-  │   ├── agent_analyst
-  │   ├── agent_actor
-  │   ├── agent_mediator
-  │   └── agent_friend
+[round_1_fanout]                  ── 4개 에이전트 병렬 호출
+  │   ├── agent_playboy
+  │   ├── agent_ice
+  │   ├── agent_confessor
+  │   └── agent_bestie
   ▼
 [round_1_join]
   │
@@ -94,17 +92,17 @@ LLM 토큰 절약을 위해 각 호출에 넘기는 컨텍스트 범위를 명�
 순차 라운드(2·3)에서 에이전트 호출 순서는 다음으로 고정:
 
 ```text
-realist → analyst → mediator → empath → actor → friend
+ice → playboy → confessor → bestie
 ```
 
-> 사유: 직설·논리·중립 → 감정·행동·캐주얼 순으로 진행하면 후반 에이전트가 앞 의견을 참조하여 보완하기 쉬움. 같은 페르소나끼리 인접하지 않게 배치.
+> 사유: 분석(데이터) → 경험(시니컬) → 행동(즉시 돌파) → 친근(단순화) 순으로 진행해 토론 톤이 점점 풀어지며 마지막 친구 캐릭터가 정리하기 좋게 배치.
 
 각 에이전트는 자기보다 앞서 발언한 같은 라운드 동료의 발언도 참조 가능하다 (`targets`에 포함 가능).
 
 ### 3.2 발언 권한
 
-- 1라운드: 6개 에이전트만 발언. 슈퍼바이저는 발언 안 함.
-- 2·3라운드: 6개 에이전트만 발언. 슈퍼바이저는 라운드 종료 후에만 노트 작성.
+- 1라운드: 4개 에이전트만 발언. 슈퍼바이저는 발언 안 함.
+- 2·3라운드: 4개 에이전트만 발언. 슈퍼바이저는 라운드 종료 후에만 노트 작성.
 - 슈퍼바이저는 에이전트 발언을 수정할 수 없다. 잘못된 발언은 스킵 또는 재생성으로만 처리(§7).
 
 ---
@@ -119,9 +117,9 @@ realist → analyst → mediator → empath → actor → friend
 
 | 분류 | 조건 |
 | --- | --- |
-| `consensus` | 6개 에이전트 중 **5개 이상**이 동일하거나 호환 가능한 `final_stance` 또는 `agreement` 표현 (예: `agree` + `partial` 모두 합의로 본다) |
-| `conflict` | `agree` 진영과 `disagree` 진영이 각각 **2개 이상** |
-| `pending` | 위 둘 모두 아닌 경우 (예: `extend` 발언이 절반 이상이거나, 의견이 4-2로 갈리는 경우) |
+| `consensus` | 4개 에이전트 중 **3개 이상**이 동일하거나 호환 가능한 `final_stance` 또는 `agreement` 표현 (예: `agree` + `partial` 모두 합의로 본다) |
+| `conflict` | `agree` 진영과 `disagree` 진영이 각각 **2개 이상** (즉 2-2 split) |
+| `pending` | 위 둘 모두 아닌 경우 (예: `extend` 발언이 절반 이상이거나, 의견이 3분할되는 경우) |
 
 > "호환 가능"은 슈퍼바이저 LLM의 판단에 위임. 다만 이진 enum(`proceed` ↔ `withdraw`)은 자동으로 비호환.
 
@@ -159,10 +157,10 @@ LangGraph `add_conditional_edges` 매핑. 김민우님이 그래프 구성 시 �
 
 | 조건 | 다음 노드 |
 | --- | --- |
-| `len(round_1_opinions) ≥ 4` | `summarize_round_1` |
-| `len(round_1_opinions) < 4` | `handle_failure` (이유: `internal_error`) |
+| `len(round_1_opinions) ≥ 3` | `summarize_round_1` |
+| `len(round_1_opinions) < 3` | `handle_failure` (이유: `internal_error`) |
 
-> 6개 에이전트 중 최소 4개가 살아남아야 토론 의미가 있다는 정책. 임계값은 [agents/prompts/](../prompts/)와 [backend/](../../backend/) 운영 경험에 따라 조정.
+> 4개 에이전트 중 최소 3개가 살아남아야 토론 의미가 있다는 정책. 임계값은 [agents/prompts/](../prompts/)와 [backend/](../../backend/) 운영 경험에 따라 조정.
 
 ### 5.3 `summarize_round_1` 이후
 
@@ -177,7 +175,7 @@ LangGraph `add_conditional_edges` 매핑. 김민우님이 그래프 구성 시 �
 | --- | --- |
 | `classify_2.payload.next_action == "skip_to_final"` | `integrate_final` (3라운드 생략, `Termination.reason = "consensus_reached"`) |
 | `classify_2.payload.next_action == "proceed_to_round_3"` | `round_3_sequential` |
-| `classify_2` 실패 또는 `len(round_2_rebuttals) < 4` | `handle_failure` |
+| `classify_2` 실패 또는 `len(round_2_rebuttals) < 3` | `handle_failure` |
 
 ### 5.5 `round_3_sequential` 이후
 
@@ -209,12 +207,12 @@ LangGraph `add_conditional_edges` 매핑. 김민우님이 그래프 구성 시 �
 
 다음 중 하나라도 해당하면 트리거:
 
-1. 2라운드 발언 6개 중 **4개 이상**이 자기 1라운드 의견과 `stance` 동일 + `new_evidence == []` + `targets`가 모두 `agree`
-2. `summary_1`의 `diverging_points`가 비어 있음 + 1라운드 stance 분포가 단일 값 6개
+1. 2라운드 발언 4개 중 **3개 이상**이 자기 1라운드 의견과 `stance` 동일 + `new_evidence == []` + `targets`가 모두 `agree`
+2. `summary_1`의 `diverging_points`가 비어 있음 + 1라운드 stance 분포가 단일 값 4개
 
 ### 6.3 페르소나 붕괴 감지 규칙
 
-각 에이전트별로 이번 상담에서 누적 `PERSONA_DRIFT` 카운트 유지(§7). 한 에이전트의 누적 카운트가 **2** 이상이면 해당 에이전트를 이후 라운드에서 영구 스킵하고, 영구 스킵된 에이전트가 **3명 이상**이면 워크플로우를 `persona_breakdown`으로 종료.
+각 에이전트별로 이번 상담에서 누적 `PERSONA_DRIFT` 카운트 유지(§7). 한 에이전트의 누적 카운트가 **2** 이상이면 해당 에이전트를 이후 라운드에서 영구 스킵하고, 영구 스킵된 에이전트가 **2명 이상**이면 워크플로우를 `persona_breakdown`으로 종료.
 
 ### 6.4 페르소나 이탈 판정 기준
 

@@ -1,78 +1,90 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useConsultationStore } from '@/stores/consultationStore';
 import { AGENTS } from '@/mocks/agents';
 import { RootLayout } from '@/components/layout';
-import { OpinionPhase, DiscussionPhase, ResultPhase } from '@/components/consultation';
+import { ChatPhase, FinalAdvicePhase, ResultPhase } from '@/components/consultation';
 import { LoadingOverlay, ErrorMessage } from '@/components/status';
 
 export default function ConsultationPage() {
-  const params = useParams<{ sessionId: string }>();
+  const router = useRouter();
   const {
     step,
     currentRound,
     session,
-    backendStatus,
-    errorMessage,
-    consultationId,
-    loadConsultation,
-    goToNextRound,
+    status,
+    punchline,
+    punchlineLoading,
+    goToStep,
+    fetchPunchline,
+    reset,
   } = useConsultationStore();
 
-  useEffect(() => {
-    const sessionId = params.sessionId;
-    if (sessionId && consultationId !== sessionId) {
-      void loadConsultation(sessionId);
-    }
-  }, [consultationId, loadConsultation, params.sessionId]);
+  // 새 상담 시작: store 초기화 + 홈으로 이동 (URL이 그대로면 세션 없음 에러가 뜸).
+  function handleReset() {
+    reset();
+    router.push('/');
+  }
 
   if (step === 'loading') {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <div className="flex w-full max-w-4xl flex-col gap-4 rounded-2xl bg-white p-8 shadow-sm">
-          <LoadingOverlay phase={backendStatus ?? 'analyzing'} />
-          {errorMessage && <ErrorMessage message={errorMessage} />}
-        </div>
-      </div>
-    );
+    return <LoadingOverlay phase={status ?? 'analyzing'} />;
   }
 
   if (!session) {
-    return <ErrorMessage message={errorMessage ?? '세션 정보를 찾을 수 없습니다.'} />;
+    return <ErrorMessage message="세션 정보를 찾을 수 없습니다." />;
   }
 
-  const isLastRound = step === 'discussion' && currentRound >= session.rounds.length;
-  const canGoNext = getCanGoNext(step, session, currentRound);
+  if (step === 'result' && !session.finalResult) {
+    return <LoadingOverlay phase={status ?? 'summarizing'} />;
+  }
+
+  const isChat = step === 'opinions' || step === 'discussion';
+  const isFinalAdvice = step === 'final_advice';
+  const canReview = !!session.finalResult;
+
+  async function handleShowFinalAdvice() {
+    await fetchPunchline();
+    goToStep('final_advice');
+  }
 
   function renderContent() {
     if (!session) return null;
 
-    if (step === 'opinions') {
+    if (isChat) {
       return (
-        <OpinionPhase
-          userInput={session.userInput}
-          agents={AGENTS}
-          opinions={session.opinions}
-        />
-      );
-    }
-
-    if (step === 'discussion') {
-      return (
-        <DiscussionPhase
+        <ChatPhase
           userInput={session.userInput}
           agents={AGENTS}
           opinions={session.opinions}
           rounds={session.rounds}
-          currentRound={currentRound}
+          status={status}
+          canReview={canReview}
+          onFinalReview={() => goToStep('result')}
+        />
+      );
+    }
+
+    if (isFinalAdvice && punchline) {
+      return (
+        <FinalAdvicePhase
+          agents={AGENTS}
+          punchline={punchline}
+          onBack={() => goToStep('result')}
+          onReset={handleReset}
         />
       );
     }
 
     if (step === 'result' && session.finalResult) {
-      return <ResultPhase agents={AGENTS} opinions={session.opinions} result={session.finalResult} />;
+      return (
+        <ResultPhase
+          agents={AGENTS}
+          result={session.finalResult}
+          onShowFinalAdvice={handleShowFinalAdvice}
+          isLoadingFinalAdvice={punchlineLoading}
+        />
+      );
     }
 
     return null;
@@ -84,27 +96,12 @@ export default function ConsultationPage() {
       step={step}
       currentRound={currentRound}
       opinions={session.opinions}
-      isLastRound={isLastRound}
-      canGoNext={canGoNext}
-      onNext={goToNextRound}
+      isLastRound={true}
+      onNext={() => goToStep('result')}
+      showRightPanel={!isChat && !isFinalAdvice}
+      showSidebar={!isFinalAdvice}
     >
       {renderContent()}
     </RootLayout>
   );
-}
-
-function getCanGoNext(
-  step: ReturnType<typeof useConsultationStore.getState>['step'],
-  session: NonNullable<ReturnType<typeof useConsultationStore.getState>['session']>,
-  currentRound: number,
-) {
-  if (step === 'opinions') {
-    return session.opinions.length >= AGENTS.length && (session.rounds.length > 0 || Boolean(session.finalResult));
-  }
-
-  if (step === 'discussion') {
-    return currentRound < session.rounds.length || Boolean(session.finalResult);
-  }
-
-  return false;
 }

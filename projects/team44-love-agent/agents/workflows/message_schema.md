@@ -25,16 +25,14 @@
 
 ### 2.1 `AgentId`
 
-6개 상담 에이전트 + 슈퍼바이저의 불변 식별자. 표시명은 [02_user_agent/user_agent_design.md:18-27](../../docs/team44-love-agent/02_user_agent/user_agent_design.md#L18-L27) 참조.
+4개 상담 에이전트 + 슈퍼바이저의 불변 식별자. 페르소나 상세는 [agents/prompts/relationship_agents.md](../prompts/relationship_agents.md) 참조.
 
 | `agent_id` | `agent_name`(표시) | 페르소나 |
 | --- | --- | --- |
-| `realist` | 현실주의자 | 행동·결과 중심, 직설적 |
-| `empath` | 공감형 감성론자 | 감정 우선, 따뜻한 말투 |
-| `analyst` | 신중한 분석가 | 맥락·패턴 분석, 차분 |
-| `actor` | 행동파 조언자 | 행동 권유, 적극적 |
-| `mediator` | 균형형 중재자 | 양측 고려, 중립 |
-| `friend` | 친구형 상담자 | 캐주얼, 친근 |
+| `playboy` | 지옥에서 온 바람둥이 | 시니컬한 100전 베테랑, 거리두기·밀당 권유 |
+| `ice` | 냉혈한 얼음 연애 분석가 | 데이터·확률만, 감정 0%, 건조한 단문 |
+| `confessor` | 행동파 연쇄고백마 | 무모하고 활기찬 즉시 행동파 |
+| `bestie` | 리얼 찐친 연애 박사 | 반말 + ㅋㅋ, 단순화의 친구 톤 |
 | `supervisor` | 슈퍼바이저 | 통합·조정 |
 
 ### 2.2 `StanceType` — 1라운드 의견의 입장

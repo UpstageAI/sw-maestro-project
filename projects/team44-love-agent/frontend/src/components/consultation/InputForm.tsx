@@ -10,10 +10,11 @@ const MAX_LENGTH = 1000;
 const EXAMPLES = [
   '썸남이 연락이 뜸해졌어요. 제가 뭘 잘못한 걸까요?',
   '3년 사귄 남자친구가 요즘 너무 무관심한 것 같아요.',
+  '내가 바람피다가 여자친구한테 걸렸어. 어떻게 대처해야 해?',
 ];
 
 interface InputFormProps {
-  onSubmit: (input: string) => void | Promise<void>;
+  onSubmit: (input: string) => void;
   isLoading?: boolean;
 }
 

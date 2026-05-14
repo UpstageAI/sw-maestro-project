@@ -27,6 +27,7 @@ function getActiveIndex(step: ConsultationStep, currentRound: number): number {
   if (step === 'opinions') return 1;
   if (step === 'discussion') return currentRound + 1;
   if (step === 'result') return 4;
+  if (step === 'final_advice') return 4;
   return 0;
 }
 

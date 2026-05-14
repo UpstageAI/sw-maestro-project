@@ -19,8 +19,8 @@ export function LoadingOverlay({ phase = 'analyzing' }: LoadingOverlayProps) {
           <p className="text-xs text-muted-foreground">{content.description}</p>
         )}
       </div>
-      <div className="grid grid-cols-3 gap-3">
-        {Array.from({ length: 6 }).map((_, i) => (
+      <div className="grid grid-cols-2 gap-3">
+        {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="h-24 w-40 rounded-lg" />
         ))}
       </div>

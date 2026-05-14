@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { RotateCcw } from 'lucide-react';
@@ -12,15 +13,19 @@ import { inputContent } from '@/content';
 
 export default function HomePage() {
   const router = useRouter();
-  const { setUserInput, startConsultation, reset, isSubmitting, errorMessage } = useConsultationStore();
+  const { setUserInput, startConsultation, reset, error } = useConsultationStore();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(input: string) {
     setUserInput(input);
+    setIsSubmitting(true);
     try {
       const consultationId = await startConsultation();
-      router.push(`/consultation/${consultationId}`);
-    } catch {
-      // User-facing error state is stored in the consultation store.
+      if (consultationId) {
+        router.push(`/consultation/${consultationId}`);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -43,12 +48,12 @@ export default function HomePage() {
         </div>
 
         <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-10 py-4">
-          <InputForm onSubmit={handleSubmit} isLoading={isSubmitting} />
-          {errorMessage && (
-            <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {errorMessage}
-            </p>
+          {error && (
+            <div className="rounded-xl border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {error}
+            </div>
           )}
+          <InputForm onSubmit={handleSubmit} isLoading={isSubmitting} />
 
           {/* StepBar 카드 */}
           <div className="flex justify-center rounded-2xl border bg-white px-6 py-4 shadow-sm">

@@ -8,10 +8,10 @@ interface UserInputBannerProps {
 
 export function UserInputBanner({ userInput, onEdit }: UserInputBannerProps) {
   return (
-    <div className="flex flex-col gap-1 rounded-xl border bg-white px-4 py-3 shadow-sm">
-      <p className="text-xs text-muted-foreground">내 질문</p>
+    <div className="flex flex-col gap-1.5 rounded-xl border bg-white px-5 py-4 shadow-sm">
+      <p className="text-sm font-semibold text-muted-foreground">내 질문</p>
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm">{userInput}</p>
+        <p className="text-base leading-relaxed">{userInput}</p>
         {onEdit && (
           <button
             onClick={onEdit}

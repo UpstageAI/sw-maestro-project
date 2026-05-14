@@ -17,19 +17,17 @@ interface RoundSummaryPanelProps {
   opinions: AgentOpinion[];
   onNext: () => void;
   isLastRound: boolean;
-  canGoNext: boolean;
   currentRound: number;
   step: ConsultationStep;
 }
 
-export function RoundSummaryPanel({ onNext, isLastRound, canGoNext, step }: RoundSummaryPanelProps) {
+export function RoundSummaryPanel({ onNext, isLastRound, step }: RoundSummaryPanelProps) {
   const roundInfo = step === 'opinions' ? consultationContent.round1 : consultationContent.round2;
-  const nextLabel = getNextLabel(step, isLastRound, canGoNext);
 
   return (
     <div className="flex flex-col gap-3">
-      <Button onClick={onNext} disabled={!canGoNext} className="w-full gap-1.5">
-        {nextLabel}
+      <Button onClick={onNext} className="w-full gap-1.5">
+        {isLastRound ? '최종 결과 보기' : '다음 단계로 이동'}
         <ChevronRight className="size-4" />
       </Button>
 
@@ -54,11 +52,4 @@ export function RoundSummaryPanel({ onNext, isLastRound, canGoNext, step }: Roun
       </div>
     </div>
   );
-}
-
-function getNextLabel(step: ConsultationStep, isLastRound: boolean, canGoNext: boolean) {
-  if (!canGoNext) return '다음 단계 준비 중';
-  if (isLastRound) return '최종 결과 보기';
-  if (step === 'opinions') return '2라운드 보기';
-  return '다음 단계로 이동';
 }

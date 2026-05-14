@@ -1,17 +1,14 @@
 .codex/
 
-# Python cache
-__pycache__/
-*.py[cod]
-
-# Office/generated files
-*.pptx
-*.ppt
-*.xlsx
-
 # Local secrets
 .env
 .env.*
 !.env.example
 !**/.env.example
 
+# Root-level original PNG assets (resized copies live in frontend/public/agents/)
+/*.png
+
+# Python bytecode
+__pycache__/
+*.pyc

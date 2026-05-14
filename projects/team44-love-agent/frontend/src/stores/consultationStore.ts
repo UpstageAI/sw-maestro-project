@@ -1,20 +1,22 @@
 import { create } from 'zustand';
-import type { ConsultationSession, ConsultationStep } from '@/types';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import type {
+  ConsultationHistoryEntry,
+  ConsultationSession,
+  ConsultationStep,
+  DiscussionRound,
+  Punchline,
+} from '@/types';
 import {
-  createConsultation,
-  getConsultation,
-  openConsultationEventSource,
-  type BackendStreamEvent,
-} from '@/lib/consultationApi';
-import {
-  isTerminalStatus,
-  mapBackendMessage,
-  mapBackendResponseToSession,
-  mergeDiscussionMessage,
-  mergeOpinion,
+  ApiError,
+  requestPunchline,
+  startConsultation as apiStartConsultation,
+  subscribeEvents,
+  toDiscussionMessage,
+  toOpinion,
+  toSession,
   type BackendConsultationResponse,
-  type BackendStatus,
-} from '@/lib/consultationMapper';
+} from '@/lib/api';
 
 const EMPTY_SESSION: ConsultationSession = {
   userInput: '',
@@ -23,292 +25,343 @@ const EMPTY_SESSION: ConsultationSession = {
   finalResult: null,
 };
 
-type StoreState = Pick<ConsultationState, 'step' | 'currentRound' | 'session'>;
+const HISTORY_LIMIT = 50;
 
-const INITIAL_STATE: StoreState = {
+type TransientState = Pick<
+  ConsultationState,
+  | 'step'
+  | 'currentRound'
+  | 'session'
+  | 'consultationId'
+  | 'error'
+  | 'status'
+  | 'punchline'
+  | 'punchlineLoading'
+>;
+
+const INITIAL_TRANSIENT: TransientState = {
   step: 'input',
   currentRound: 1,
   session: null,
+  consultationId: null,
+  error: null,
+  status: null,
+  punchline: null,
+  punchlineLoading: false,
 };
+
+// SSE cleanup 함수는 비직렬화 자료라 store 바깥 모듈 스코프에서 관리.
+let activeSseCleanup: (() => void) | null = null;
 
 interface ConsultationState {
   step: ConsultationStep;
   currentRound: number;
   session: ConsultationSession | null;
   consultationId: string | null;
-  backendStatus: BackendStatus | null;
-  errorMessage: string | null;
-  isSubmitting: boolean;
-  eventSource: EventSource | null;
+  error: string | null;
+  status: BackendConsultationResponse['status'] | null;
+  punchline: Punchline | null;
+  punchlineLoading: boolean;
+
+  // 영속화되는 상담 기록 (localStorage). 시작 시점 기준 최신 순.
+  history: ConsultationHistoryEntry[];
 
   setUserInput: (input: string) => void;
-  startConsultation: () => Promise<string>;
-  loadConsultation: (consultationId: string) => Promise<void>;
+  startConsultation: () => Promise<string | null>;
   setSession: (session: ConsultationSession) => void;
   goToNextRound: () => void;
   goToStep: (step: ConsultationStep, round?: number) => void;
   reset: () => void;
+  fetchPunchline: () => Promise<void>;
+  loadFromHistory: (consultationId: string) => boolean;
+  clearHistory: () => void;
+  removeFromHistory: (consultationId: string) => void;
 }
 
-export const useConsultationStore = create<ConsultationState>((set, get) => ({
-  ...INITIAL_STATE,
-  consultationId: null,
-  backendStatus: null,
-  errorMessage: null,
-  isSubmitting: false,
-  eventSource: null,
+// 내부: 현재 store 상태로부터 history 엔트리 만들기.
+function upsertHistory(
+  history: ConsultationHistoryEntry[],
+  entry: ConsultationHistoryEntry,
+): ConsultationHistoryEntry[] {
+  const without = history.filter((e) => e.consultationId !== entry.consultationId);
+  return [entry, ...without].slice(0, HISTORY_LIMIT);
+}
 
-  setUserInput: (input) => {
-    set((state) => ({
-      session: {
-        ...(state.session ?? EMPTY_SESSION),
-        userInput: input,
+export const useConsultationStore = create<ConsultationState>()(
+  persist(
+    (set, get) => ({
+      ...INITIAL_TRANSIENT,
+      history: [],
+
+      setUserInput: (input) => {
+        set((state) => ({
+          session: {
+            ...(state.session ?? EMPTY_SESSION),
+            userInput: input,
+          },
+        }));
       },
-    }));
-  },
 
-  startConsultation: async () => {
-    if (process.env.NEXT_PUBLIC_USE_MOCK === 'true') {
-      const { MOCK_CONSULTATION } = await import('@/mocks/consultation');
-      set({
-        step: 'opinions',
-        session: MOCK_CONSULTATION,
-        currentRound: 1,
-        consultationId: 'mock',
-        backendStatus: 'completed',
-        errorMessage: null,
-      });
-      return 'mock';
-    }
+      startConsultation: async () => {
+        const userInput = get().session?.userInput ?? '';
 
-    const userInput = get().session?.userInput.trim();
-    if (!userInput) {
-      throw new Error('상담할 고민 내용을 먼저 입력해주세요.');
-    }
+        if (process.env.NEXT_PUBLIC_USE_MOCK === 'true') {
+          const { MOCK_CONSULTATION } = await import('@/mocks/consultation');
+          set({
+            step: 'opinions',
+            session: MOCK_CONSULTATION,
+            currentRound: 1,
+            consultationId: 'mock',
+            error: null,
+            status: 'completed',
+          });
+          return 'mock';
+        }
 
-    get().eventSource?.close();
+        // 이전 상담의 SSE가 살아있으면 정리.
+        activeSseCleanup?.();
+        activeSseCleanup = null;
 
-    const consultationId = crypto.randomUUID();
-    set({
-      step: 'loading',
-      currentRound: 1,
-      consultationId,
-      backendStatus: 'pending',
-      errorMessage: null,
-      isSubmitting: true,
-      session: {
-        ...EMPTY_SESSION,
-        userInput,
+        set({
+          step: 'loading',
+          error: null,
+          session: { ...EMPTY_SESSION, userInput },
+          status: 'pending',
+          punchline: null,
+          punchlineLoading: false,
+        });
+
+        let consultationId: string;
+        try {
+          consultationId = await apiStartConsultation(userInput);
+        } catch (err) {
+          const message =
+            err instanceof ApiError
+              ? `백엔드 통신 실패 (${err.status}): ${err.message}`
+              : err instanceof Error
+                ? err.message
+                : '알 수 없는 오류가 발생했습니다.';
+          set({ step: 'input', error: message, status: null });
+          return null;
+        }
+
+        const startedAt = new Date().toISOString();
+        set({ consultationId });
+
+        activeSseCleanup = subscribeEvents(consultationId, {
+          onStatusChanged: (status) => {
+            if (get().consultationId !== consultationId) return;
+            set({ status });
+          },
+
+          onAgentMessage: (round, message) => {
+            if (get().consultationId !== consultationId) return;
+
+            if (round === 'round_1') {
+              const opinion = toOpinion(message);
+              set((s) => {
+                const baseSession = s.session ?? EMPTY_SESSION;
+                const exists = baseSession.opinions.some((o) => o.agentId === opinion.agentId);
+                const opinions = exists
+                  ? baseSession.opinions
+                  : [...baseSession.opinions, opinion];
+                const session = { ...baseSession, opinions };
+                const nextStep = s.step === 'loading' ? 'opinions' : s.step;
+                return { session, step: nextStep };
+              });
+              return;
+            }
+
+            const targetRoundNumber = round === 'round_2' ? 1 : 2;
+            const label = round === 'round_2' ? 'rebuttal' : 'deepdive';
+            const msg = toDiscussionMessage(message, label);
+
+            set((s) => {
+              const baseSession = s.session ?? EMPTY_SESSION;
+              const existing = baseSession.rounds.find(
+                (r) => r.roundNumber === targetRoundNumber,
+              );
+              let rounds: DiscussionRound[];
+              if (existing) {
+                const alreadyHas = existing.messages.some((m) => m.agentId === msg.agentId);
+                const newMessages = alreadyHas
+                  ? existing.messages
+                  : [...existing.messages, msg];
+                rounds = baseSession.rounds.map((r) =>
+                  r.roundNumber === targetRoundNumber ? { ...r, messages: newMessages } : r,
+                );
+              } else {
+                rounds = [
+                  ...baseSession.rounds,
+                  { roundNumber: targetRoundNumber, messages: [msg] },
+                ];
+                rounds.sort((a, b) => a.roundNumber - b.roundNumber);
+              }
+
+              let nextStep: typeof s.step = s.step;
+              let nextCurrentRound = s.currentRound;
+              if (s.step !== 'result') {
+                if (s.step === 'loading' || s.step === 'opinions') {
+                  nextStep = 'discussion';
+                  nextCurrentRound = targetRoundNumber;
+                } else if (s.step === 'discussion' && s.currentRound < targetRoundNumber) {
+                  nextCurrentRound = targetRoundNumber;
+                }
+              }
+
+              return {
+                session: { ...baseSession, rounds },
+                step: nextStep,
+                currentRound: nextCurrentRound,
+              };
+            });
+          },
+
+          onCompleted: (response) => {
+            if (get().consultationId !== consultationId) return;
+            const finalSession = toSession(response);
+            set((s) => {
+              // 완료된 상담을 history에 push (영속).
+              const entry: ConsultationHistoryEntry = {
+                consultationId,
+                userInput: response.user_question || finalSession.userInput,
+                startedAt: response.started_at || startedAt,
+                completedAt: response.completed_at ?? null,
+                status: response.status,
+                session: finalSession,
+                punchline: s.punchline,
+              };
+              return {
+                session: finalSession,
+                step: s.step === 'loading' ? 'opinions' : s.step,
+                status: response.status,
+                history: upsertHistory(s.history, entry),
+              };
+            });
+          },
+
+          onError: (err) => {
+            if (get().consultationId !== consultationId) return;
+            const message =
+              'user_message_key' in err
+                ? `상담이 중단되었습니다 (${err.user_message_key}).`
+                : err.message || '상담 실행 중 오류가 발생했습니다.';
+            set({ step: 'input', error: message, status: 'failed' });
+          },
+
+          onClose: () => {
+            if (get().consultationId === consultationId) {
+              activeSseCleanup = null;
+            }
+          },
+        });
+
+        return consultationId;
       },
-    });
 
-    try {
-      const started = await createConsultation(userInput, consultationId);
-      set({ backendStatus: started.status, isSubmitting: false });
-      attachEventSource(consultationId, set, get);
-      return consultationId;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : '상담 요청을 시작하지 못했어요.';
-      set({ step: 'input', errorMessage: message, isSubmitting: false });
-      throw error;
-    }
-  },
+      setSession: (session) => {
+        set({ session, step: 'opinions' });
+      },
 
-  loadConsultation: async (consultationId) => {
-    if (process.env.NEXT_PUBLIC_USE_MOCK === 'true' || consultationId === 'mock') {
-      const { MOCK_CONSULTATION } = await import('@/mocks/consultation');
-      set({
-        step: 'opinions',
-        session: MOCK_CONSULTATION,
-        currentRound: 1,
-        consultationId: 'mock',
-        backendStatus: 'completed',
-        errorMessage: null,
-      });
-      return;
-    }
+      goToNextRound: () => {
+        const { step, session, currentRound } = get();
+        if (!session) return;
 
-    try {
-      const shouldPreserveStep = get().consultationId === consultationId;
-      const response = await getConsultation(consultationId);
-      applyBackendResponse(response, set, get, { preserveStep: shouldPreserveStep });
-      set({ consultationId, errorMessage: null });
-      if (!isTerminalStatus(response.status)) {
-        attachEventSource(consultationId, set, get);
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : '상담 정보를 불러오지 못했어요.';
-      set({ errorMessage: message, step: 'loading' });
-    }
-  },
+        if (step === 'opinions') {
+          if (session.rounds.length > 0) {
+            set({ step: 'discussion', currentRound: 1 });
+          } else {
+            set({ step: 'result' });
+          }
+        } else if (step === 'discussion') {
+          if (currentRound < session.rounds.length) {
+            set({ currentRound: currentRound + 1 });
+          } else {
+            set({ step: 'result' });
+          }
+        }
+      },
 
-  setSession: (session) => {
-    set({ session, step: 'opinions' });
-  },
+      goToStep: (step, round) => {
+        set({ step, ...(round !== undefined ? { currentRound: round } : {}) });
+      },
 
-  goToNextRound: () => {
-    const { step, session, currentRound } = get();
-    if (!session) return;
+      reset: () => {
+        activeSseCleanup?.();
+        activeSseCleanup = null;
+        set(INITIAL_TRANSIENT);
+      },
 
-    if (step === 'opinions') {
-      if (session.rounds.length > 0) {
-        set({ step: 'discussion', currentRound: 1 });
-      } else if (session.finalResult) {
-        set({ step: 'result' });
-      }
-    } else if (currentRound < session.rounds.length) {
-      set({ currentRound: currentRound + 1 });
-    } else if (session.finalResult) {
-      set({ step: 'result' });
-    }
-  },
+      fetchPunchline: async () => {
+        const { consultationId, punchline, punchlineLoading } = get();
+        if (!consultationId || punchline || punchlineLoading) return;
+        set({ punchlineLoading: true });
+        try {
+          const res = await requestPunchline(consultationId);
+          const newPunchline: Punchline = {
+            chosenAgentId: res.chosen_agent_id,
+            oneLiner: res.one_liner,
+            vibe: res.vibe,
+            rationale: res.rationale,
+          };
+          set((s) => {
+            // 진행 중 또는 직전 완료된 history 엔트리가 있으면 punchline 업데이트.
+            const updatedHistory = s.history.map((e) =>
+              e.consultationId === consultationId ? { ...e, punchline: newPunchline } : e,
+            );
+            return {
+              punchline: newPunchline,
+              punchlineLoading: false,
+              history: updatedHistory,
+            };
+          });
+        } catch (err) {
+          const message =
+            err instanceof ApiError
+              ? `최종 조언 요청 실패 (${err.status}): ${err.message}`
+              : err instanceof Error
+                ? err.message
+                : '최종 조언을 받지 못했습니다.';
+          set({ punchlineLoading: false, error: message });
+        }
+      },
 
-  goToStep: (step, round) => {
-    set({ step, ...(round !== undefined ? { currentRound: round } : {}) });
-  },
+      loadFromHistory: (consultationId) => {
+        const entry = get().history.find((e) => e.consultationId === consultationId);
+        if (!entry) return false;
+        // SSE 연결 정리 (다른 상담이 진행 중이었다면).
+        activeSseCleanup?.();
+        activeSseCleanup = null;
+        set({
+          consultationId: entry.consultationId,
+          session: entry.session,
+          status: (entry.status as BackendConsultationResponse['status']) ?? 'completed',
+          punchline: entry.punchline,
+          punchlineLoading: false,
+          // 결과 화면으로 바로 표시.
+          step: entry.session.finalResult ? 'result' : 'opinions',
+          currentRound: 1,
+          error: null,
+        });
+        return true;
+      },
 
-  reset: () => {
-    get().eventSource?.close();
-    set({
-      ...INITIAL_STATE,
-      consultationId: null,
-      backendStatus: null,
-      errorMessage: null,
-      isSubmitting: false,
-      eventSource: null,
-    });
-  },
-}));
+      clearHistory: () => {
+        set({ history: [] });
+      },
 
-function attachEventSource(
-  consultationId: string,
-  set: typeof useConsultationStore.setState,
-  get: typeof useConsultationStore.getState,
-) {
-  get().eventSource?.close();
-  const eventSource = openConsultationEventSource(consultationId);
-  set({ eventSource });
-
-  const handleEvent = (event: MessageEvent<string>) => {
-    const data = JSON.parse(event.data) as BackendStreamEvent;
-    handleStreamEvent(data, set, get);
-  };
-
-  eventSource.addEventListener('status_changed', handleEvent);
-  eventSource.addEventListener('agent_message_added', handleEvent);
-  eventSource.addEventListener('completed', handleEvent);
-  eventSource.addEventListener('error_occurred', handleEvent);
-  eventSource.onerror = () => {
-    if (!isTerminalStatus(get().backendStatus ?? 'pending')) {
-      set({ errorMessage: '실시간 상담 연결이 잠시 끊겼어요. 결과 조회를 다시 시도해주세요.' });
-    }
-  };
-}
-
-function handleStreamEvent(
-  event: BackendStreamEvent,
-  set: typeof useConsultationStore.setState,
-  get: typeof useConsultationStore.getState,
-) {
-  if (event.event_type === 'status_changed') {
-    const status = event.payload.status as BackendStatus;
-    set((state) => ({
-      backendStatus: status,
-      step: getStepAfterStatusUpdate(status, state.session, state.step),
-    }));
-    return;
-  }
-
-  if (event.event_type === 'agent_message_added') {
-    const round = event.payload.round as 'round_1' | 'round_2' | 'round_3';
-    const message = mapBackendMessage(round, event.payload.message as never);
-    if (!message) return;
-
-    set((state) => {
-      const session = state.session ?? EMPTY_SESSION;
-      if (round === 'round_1' && 'advice' in message) {
-        const next = mergeOpinion(session, message);
-        return {
-          session: next,
-          step: getStepAfterMessageUpdate(state.step),
-        };
-      }
-      if ('content' in message) {
-        const next = mergeDiscussionMessage(session, round === 'round_2' ? 1 : 2, message);
-        return {
-          session: next,
-          step: getStepAfterMessageUpdate(state.step),
-          currentRound: state.step === 'discussion'
-            ? Math.min(state.currentRound, Math.max(next.rounds.length, 1))
-            : state.currentRound,
-        };
-      }
-      return state;
-    });
-    return;
-  }
-
-  if (event.event_type === 'completed') {
-    const response = event.payload.response as BackendConsultationResponse;
-    applyBackendResponse(response, set, get, { preserveStep: true });
-    get().eventSource?.close();
-    set({ eventSource: null });
-    return;
-  }
-
-  if (event.event_type === 'error_occurred') {
-    set({ errorMessage: '상담 처리 중 일부 문제가 있었어요. 가능한 결과를 계속 정리하고 있습니다.' });
-  }
-}
-
-function applyBackendResponse(
-  response: BackendConsultationResponse,
-  set: typeof useConsultationStore.setState,
-  get: typeof useConsultationStore.getState,
-  options: { preserveStep: boolean },
-) {
-  const session = mapBackendResponseToSession(response);
-  const current = get();
-  const stepForDisplay = getStepAfterResponse(
-    response.status,
-    session,
-    options.preserveStep ? current.step : 'loading',
-  );
-
-  set({
-    session,
-    backendStatus: response.status,
-    step: stepForDisplay,
-    currentRound: stepForDisplay === 'discussion'
-      ? Math.min(current.currentRound, Math.max(session.rounds.length, 1))
-      : 1,
-  });
-}
-
-function getStepAfterResponse(
-  status: BackendStatus,
-  session: ConsultationSession | null,
-  currentStep: ConsultationStep,
-): ConsultationStep {
-  if (status === 'failed') return 'loading';
-  if (!session || session.opinions.length === 0) return 'loading';
-
-  if (currentStep === 'discussion') return 'discussion';
-  if (currentStep === 'result' && session.finalResult) return 'result';
-  return 'opinions';
-}
-
-function getStepAfterStatusUpdate(
-  status: BackendStatus,
-  session: ConsultationSession | null,
-  currentStep: ConsultationStep,
-): ConsultationStep {
-  if (status === 'failed') return 'loading';
-  if (currentStep !== 'loading') return currentStep;
-  return session?.opinions.length ? 'opinions' : 'loading';
-}
-
-function getStepAfterMessageUpdate(currentStep: ConsultationStep): ConsultationStep {
-  if (currentStep === 'input' || currentStep === 'loading') return 'opinions';
-  return currentStep;
-}
+      removeFromHistory: (consultationId) => {
+        set((s) => ({
+          history: s.history.filter((e) => e.consultationId !== consultationId),
+        }));
+      },
+    }),
+    {
+      name: 'ai-consult-history',
+      storage: createJSONStorage(() => localStorage),
+      // history만 영속 — 진행 중 세션이나 SSE 상태는 새 페이지 로드 때 다시 초기화.
+      partialize: (s) => ({ history: s.history }),
+      version: 1,
+    },
+  ),
+);

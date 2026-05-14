@@ -5,6 +5,8 @@ export { OpinionGrid } from './OpinionGrid';
 export { OpinionPhase } from './OpinionPhase';
 export { DiscussionRound } from './DiscussionRound';
 export { DiscussionPhase } from './DiscussionPhase';
+export { ChatPhase } from './ChatPhase';
+export { FinalAdvicePhase } from './FinalAdvicePhase';
 export { ResultCategoryCard } from './ResultCategoryCard';
 export { FinalResult } from './FinalResult';
 export { FinalAgentSummary } from './FinalAgentSummary';

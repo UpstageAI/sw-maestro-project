@@ -5,7 +5,7 @@ export const statusContent: Record<string, { short: string; description: string 
   // status.analyzing
   analyzing: { short: '고민 분석 중', description: '관계 상태, 감정, 핵심 이슈를 먼저 정리하고 있어요.' },
   // status.round_1_running
-  round_1_running: { short: '에이전트 의견 모으는 중', description: '6명의 에이전트가 각자의 관점에서 첫 의견을 만들고 있어요.' },
+  round_1_running: { short: '에이전트 의견 모으는 중', description: '4명의 에이전트가 각자의 관점에서 첫 의견을 만들고 있어요.' },
   // status.summary_1_running
   summary_1_running: { short: '쟁점 정리 중', description: '나온 의견에서 공통점과 갈리는 지점을 정리하고 있어요.' },
   // status.round_2_running

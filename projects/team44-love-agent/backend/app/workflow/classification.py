@@ -23,25 +23,9 @@ def normalize_classify_payload(
                 "next_action": "proceed_to_round_3",
             }
         )
-    payload = _recompute_consensus_ratio(payload)
     if not should_skip_to_final(payload):
         payload = payload.model_copy(update={"next_action": "proceed_to_round_3"})
     return payload
-
-
-def _recompute_consensus_ratio(payload: Classify2Payload) -> Classify2Payload:
-    """Override the LLM-reported ratio with the spec formula.
-
-    spec §4.2: consensus_ratio = consensus / (consensus + conflict + pending),
-    rounded to two decimals. The LLM frequently miscounts (e.g. de-duplicating one
-    side but not the other), so we treat this as a derived field owned by the backend.
-    """
-
-    total = len(payload.consensus) + len(payload.conflict) + len(payload.pending)
-    expected = round(len(payload.consensus) / total, 2) if total > 0 else 0.0
-    if abs(payload.consensus_ratio - expected) <= 0.005:
-        return payload
-    return payload.model_copy(update={"consensus_ratio": expected})
 
 
 def should_skip_to_final(payload: Classify2Payload | Mapping[str, Any]) -> bool:

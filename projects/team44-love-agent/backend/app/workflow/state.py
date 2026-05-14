@@ -13,22 +13,9 @@ from app.schemas.consultation import (
     PublicRound,
     PublicTermination,
     RoundType,
-    TerminationReason,
     UserConsultationRequest,
     utc_now_iso,
 )
-
-
-_TERMINATION_USER_MESSAGE_KEY_OVERRIDES: dict[TerminationReason, str] = {
-    TerminationReason.SAFETY_FILTER: "termination.safety_refused",
-}
-
-
-def _termination_user_message_key(reason: TerminationReason) -> str:
-    override = _TERMINATION_USER_MESSAGE_KEY_OVERRIDES.get(reason)
-    if override is not None:
-        return override
-    return f"termination.{reason.value}"
 
 
 class ConsultationGraphState(TypedDict, total=False):
@@ -80,7 +67,7 @@ def build_consultation_response(state: ConsultationState) -> ConsultationRespons
     if state.termination is not None:
         termination = PublicTermination(
             reason=state.termination.reason,
-            user_message_key=_termination_user_message_key(state.termination.reason),
+            user_message_key=f"termination.{state.termination.reason.value}",
         )
 
     return ConsultationResponse(
@@ -95,6 +82,7 @@ def build_consultation_response(state: ConsultationState) -> ConsultationRespons
         final=final,
         termination=termination,
         errors=[to_public_error(error) for error in state.errors],
+        punchline=state.punchline,
     )
 
 

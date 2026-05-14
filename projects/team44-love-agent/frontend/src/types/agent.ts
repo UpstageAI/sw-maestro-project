@@ -1,11 +1,9 @@
 // 에이전트 식별자 및 기본 타입 정의
 export type AgentId =
-  | 'realist'
-  | 'empath'
-  | 'analyst'
-  | 'actor'
-  | 'mediator'
-  | 'friend';
+  | 'playboy'
+  | 'ice'
+  | 'confessor'
+  | 'bestie';
 
 export interface Agent {
   id: AgentId;
@@ -13,4 +11,6 @@ export interface Agent {
   persona: string;
   tone: string;
   colorKey: string;
+  // public/agents/{id}.png 경로. Sidebar·ChatPhase·아바타에서 사용.
+  image: string;
 }
