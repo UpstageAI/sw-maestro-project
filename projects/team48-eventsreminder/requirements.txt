@@ -1,0 +1,10 @@
+streamlit
+streamlit-calendar
+icalendar
+requests
+apscheduler
+discord.py
+gtts
+langgraph
+langchain-upstage
+python-dotenv

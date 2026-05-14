@@ -1,0 +1,61 @@
+{
+  "decision_trace": {
+    "evaluator": {
+      "final_action": "HOLD",
+      "reason_codes": [
+        "EVIDENCE_INSUFFICIENT"
+      ]
+    },
+    "execution": {
+      "final_action": "",
+      "reason_codes": []
+    },
+    "policy": {
+      "final_action": "",
+      "reason_codes": []
+    },
+    "risk": {
+      "final_action": "",
+      "reason_codes": []
+    },
+    "run_summary": {
+      "final_action": "",
+      "reason_codes": []
+    }
+  },
+  "expected": {
+    "evaluator.reason_codes": [
+      "EVIDENCE_INSUFFICIENT"
+    ],
+    "evaluator_check_appended": true,
+    "hold_reason": "HOLD_DATA_INSUFFICIENT",
+    "lifecycle_status": "HOLD"
+  },
+  "input_payload": {
+    "synthetic_state": {
+      "lifecycle_status": "READY_FOR_BE",
+      "note": "policy/risk pass entry가 누락된 상태",
+      "verification_checks": []
+    }
+  },
+  "notes": "그래프(`graph.py:24-27`) routing이 자연 흐름에서는 evaluator를 policy+risk pass 누적된 상태로만 호출하므로 `evaluator.py:22-27` EVIDENCE_INSUFFICIENT branch는 graph harness만으로는 도달 불가. 직접 단위 호출로 evaluator의 차단 책임 자체를 검증.",
+  "observed": {
+    "evaluator.reason_codes": [
+      "EVIDENCE_INSUFFICIENT"
+    ],
+    "evaluator_check_appended": true,
+    "hold_reason": "HOLD_DATA_INSUFFICIENT",
+    "lifecycle_status": "HOLD"
+  },
+  "passed": true,
+  "purpose": "초기 단계가 통과한 것처럼 보여도 evaluator가 근거 부족이면 READY_FOR_BE 승격을 막고 HOLD/HOLD_DATA_INSUFFICIENT로 되돌리는지 확인",
+  "reviewer": "검수자 B",
+  "scenario_id": "QA-B-02",
+  "verification_checks": [
+    {
+      "name": "evidence_sufficiency",
+      "result": "fail",
+      "stage": "evaluator"
+    }
+  ]
+}

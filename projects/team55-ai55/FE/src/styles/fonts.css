@@ -1,0 +1,15 @@
+body,
+button,
+input,
+textarea,
+select {
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Noto Sans KR",
+    "Apple SD Gothic Neo",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+}

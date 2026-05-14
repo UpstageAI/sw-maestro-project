@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>autocoin-ai · AI 파트 구조 가이드</title>
+<style>
+  :root {
+    --bg: #0b0d12;
+    --panel: #131722;
+    --panel-2: #1a1f2e;
+    --line: #232a3d;
+    --text: #e6e9f0;
+    --muted: #8b93a7;
+    --fe: #4f9cf9;
+    --be: #34d399;
+    --ai: #b78cf2;
+    --warn: #f59e0b;
+    --err: #ef4444;
+    --ok: #34d399;
+    --hold: #fbbf24;
+    --code-bg: #0f1320;
+    --accent: #b78cf2;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "SF Pro Text", "Pretendard", "Apple SD Gothic Neo", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    font-size: 15px;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+
+  /* nav */
+  nav.top {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(11,13,18,.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+    padding: 14px 0;
+  }
+  nav .row { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  nav .brand { font-weight: 700; color: var(--ai); margin-right: 12px; }
+  nav a { color: var(--muted); text-decoration: none; font-size: 13px; }
+  nav a:hover { color: var(--text); }
+
+  /* hero */
+  .hero { padding: 70px 0 50px; }
+  .hero h1 {
+    font-size: 42px; line-height: 1.2; margin: 0 0 16px;
+    background: linear-gradient(135deg, var(--ai), var(--fe));
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+  }
+  .hero .sub { font-size: 18px; color: var(--muted); max-width: 720px; }
+  .hero .pills { display: flex; gap: 8px; margin-top: 28px; flex-wrap: wrap; }
+  .pill {
+    padding: 6px 14px; border-radius: 999px;
+    background: var(--panel); border: 1px solid var(--line);
+    font-size: 12px; color: var(--muted);
+  }
+  .pill b { color: var(--text); }
+
+  /* sections */
+  section { padding: 50px 0; border-top: 1px solid var(--line); }
+  section h2 {
+    font-size: 28px; margin: 0 0 8px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  section h2 .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--panel); border: 1px solid var(--line);
+    font-size: 14px; color: var(--ai);
+  }
+  section .lead { color: var(--muted); margin: 0 0 28px; font-size: 15px; max-width: 800px; }
+
+  /* 3-tier */
+  .lanes {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+  }
+  .lane {
+    border-radius: 12px; padding: 20px;
+    background: var(--panel); border: 1px solid var(--line);
+    position: relative;
+  }
+  .lane.fe  { border-color: rgba(79,156,249,.4); }
+  .lane.be  { border-color: rgba(52,211,153,.4); }
+  .lane.ai  { border-color: rgba(183,140,242,.6); background: linear-gradient(180deg, rgba(183,140,242,.08), transparent); }
+  .lane h3 { margin: 0 0 4px; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+  .lane.fe h3 { color: var(--fe); }
+  .lane.be h3 { color: var(--be); }
+  .lane.ai h3 { color: var(--ai); }
+  .lane .role { color: var(--muted); font-size: 12px; margin-bottom: 14px; }
+  .lane ul { padding-left: 18px; margin: 8px 0; font-size: 13px; }
+  .lane ul li { margin: 4px 0; color: var(--text); }
+  .lane .neg { color: #f47b7b; font-size: 12px; margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); }
+  .lane .neg b { color: var(--err); }
+  .lane .focus-tag {
+    position: absolute; top: -10px; right: 14px;
+    background: var(--ai); color: #0b0d12;
+    padding: 2px 10px; border-radius: 4px;
+    font-size: 11px; font-weight: 700;
+  }
+
+  /* arrows row */
+  .flow-arrows {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px; margin-top: 20px;
+    text-align: center; color: var(--muted); font-size: 12px;
+  }
+  .flow-arrows .a { padding: 10px; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; }
+
+  /* AI inner: 4 nodes */
+  .nodes {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  }
+  .node {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 16px;
+    cursor: pointer; transition: all .2s;
+  }
+  .node:hover { border-color: var(--ai); transform: translateY(-2px); }
+  .node h4 { margin: 0 0 6px; font-size: 14px; color: var(--ai); }
+  .node .file { font-family: "SF Mono", Menlo, monospace; font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+  .node .desc { font-size: 12px; color: var(--text); }
+  .node .out { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 10px; }
+  .node .out span {
+    font-size: 10px; padding: 2px 6px; border-radius: 3px;
+    background: var(--code-bg); border: 1px solid var(--line);
+    color: var(--muted);
+  }
+  .node.active { border-color: var(--ai); background: rgba(183,140,242,.06); }
+
+  .node-detail {
+    margin-top: 16px; padding: 20px;
+    background: var(--code-bg); border-radius: 10px;
+    border: 1px solid var(--line);
+  }
+  .node-detail h5 { margin: 0 0 10px; color: var(--ai); font-size: 14px; }
+  .node-detail .rules { display: flex; flex-direction: column; gap: 6px; }
+  .node-detail .rule {
+    padding: 8px 12px; border-left: 3px solid var(--line);
+    background: var(--panel); border-radius: 4px;
+    font-size: 13px; display: flex; align-items: center; gap: 10px;
+  }
+  .node-detail .rule.hold { border-left-color: var(--hold); }
+  .node-detail .rule.no-order { border-left-color: var(--warn); }
+  .node-detail .rule.failed { border-left-color: var(--err); }
+  .node-detail .rule.pass { border-left-color: var(--ok); }
+  .node-detail .arrow { color: var(--muted); }
+  .node-detail code {
+    background: rgba(255,255,255,.06); padding: 1px 6px; border-radius: 3px;
+    font-size: 12px; font-family: "SF Mono", Menlo, monospace;
+  }
+  .node-detail .badge {
+    margin-left: auto;
+    padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;
+  }
+  .badge.hold { background: rgba(251,191,36,.2); color: var(--hold); }
+  .badge.no-order { background: rgba(245,158,11,.2); color: var(--warn); }
+  .badge.failed { background: rgba(239,68,68,.2); color: var(--err); }
+  .badge.pass { background: rgba(52,211,153,.2); color: var(--ok); }
+
+  /* lifecycle states */
+  .states {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  }
+  .state {
+    padding: 16px; border-radius: 10px;
+    background: var(--panel); border: 1px solid var(--line);
+    border-left-width: 4px;
+  }
+  .state.hold { border-left-color: var(--hold); }
+  .state.ready { border-left-color: var(--ok); }
+  .state.no-order { border-left-color: var(--warn); }
+  .state.be-rejected { border-left-color: var(--err); }
+  .state.failed { border-left-color: var(--err); }
+  .state.report-ready { border-left-color: var(--ai); }
+  .state h4 { margin: 0 0 6px; font-size: 14px; font-family: "SF Mono", Menlo, monospace; }
+  .state.hold h4 { color: var(--hold); }
+  .state.ready h4 { color: var(--ok); }
+  .state.no-order h4 { color: var(--warn); }
+  .state.be-rejected h4 { color: var(--err); }
+  .state.failed h4 { color: var(--err); }
+  .state.report-ready h4 { color: var(--ai); }
+  .state .meta { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .state .desc { font-size: 13px; }
+
+  /* state container */
+  .state-fields {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  }
+  .state-fields .f {
+    padding: 12px; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 8px;
+  }
+  .state-fields .f .name {
+    font-family: "SF Mono", Menlo, monospace;
+    color: var(--ai); font-size: 13px; margin-bottom: 4px;
+  }
+  .state-fields .f .type { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+  .state-fields .f .ex { font-size: 12px; color: var(--text); }
+  .state-fields .f .lock {
+    display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 3px;
+    background: rgba(239,68,68,.15); color: var(--err); margin-left: 6px;
+  }
+  .state-fields .f .lock.patch {
+    background: rgba(52,211,153,.15); color: var(--ok);
+  }
+
+  /* http endpoints */
+  .endpoints { display: flex; flex-direction: column; gap: 10px; }
+  .ep {
+    display: grid; grid-template-columns: 90px 200px 1fr 200px; gap: 14px;
+    align-items: center; padding: 14px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+  }
+  .ep .method {
+    font-family: "SF Mono", Menlo, monospace; font-size: 11px; font-weight: 700;
+    background: rgba(52,211,153,.2); color: var(--ok);
+    padding: 4px 8px; border-radius: 4px; text-align: center;
+  }
+  .ep .path {
+    font-family: "SF Mono", Menlo, monospace; font-size: 13px; color: var(--text);
+  }
+  .ep .desc { font-size: 13px; color: var(--muted); }
+  .ep .when {
+    font-size: 11px; padding: 4px 10px; border-radius: 4px;
+    background: var(--code-bg); border: 1px solid var(--line);
+    color: var(--muted); text-align: center;
+  }
+
+  /* flow scenarios (tabs) */
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab {
+    padding: 8px 14px; border-radius: 6px;
+    background: var(--panel); border: 1px solid var(--line);
+    cursor: pointer; font-size: 13px; color: var(--muted);
+    transition: all .15s;
+  }
+  .tab.active { background: var(--ai); color: #0b0d12; border-color: var(--ai); font-weight: 600; }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  .scenario { display: none; }
+  .scenario.active { display: block; }
+  .scenario .timeline { display: flex; flex-direction: column; gap: 8px; }
+  .step {
+    display: grid; grid-template-columns: 32px 1fr; gap: 12px;
+    padding: 12px; background: var(--panel);
+    border-left: 3px solid var(--line); border-radius: 6px;
+  }
+  .step.fe-step { border-left-color: var(--fe); }
+  .step.be-step { border-left-color: var(--be); }
+  .step.ai-step { border-left-color: var(--ai); }
+  .step .marker {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+    background: var(--code-bg); border: 1px solid var(--line);
+  }
+  .step.fe-step .marker { color: var(--fe); border-color: var(--fe); }
+  .step.be-step .marker { color: var(--be); border-color: var(--be); }
+  .step.ai-step .marker { color: var(--ai); border-color: var(--ai); }
+  .step .body .who {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+    margin-bottom: 4px;
+  }
+  .step.fe-step .body .who { color: var(--fe); }
+  .step.be-step .body .who { color: var(--be); }
+  .step.ai-step .body .who { color: var(--ai); }
+  .step .body .what { font-size: 14px; }
+  .step .body code {
+    font-family: "SF Mono", Menlo, monospace; font-size: 12px;
+    background: rgba(255,255,255,.06); padding: 1px 6px; border-radius: 3px;
+  }
+  .step .body .result {
+    font-size: 12px; color: var(--muted); margin-top: 4px;
+  }
+
+  /* file reading order */
+  .files-order { display: grid; grid-template-columns: 1fr; gap: 8px; }
+  .file-item {
+    display: grid; grid-template-columns: 30px 220px 1fr 60px; gap: 14px;
+    align-items: center; padding: 12px 16px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+  }
+  .file-item .step-n {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--ai); color: #0b0d12;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .file-item .path {
+    font-family: "SF Mono", Menlo, monospace; font-size: 13px; color: var(--text);
+  }
+  .file-item .why { font-size: 13px; color: var(--muted); }
+  .file-item .time {
+    font-size: 11px; padding: 3px 8px; border-radius: 4px;
+    background: var(--code-bg); color: var(--muted); text-align: center;
+  }
+
+  /* footer */
+  footer {
+    padding: 40px 0; text-align: center; color: var(--muted);
+    font-size: 12px; border-top: 1px solid var(--line); margin-top: 30px;
+  }
+
+  /* responsive */
+  @media (max-width: 900px) {
+    .lanes, .nodes, .states, .state-fields { grid-template-columns: 1fr 1fr; }
+    .ep { grid-template-columns: 1fr; gap: 6px; }
+    .file-item { grid-template-columns: 30px 1fr; }
+    .file-item .why, .file-item .time { display: none; }
+  }
+  @media (max-width: 600px) {
+    .lanes, .nodes, .states, .state-fields { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 30px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="top">
+  <div class="wrap row">
+    <span class="brand">🤖 autocoin-ai</span>
+    <a href="#tier">3-Tier 경계</a>
+    <a href="#nodes">4 노드</a>
+    <a href="#state">State 계약</a>
+    <a href="#lifecycle">Lifecycle</a>
+    <a href="#http">HTTP API</a>
+    <a href="#flows">실행 흐름</a>
+    <a href="#read">읽기 순서</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>autocoin-ai 구조 가이드</h1>
+    <p class="sub">
+      Binance Spot Testnet 전용 Coin Agent의 <b>AI 계층</b>을 중심으로,
+      FE·BE와의 경계와 LangGraph 내부 구조를 한 장에 정리합니다.
+    </p>
+    <div class="pills">
+      <span class="pill">📦 <b>LangGraph</b> 기반</span>
+      <span class="pill">🔌 <b>FastAPI</b> HTTP 노출</span>
+      <span class="pill">💾 <b>JSON 파일</b> 영속화</span>
+      <span class="pill">🚫 <b>LLM 호출 없음</b> (현재)</span>
+      <span class="pill">🔒 <b>Testnet 전용</b></span>
+    </div>
+  </div>
+</header>
+
+<!-- ============== 3-TIER ============== -->
+<section id="tier">
+  <div class="wrap">
+    <h2><span class="num">1</span> 3-Tier 경계 — 누가 뭘 하나</h2>
+    <p class="lead">
+      이 시스템은 FE / BE / AI 셋이 분명히 분리되어 있어요.
+      <b>autocoin-ai 저장소는 그중 AI 한 칸만 책임</b>지지만,
+      이 칸이 BE·FE와 어떻게 맞물리는지 알아야 코드가 이해돼요.
+    </p>
+
+    <div class="lanes">
+      <div class="lane fe">
+        <h3>🖥 FE</h3>
+        <div class="role">사용자 입력 + 상태 표시</div>
+        <ul>
+          <li>주문 테스트 요청 폼</li>
+          <li><code>run_id</code>·<code>hold_reason</code>·<code>decision_trace</code> 표시</li>
+          <li>resume용 보완 입력 재전송</li>
+        </ul>
+        <div class="neg">
+          <b>안 함:</b> Binance 직접 호출 / API 키 다루기 / 서명 / 실행 승인
+        </div>
+      </div>
+
+      <div class="lane be">
+        <h3>⚙️ BE</h3>
+        <div class="role">정책 retrieval + Binance 호출 + 최종 실행</div>
+        <ul>
+          <li><code>policy_context</code> 만들어 AI에 넘김</li>
+          <li>AI proposal을 받아 <b>deterministic 재검증</b></li>
+          <li>Binance Testnet에 서명·제출</li>
+          <li><code>execution_result</code> / <code>be_rejection_evidence</code> 회신</li>
+        </ul>
+        <div class="neg">
+          <b>안 함:</b> AI 판단을 무검증으로 신뢰 / production host 사용
+        </div>
+      </div>
+
+      <div class="lane ai">
+        <span class="focus-tag">이 저장소</span>
+        <h3>🤖 AI</h3>
+        <div class="role">LangGraph 정책 게이트 + 설명 가능한 trace</div>
+        <ul>
+          <li>요청 정규화 + <code>policy_context</code> grounding</li>
+          <li>리스크 게이트 (HOLD/NO_ORDER/READY_FOR_BE)</li>
+          <li><code>decision_trace</code>로 단계별 근거 기록</li>
+          <li>BE 결과 해석 → 사용자 리포트</li>
+        </ul>
+        <div class="neg">
+          <b>안 함:</b> Binance 직접 호출 / 서명 / 최종 실행
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-arrows">
+      <div class="a">FE → BE<br><b>request_context</b> 전달</div>
+      <div class="a">BE → AI<br><b>policy_context + run_id</b> 으로 run 시작</div>
+      <div class="a">AI → BE<br><b>READY_FOR_BE</b> 핸드오프</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== 4 NODES ============== -->
+<section id="nodes">
+  <div class="wrap">
+    <h2><span class="num">2</span> AI 내부 — LangGraph 4 노드</h2>
+    <p class="lead">
+      AI가 "추론"한다고 부르는 부분의 정체. 각 노드를 클릭하면 룰을 풀어드릴게요.
+      <b>LLM 호출 없이 결정론적 if/else로 동작</b>합니다.
+    </p>
+
+    <div class="nodes">
+      <div class="node active" data-node="policy">
+        <h4>1️⃣ policy</h4>
+        <div class="file">nodes/policy.py</div>
+        <div class="desc">요청 검증·정규화 + 정책 grounding</div>
+        <div class="out">
+          <span>normalized_order_intent</span>
+          <span>policy_context</span>
+        </div>
+      </div>
+      <div class="node" data-node="risk">
+        <h4>2️⃣ risk</h4>
+        <div class="file">nodes/risk.py</div>
+        <div class="desc">잔고·시장·심볼·금액 4단계 게이트</div>
+        <div class="out">
+          <span>HOLD / NO_ORDER / READY_FOR_BE</span>
+        </div>
+      </div>
+      <div class="node" data-node="evaluator">
+        <h4>3️⃣ evaluator</h4>
+        <div class="file">nodes/evaluator.py</div>
+        <div class="desc">근거(verification_checks) 충분성 재평가</div>
+        <div class="out">
+          <span>READY_FOR_BE 유지</span>
+          <span>HOLD 강등</span>
+        </div>
+      </div>
+      <div class="node" data-node="execution">
+        <h4>4️⃣ execution</h4>
+        <div class="file">nodes/execution.py</div>
+        <div class="desc">BE 결과 → 사용자 리포트 (별도 그래프)</div>
+        <div class="out">
+          <span>REPORT_READY</span>
+          <span>BE_REJECTED</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- node detail panels -->
+    <div class="node-detail" id="detail-policy">
+      <h5>policy_node — 진입 노드</h5>
+      <div class="rules">
+        <div class="rule failed">
+          <code>request_context</code> 필수 필드 누락
+          <span class="arrow">→</span>
+          <code>INITIAL_REQUEST_CONTRACT_FAILED</code>
+          <span class="badge failed">FAILED</span>
+        </div>
+        <div class="rule pass">
+          symbol·side·type 대문자 정규화 + <code>policy_refs</code> 기록
+          <span class="arrow">→</span>
+          <code>ORDER_INTENT_NORMALIZED</code>
+          <span class="badge pass">PASS → risk</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="node-detail" id="detail-risk" style="display:none">
+      <h5>risk_node — 4단계 게이트 (위에서 아래로 순서대로)</h5>
+      <div class="rules">
+        <div class="rule hold">
+          <code>market_snapshot_fresh == false</code>
+          <span class="arrow">→</span>
+          <code>STALE_MARKET_SNAPSHOT</code>
+          <span class="badge hold">HOLD_DATA_INSUFFICIENT</span>
+        </div>
+        <div class="rule hold">
+          <code>requires_review == true</code>
+          <span class="arrow">→</span>
+          <code>HUMAN_REVIEW_REQUIRED</code>
+          <span class="badge hold">HOLD_REVIEW_REQUIRED</span>
+        </div>
+        <div class="rule no-order">
+          symbol ∉ {BTCUSDT, ETHUSDT}
+          <span class="arrow">→</span>
+          <code>SYMBOL_NOT_ALLOWED</code>
+          <span class="badge no-order">NO_ORDER</span>
+        </div>
+        <div class="rule no-order">
+          <code>quantity / quoteOrderQty &lt;= 0</code>
+          <span class="arrow">→</span>
+          <code>ORDER_AMOUNT_INVALID</code>
+          <span class="badge no-order">NO_ORDER</span>
+        </div>
+        <div class="rule pass">
+          모든 체크 통과
+          <span class="arrow">→</span>
+          <code>ALL_CHECKS_PASSED</code>
+          <span class="badge pass">READY_FOR_BE</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="node-detail" id="detail-evaluator" style="display:none">
+      <h5>evaluator_node — 마지막 검열</h5>
+      <div class="rules">
+        <div class="rule hold">
+          <code>verification_checks</code>에 policy=pass + risk=pass 둘 다 있어야 함. 하나라도 누락
+          <span class="arrow">→</span>
+          <code>EVIDENCE_INSUFFICIENT</code>
+          <span class="badge hold">HOLD_DATA_INSUFFICIENT</span>
+        </div>
+        <div class="rule pass">
+          근거 둘 다 있음
+          <span class="arrow">→</span>
+          <code>EVIDENCE_SUFFICIENT</code>
+          <span class="badge pass">READY_FOR_BE 유지</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="node-detail" id="detail-execution" style="display:none">
+      <h5>execution_node — BE 결과 해석 (Order graph가 아니라 Completion graph 소속)</h5>
+      <div class="rules">
+        <div class="rule failed">
+          <code>completion_payload</code>에 execution_result/be_rejection_evidence가 둘 다 있거나 둘 다 없음 (XOR 위반)
+          <span class="arrow">→</span>
+          <code>COMPLETION_PAYLOAD_INVALID</code>
+          <span class="badge failed">FAILED</span>
+        </div>
+        <div class="rule failed">
+          <code>be_rejection_evidence</code> 있음
+          <span class="arrow">→</span>
+          <code>BE_REVALIDATION_REJECTED</code>
+          <span class="badge failed">BE_REJECTED</span>
+        </div>
+        <div class="rule pass">
+          <code>execution_result</code> 있음
+          <span class="arrow">→</span>
+          <code>ORDER_RESPONSE_VERIFIED</code>
+          <span class="badge pass">REPORT_READY</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== STATE ============== -->
+<section id="state">
+  <div class="wrap">
+    <h2><span class="num">3</span> AgentState — 모든 노드가 주고받는 한 덩어리</h2>
+    <p class="lead">
+      LangGraph는 state를 노드들이 차례로 변형해서 넘기는 구조. 이 State 모양만 외우면 코드 95% 이해됨.
+      <code>models.py</code>의 <code>AgentState</code> TypedDict.
+    </p>
+    <div class="state-fields">
+      <div class="f">
+        <div class="name">run_id<span class="lock">immutable</span></div>
+        <div class="type">str</div>
+        <div class="ex">"airun_allowed_001" — run의 영원한 ID</div>
+      </div>
+      <div class="f">
+        <div class="name">request_context<span class="lock">immutable</span></div>
+        <div class="type">dict</div>
+        <div class="ex">최초 FE 요청 envelope. resume 때도 절대 안 바뀜</div>
+      </div>
+      <div class="f">
+        <div class="name">policy_context<span class="lock">immutable</span></div>
+        <div class="type">{ policy_refs: [...] }</div>
+        <div class="ex">BE가 retrieval한 정책 grounding 컨텍스트</div>
+      </div>
+      <div class="f">
+        <div class="name">normalized_order_intent</div>
+        <div class="type">dict</div>
+        <div class="ex">policy 노드가 만든 정규화된 주문 의도</div>
+      </div>
+      <div class="f">
+        <div class="name">lifecycle_status</div>
+        <div class="type">str</div>
+        <div class="ex">현재 라이프사이클 — 6개 값 중 하나</div>
+      </div>
+      <div class="f">
+        <div class="name">hold_reason</div>
+        <div class="type">str | None</div>
+        <div class="ex">HOLD일 때만 의미 있음 (REVIEW / DATA_INSUFFICIENT)</div>
+      </div>
+      <div class="f">
+        <div class="name">decision_trace</div>
+        <div class="type">stage-keyed dict</div>
+        <div class="ex">policy/risk/evaluator/execution/run_summary 별 reason·evidence·action</div>
+      </div>
+      <div class="f">
+        <div class="name">verification_checks</div>
+        <div class="type">List[Check]</div>
+        <div class="ex">단계별 검증 결과 누적 (append-only). evaluator가 이걸로 판단</div>
+      </div>
+      <div class="f">
+        <div class="name">completion_payload<span class="lock patch">patchable</span></div>
+        <div class="type">dict (BE → AI)</div>
+        <div class="ex">BE가 complete()로 넘기는 결과. execution_result XOR be_rejection_evidence</div>
+      </div>
+      <div class="f">
+        <div class="name">resume_history<span class="lock patch">patchable</span></div>
+        <div class="type">List[dict]</div>
+        <div class="ex">재개 이력. 보완 입력·승인 결과 누적</div>
+      </div>
+      <div class="f">
+        <div class="name">decision_trace_history<span class="lock patch">patchable</span></div>
+        <div class="type">List[dict]</div>
+        <div class="ex">resume 시 이전 trace 스냅샷 보존 (PR #6)</div>
+      </div>
+      <div class="f">
+        <div class="name">report</div>
+        <div class="type">{ status, message }</div>
+        <div class="ex">execution_node가 만드는 사용자 리포트</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== LIFECYCLE ============== -->
+<section id="lifecycle">
+  <div class="wrap">
+    <h2><span class="num">4</span> 6개 Lifecycle 상태</h2>
+    <p class="lead">
+      <code>constants.py</code>에 박혀있는 종료/핵심 상태들. 각 노드의 결정이 결국 이 6개 중 하나로 귀결됨.
+    </p>
+    <div class="states">
+      <div class="state hold">
+        <h4>HOLD</h4>
+        <div class="meta">대기 / resume 가능</div>
+        <div class="desc">사람 검토 또는 추가 데이터 필요. <code>hold_reason</code>으로 세분화. <b>같은 run_id로 resume 가능.</b></div>
+      </div>
+      <div class="state ready">
+        <h4>READY_FOR_BE</h4>
+        <div class="meta">AI → BE 핸드오프</div>
+        <div class="desc">AI proposal이 BE의 deterministic 재검증으로 넘어가는 상태. <b>실행 승인 아님.</b></div>
+      </div>
+      <div class="state no-order">
+        <h4>NO_ORDER</h4>
+        <div class="meta">종료</div>
+        <div class="desc">새 주문 없이 종료 (정책 위반 심볼·금액 등). 사용자 설명은 만들 수 있음.</div>
+      </div>
+      <div class="state be-rejected">
+        <h4>BE_REJECTED</h4>
+        <div class="meta">BE 차단</div>
+        <div class="desc">BE 재검증이 차단함. AI가 <code>be_rejection_evidence</code>로 받아 사용자 설명 생성.</div>
+      </div>
+      <div class="state failed">
+        <h4>FAILED</h4>
+        <div class="meta">계약 깨짐 (terminal)</div>
+        <div class="desc">schema mismatch·복구 불가 기술 실패. <b>같은 run_id 재사용 금지.</b> REPORT_READY로 강제 승격 안 됨.</div>
+      </div>
+      <div class="state report-ready">
+        <h4>REPORT_READY</h4>
+        <div class="meta">최종 리포트 준비됨</div>
+        <div class="desc">BE 실행 성공 후 사용자용 설명 완성. <code>report.message</code>로 전달.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== HTTP API ============== -->
+<section id="http">
+  <div class="wrap">
+    <h2><span class="num">5</span> HTTP API — BE가 부르는 3개 엔드포인트</h2>
+    <p class="lead">
+      <code>http_api.py</code>가 <code>app.py</code>의 3개 메서드를 그대로 노출. BE가 AI를 사용하는 유일한 통로.
+    </p>
+    <div class="endpoints">
+      <div class="ep">
+        <span class="method">POST</span>
+        <span class="path">/runs/start</span>
+        <span class="desc">새 run 시작 → policy/risk/evaluator 그래프 실행</span>
+        <span class="when">최초 요청 시</span>
+      </div>
+      <div class="ep">
+        <span class="method">POST</span>
+        <span class="path">/runs/resume</span>
+        <span class="desc">HOLD 상태 run에 보완 입력·승인 결과 patch 후 재실행</span>
+        <span class="when">HOLD 시에만</span>
+      </div>
+      <div class="ep">
+        <span class="method">POST</span>
+        <span class="path">/runs/complete</span>
+        <span class="desc">BE의 execution_result 또는 be_rejection_evidence 받아 최종 리포트 생성</span>
+        <span class="when">READY_FOR_BE 후에만</span>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-top:14px">
+      ⚠️ 에러 매핑: <code>unknown run_id</code> → 404, 그 외 ValueError → 400.
+      <code>READY_FOR_BE</code> 이전 <code>complete</code> 호출은 거부됨 (PR #4에서 추가).
+    </p>
+  </div>
+</section>
+
+<!-- ============== FLOWS ============== -->
+<section id="flows">
+  <div class="wrap">
+    <h2><span class="num">6</span> 4가지 시나리오 흐름</h2>
+    <p class="lead">탭을 클릭해 각 결말의 실행 흐름을 따라가 보세요.</p>
+    <div class="tabs">
+      <div class="tab active" data-tab="happy">✅ Happy Path</div>
+      <div class="tab" data-tab="hold">⏸ HOLD → Resume</div>
+      <div class="tab" data-tab="rejected">🛑 BE_REJECTED</div>
+      <div class="tab" data-tab="failed">💥 FAILED</div>
+    </div>
+
+    <!-- happy -->
+    <div class="scenario active" id="sc-happy">
+      <div class="timeline">
+        <div class="step fe-step"><div class="marker">1</div><div class="body">
+          <div class="who">FE</div>
+          <div class="what">사용자가 "BTCUSDT 50 USDT 시장가 매수 테스트" 폼 제출</div>
+          <div class="result">→ <code>request_context</code> 만들어 BE에 POST</div>
+        </div></div>
+        <div class="step be-step"><div class="marker">2</div><div class="body">
+          <div class="who">BE</div>
+          <div class="what">정책 retrieval → <code>policy_context</code> 구성 → AI 호출</div>
+          <div class="result">→ <code>POST /runs/start</code> with run_id + request_context + policy_context</div>
+        </div></div>
+        <div class="step ai-step"><div class="marker">3</div><div class="body">
+          <div class="who">AI · policy</div>
+          <div class="what">필수 필드 OK → symbol/side/type 정규화 → policy_refs 기록</div>
+          <div class="result">→ verification_checks += "initial_request_contract: pass"</div>
+        </div></div>
+        <div class="step ai-step"><div class="marker">4</div><div class="body">
+          <div class="who">AI · risk</div>
+          <div class="what">snapshot fresh ✓ / review 불필요 ✓ / BTCUSDT allowlist ✓ / 50&gt;0 ✓</div>
+          <div class="result">→ <code>lifecycle_status = READY_FOR_BE</code></div>
+        </div></div>
+        <div class="step ai-step"><div class="marker">5</div><div class="body">
+          <div class="who">AI · evaluator</div>
+          <div class="what">policy/risk pass 흔적 둘 다 있음</div>
+          <div class="result">→ READY_FOR_BE 유지하고 그래프 종료</div>
+        </div></div>
+        <div class="step be-step"><div class="marker">6</div><div class="body">
+          <div class="who">BE</div>
+          <div class="what">deterministic 재검증 → Binance Testnet에 서명·제출</div>
+          <div class="result">→ <code>POST /runs/complete</code> with execution_result</div>
+        </div></div>
+        <div class="step ai-step"><div class="marker">7</div><div class="body">
+          <div class="who">AI · execution</div>
+          <div class="what">execution_result 발견 → run_summary 작성 → report 생성</div>
+          <div class="result">→ <code>lifecycle_status = REPORT_READY</code></div>
+        </div></div>
+        <div class="step fe-step"><div class="marker">8</div><div class="body">
+          <div class="who">FE</div>
+          <div class="what">REPORT_READY 화면에 <code>report.message</code> + <code>decision_trace</code> 표시</div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- hold -->
+    <div class="scenario" id="sc-hold">
+      <div class="timeline">
+        <div class="step fe-step"><div class="marker">1</div><div class="body">
+          <div class="who">FE</div>
+          <div class="what"><code>requires_review: true</code> 포함된 요청 제출</div>
+        </div></div>
+        <div class="step ai-step"><div class="marker">2</div><div class="body">
+          <div class="who">AI · risk</div>
+          <div class="what">requires_review가 true → 사람 승인 경계 발동</div>
+          <div class="result">→ HOLD + <code>hold_reason = HOLD_REVIEW_REQUIRED</code></div>
+        </div></div>
+        <div class="step fe-step"><div class="marker">3</div><div class="body">
+          <div class="who">FE</div>
+          <div class="what">"승인 필요" 화면 표시 → 운영자 승인 받음</div>
+        </div></div>
+        <div class="step be-step"><div class="marker">4</div><div class="body">
+          <div class="who">BE</div>
+          <div class="what">같은 run_id로 <code>POST /runs/resume</code> 호출</div>
+          <div class="result">→ patch_fields = { approval: { approved: true } }</div>
+        </div></div>
+        <div class="step ai-step"><div class="marker">5</div><div class="body">
+          <div class="who">AI · resume</div>
+          <div class="what">request_context는 그대로 (immutable), resume_history append, 이전 decision_trace는 history에 보존</div>
+          <div class="result">→ <code>effective_user_input</code>이 approval 반영해 requires_review를 false로 덮음</div>
+        </div></div>
+        <div class="step ai-step"><div class="marker">6</div><div class="body">
+          <div class="who">AI · 재실행</div>
+          <div class="what">policy → risk → evaluator 다시 흐름</div>
+          <div class="result">→ READY_FOR_BE로 진행</div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- rejected -->
+    <div class="scenario" id="sc-rejected">
+      <div class="timeline">
+        <div class="step ai-step"><div class="marker">1</div><div class="body">
+          <div class="who">AI</div>
+          <div class="what">policy → risk → evaluator 모두 통과 → READY_FOR_BE</div>
+        </div></div>
+        <div class="step be-step"><div class="marker">2</div><div class="body">
+          <div class="who">BE</div>
+          <div class="what">deterministic 재검증 단계에서 실패 발견 (예: 잔고 부족, 가격 슬리피지 한계 초과)</div>
+        </div></div>
+        <div class="step be-step"><div class="marker">3</div><div class="body">
+          <div class="who">BE</div>
+          <div class="what">Binance에 보내지 않고 차단 → AI에 알림</div>
+          <div class="result">→ <code>POST /runs/complete</code> with be_rejection_evidence</div>
+        </div></div>
+        <div class="step ai-step"><div class="marker">4</div><div class="body">
+          <div class="who">AI · execution</div>
+          <div class="what">be_rejection_evidence 발견 → 사용자 설명 생성</div>
+          <div class="result">→ <code>lifecycle_status = BE_REJECTED</code> + report</div>
+        </div></div>
+        <div class="step fe-step"><div class="marker">5</div><div class="body">
+          <div class="who">FE</div>
+          <div class="what">"재검증 차단" 화면 + 차단 사유 표시</div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- failed -->
+    <div class="scenario" id="sc-failed">
+      <div class="timeline">
+        <div class="step fe-step"><div class="marker">1</div><div class="body">
+          <div class="who">FE</div>
+          <div class="what">잘못된 요청 (필수 필드 누락 또는 schema mismatch)</div>
+        </div></div>
+        <div class="step ai-step"><div class="marker">2</div><div class="body">
+          <div class="who">AI · policy</div>
+          <div class="what"><code>validate_request_context()</code>가 missing fields 반환</div>
+          <div class="result">→ INITIAL_REQUEST_CONTRACT_FAILED</div>
+        </div></div>
+        <div class="step ai-step"><div class="marker">3</div><div class="body">
+          <div class="who">AI</div>
+          <div class="what">graph가 즉시 END로 빠짐 (risk·evaluator 안 거침)</div>
+          <div class="result">→ <code>lifecycle_status = FAILED</code></div>
+        </div></div>
+        <div class="step ai-step"><div class="marker">4</div><div class="body">
+          <div class="who">AI · 거버넌스</div>
+          <div class="what"><b>같은 run_id로 resume 시도하면 ValueError</b> ("FAILED runs cannot be resumed")</div>
+          <div class="result">→ 새 run_id로 다시 시작해야 함</div>
+        </div></div>
+        <div class="step fe-step"><div class="marker">5</div><div class="body">
+          <div class="who">FE</div>
+          <div class="what">FAILED 화면 + missing fields 안내</div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== READING ORDER ============== -->
+<section id="read">
+  <div class="wrap">
+    <h2><span class="num">7</span> 추천 읽기 순서 (15분 코스)</h2>
+    <p class="lead">처음 코드 잡을 때 이 순서대로 보면 머릿속에 빨리 들어와요.</p>
+    <div class="files-order">
+      <div class="file-item">
+        <span class="step-n">1</span>
+        <span class="path">docs/AI.md</span>
+        <span class="why">컨셉 / lifecycle / 금지 사항. 가장 먼저</span>
+        <span class="time">5분</span>
+      </div>
+      <div class="file-item">
+        <span class="step-n">2</span>
+        <span class="path">src/autocoin_ai/constants.py</span>
+        <span class="why">단어장 — 19줄밖에 안 됨</span>
+        <span class="time">30초</span>
+      </div>
+      <div class="file-item">
+        <span class="step-n">3</span>
+        <span class="path">examples/allowed_request.json</span>
+        <span class="why">입력이 어떻게 생겼는지 한 번 봄</span>
+        <span class="time">30초</span>
+      </div>
+      <div class="file-item">
+        <span class="step-n">4</span>
+        <span class="path">src/autocoin_ai/models.py</span>
+        <span class="why">AgentState TypedDict — 이게 모든 상태</span>
+        <span class="time">1분</span>
+      </div>
+      <div class="file-item">
+        <span class="step-n">5</span>
+        <span class="path">src/autocoin_ai/nodes/policy.py</span>
+        <span class="why">진입 — 검증·정규화</span>
+        <span class="time">1분</span>
+      </div>
+      <div class="file-item">
+        <span class="step-n">6</span>
+        <span class="path">src/autocoin_ai/nodes/risk.py</span>
+        <span class="why">4단계 if/else 게이트 — 가장 중요</span>
+        <span class="time">2분</span>
+      </div>
+      <div class="file-item">
+        <span class="step-n">7</span>
+        <span class="path">src/autocoin_ai/nodes/evaluator.py</span>
+        <span class="why">검증 충분성 재검토</span>
+        <span class="time">1분</span>
+      </div>
+      <div class="file-item">
+        <span class="step-n">8</span>
+        <span class="path">src/autocoin_ai/nodes/execution.py</span>
+        <span class="why">BE 결과 해석 (별도 그래프)</span>
+        <span class="time">1분</span>
+      </div>
+      <div class="file-item">
+        <span class="step-n">9</span>
+        <span class="path">src/autocoin_ai/graph.py</span>
+        <span class="why">노드 → 그래프 라우팅</span>
+        <span class="time">1분</span>
+      </div>
+      <div class="file-item">
+        <span class="step-n">10</span>
+        <span class="path">src/autocoin_ai/app.py</span>
+        <span class="why">start/resume/complete 외부 API</span>
+        <span class="time">2분</span>
+      </div>
+      <div class="file-item">
+        <span class="step-n">11</span>
+        <span class="path">src/autocoin_ai/http_api.py</span>
+        <span class="why">FastAPI 래퍼 — 가장 마지막</span>
+        <span class="time">30초</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    autocoin-ai · 소마 17기 ai53 · 이 문서는 코드 + docs/ 기반으로 자동 생성되었습니다.
+  </div>
+</footer>
+
+<script>
+  // node detail toggle
+  document.querySelectorAll('.node').forEach(n => {
+    n.addEventListener('click', () => {
+      document.querySelectorAll('.node').forEach(x => x.classList.remove('active'));
+      n.classList.add('active');
+      document.querySelectorAll('.node-detail').forEach(d => d.style.display = 'none');
+      const id = 'detail-' + n.dataset.node;
+      const target = document.getElementById(id);
+      if (target) target.style.display = 'block';
+    });
+  });
+
+  // scenario tabs
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.scenario').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      document.getElementById('sc-' + t.dataset.tab).classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

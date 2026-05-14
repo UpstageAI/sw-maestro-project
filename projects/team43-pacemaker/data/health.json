@@ -1,0 +1,12 @@
+[
+  {"date": "2026-04-27", "sleep_hours": 6.5, "activity_minutes": 40, "resting_hr": 62},
+  {"date": "2026-04-28", "sleep_hours": 5.8, "activity_minutes": 25, "resting_hr": 65},
+  {"date": "2026-04-29", "sleep_hours": 7.2, "activity_minutes": 55, "resting_hr": 60},
+  {"date": "2026-04-30", "sleep_hours": 6.0, "activity_minutes": 30, "resting_hr": 64},
+  {"date": "2026-05-01", "sleep_hours": 7.5, "activity_minutes": 70, "resting_hr": 58},
+  {"date": "2026-05-02", "sleep_hours": 8.0, "activity_minutes": 90, "resting_hr": 57},
+  {"date": "2026-05-03", "sleep_hours": 7.8, "activity_minutes": 45, "resting_hr": 59},
+  {"date": "2026-05-04", "sleep_hours": 7.0, "activity_minutes": 35, "resting_hr": 60},
+  {"date": "2026-05-05", "sleep_hours": 4.8, "activity_minutes": 15, "resting_hr": 68},
+  {"date": "2026-05-06", "sleep_hours": 5.5, "activity_minutes": 20, "resting_hr": 65}
+]

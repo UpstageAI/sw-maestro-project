@@ -1,0 +1,29 @@
+이름: 김도윤
+이메일: doyun.kim@example.com
+연락처: 010-2345-6789
+
+[한 줄 소개]
+Python과 FastAPI 중심으로 백엔드 사이드 프로젝트를 진행해온 컴퓨터공학과 4학년입니다.
+단순 구현보다 API 설계, 예외 처리, 로그 확인을 통한 문제 해결 과정을 중요하게 생각합니다.
+
+[기술]
+Python, FastAPI, SQL, SQLite, PostgreSQL, REST API, GitHub, Streamlit
+
+[프로젝트 1]
+프로젝트명: 사내 문서 검색 챗봇
+- FastAPI로 질의 API를 구현하고 SQLite에 질의 로그를 저장했습니다.
+- 외부 LLM API 응답을 JSON 형태로 파싱해 프론트엔드에 전달했습니다.
+- 장애 상황에서 예외 메시지를 구조화해 디버깅 시간을 줄였습니다.
+
+[프로젝트 2]
+프로젝트명: 채용 서류 자동 분류 도구
+- Python으로 이력서 텍스트를 정리하고 SQL로 분류 결과를 조회할 수 있게 했습니다.
+- GitHub issue를 기준으로 작업을 나누고 팀원 2명과 협업했습니다.
+
+[협업]
+- 코드 리뷰에서 API 응답 형식 통일, 함수 분리, 로그 개선 의견을 자주 받았습니다.
+- README와 실행 방법 문서를 직접 작성했습니다.
+
+GitHub: https://github.com/tiangolo
+포트폴리오: https://example.com/doyun-backend
+

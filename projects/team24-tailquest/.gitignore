@@ -1,0 +1,58 @@
+# Secrets
+*.pem
+*.key
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.coverage
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+
+# Runtime data
+.chroma/
+.materials/
+.langgraph_state.db
+data/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Build artifacts
+dist/
+build/
+
+# Workspace scratch
+_workspace/
+docx_extracted/
+*.docx
+페이지*.html
+build_docx.py
+
+# Claude harness local settings (per-machine, may contain user paths)
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+agentic_workflow/
+agentic_workflow.zip
+build_v3_docx.py
+\[EXT\]*.pdf
+\[EXT\]*

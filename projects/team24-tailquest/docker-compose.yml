@@ -1,0 +1,42 @@
+services:
+  backend:
+    build: ./backend
+    container_name: tq-backend
+    restart: unless-stopped
+    env_file:
+      - path: ./backend/.env
+        required: false
+    # 127.0.0.1 bind keeps the service private to the host. The EC2 nginx in
+    # front (proxy_pass to 127.0.0.1:8000) is the only public path.
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./.chroma:/app/.chroma
+      - ./.materials:/app/.materials
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        BACKEND_URL: http://backend:8000
+    container_name: tq-frontend
+    restart: unless-stopped
+    env_file:
+      - path: ./frontend/.env.local
+        required: false
+    # BACKEND_URL is read by next.config.mjs to set the rewrite destination.
+    # Docker DNS resolves "backend" to the sibling service.
+    environment:
+      BACKEND_URL: http://backend:8000
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy

@@ -1,0 +1,35 @@
+{
+  "name": "멀티턴 재조정 — 화요일 빼줘",
+  "description": "1턴에서 1주일 운동 스케줄을 도출한 뒤, 2턴에서 '화요일은 피곤할 것 같아' 입력. 화요일(5/5) 슬롯만 변경(휴식 또는 경량화)되고 나머지 요일 슬롯은 유지되는지 검증 (KPI 4).",
+  "calendar": [
+    {"start_at": "2026-05-04T09:00:00", "end_at": "2026-05-04T18:00:00", "title": "업무", "is_busy": true},
+    {"start_at": "2026-05-05T09:00:00", "end_at": "2026-05-05T18:00:00", "title": "업무", "is_busy": true},
+    {"start_at": "2026-05-05T19:00:00", "end_at": "2026-05-05T21:00:00", "title": "야근", "is_busy": true},
+    {"start_at": "2026-05-06T09:00:00", "end_at": "2026-05-06T18:00:00", "title": "업무", "is_busy": true},
+    {"start_at": "2026-05-07T09:00:00", "end_at": "2026-05-07T18:00:00", "title": "업무", "is_busy": true},
+    {"start_at": "2026-05-08T09:00:00", "end_at": "2026-05-08T18:00:00", "title": "업무", "is_busy": true},
+    {"start_at": "2026-05-09T11:00:00", "end_at": "2026-05-09T13:00:00", "title": "브런치 약속", "is_busy": true},
+    {"start_at": "2026-05-10T15:00:00", "end_at": "2026-05-10T17:00:00", "title": "본가 방문", "is_busy": true}
+  ],
+  "health": [
+    {"date": "2026-05-04", "sleep_hours": 7.0, "activity_minutes": 35, "resting_hr": 60},
+    {"date": "2026-05-05", "sleep_hours": 6.5, "activity_minutes": 30, "resting_hr": 62},
+    {"date": "2026-05-06", "sleep_hours": 7.2, "activity_minutes": 40, "resting_hr": 59},
+    {"date": "2026-05-07", "sleep_hours": 7.0, "activity_minutes": 35, "resting_hr": 60}
+  ],
+  "workouts": [
+    {"date": "2026-05-01", "type": "러닝", "duration_min": 40, "muscles": ["하체", "코어"], "intensity": 3},
+    {"date": "2026-05-03", "type": "헬스", "duration_min": 55, "muscles": ["어깨", "삼두"], "intensity": 3}
+  ],
+  "turns": [
+    {"role": "user", "content": "이번 주 운동 일정 짜줘"},
+    {"role": "user", "content": "화요일은 피곤할 것 같아"}
+  ],
+  "expected": {
+    "turn1_produces_weekly_proposal": true,
+    "changed_dates": ["2026-05-05"],
+    "unchanged_dates_keep_slots": true,
+    "tuesday_action": "휴식 또는 강도 하향 (기존 슬롯 대비)",
+    "rationale_mentions_fatigue": true
+  }
+}

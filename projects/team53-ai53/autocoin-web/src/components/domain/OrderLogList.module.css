@@ -1,0 +1,61 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.entry {
+  display: grid;
+  grid-template-columns: 140px 90px 50px 70px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--color-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+}
+
+.timestamp {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.symbol {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.sideBuy {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.sideSell {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.type {
+  color: #6b7280;
+}
+
+.orderId {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+@media (max-width: 768px) {
+  .entry {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+}

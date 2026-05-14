@@ -1,0 +1,80 @@
+{
+  "service": {
+    "name": "AI PM Assistance 웹서비스",
+    "goal": "AI가 Task를 입력받아 일정 추천, 우선순위 추천, 리스크 분석을 제공하는 MVP를 4주 안에 개발한다."
+  },
+  "milestones": [
+    {
+      "title": "요구사항 산출물 확정",
+      "dueDate": "2026-05-17"
+    },
+    {
+      "title": "핵심 범위 설계 완료",
+      "dueDate": "2026-05-24"
+    },
+    {
+      "title": "MVP 기능 산출물 완성",
+      "dueDate": "2026-05-31"
+    },
+    {
+      "title": "검증 및 출시 준비",
+      "dueDate": "2026-06-07"
+    }
+  ],
+  "tasks": [
+    {
+      "title": "MVP 요구사항과 입력 항목 확정",
+      "description": "PM이 입력해야 하는 프로젝트 목표, 팀원, Task 필드와 AI가 반환해야 하는 일정 추천, 우선순위, 리스크 결과 항목을 확정한다.",
+      "importance": "critical",
+      "status": "todo",
+      "milestoneTitle": "요구사항 산출물 확정",
+      "dueDate": "2026-05-17",
+      "estimatedHours": 8,
+      "progress": 0,
+      "predecessorTitles": [],
+      "delayReason": null
+    },
+    {
+      "title": "AI 추천 API와 화면 구조 설계",
+      "description": "Task 입력 데이터를 분석 API로 보내고 우선순위, 일정안, 리스크 결과를 화면에 보여주는 데이터 계약과 주요 화면 구조를 설계한다.",
+      "importance": "critical",
+      "status": "todo",
+      "milestoneTitle": "핵심 범위 설계 완료",
+      "dueDate": "2026-05-24",
+      "estimatedHours": 12,
+      "progress": 0,
+      "predecessorTitles": [
+        "MVP 요구사항과 입력 항목 확정"
+      ],
+      "delayReason": null
+    },
+    {
+      "title": "AI 일정 추천, 우선순위, 리스크 MVP 구현",
+      "description": "Task 입력/수정, 분석 실행, 우선순위 추천, 일정 후보 추천 및 승인, 리스크 분석 결과 표시까지 MVP 핵심 기능을 구현한다.",
+      "importance": "critical",
+      "status": "todo",
+      "milestoneTitle": "MVP 기능 산출물 완성",
+      "dueDate": "2026-05-31",
+      "estimatedHours": 32,
+      "progress": 0,
+      "predecessorTitles": [
+        "AI 추천 API와 화면 구조 설계"
+      ],
+      "delayReason": null
+    },
+    {
+      "title": "핵심 플로우 QA와 출시 준비",
+      "description": "프로젝트 생성부터 Task 입력, AI 분석, 일정 승인, 리스크 확인까지 핵심 플로우를 검증하고 데모 데이터와 출시 전 버그 수정을 마무리한다.",
+      "importance": "critical",
+      "status": "todo",
+      "milestoneTitle": "검증 및 출시 준비",
+      "dueDate": "2026-06-07",
+      "estimatedHours": 16,
+      "progress": 0,
+      "predecessorTitles": [
+        "AI 일정 추천, 우선순위, 리스크 MVP 구현"
+      ],
+      "delayReason": null
+    }
+  ]
+}

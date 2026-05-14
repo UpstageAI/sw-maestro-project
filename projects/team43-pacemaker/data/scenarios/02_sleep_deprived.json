@@ -1,0 +1,26 @@
+{
+  "name": "수면 부족 → 강도 하향",
+  "description": "최근 4일 평균 sleep_hours < 5h. 프롬프트 규칙 '수면 5시간 미만 누적 시 강도 1단계 하향'에 따라 추천 운동 강도가 낮아지고, 변경 사유에 수면/회복 언급이 포함되는지 검증 (KPI 2 연계).",
+  "calendar": [
+    {"start_at": "2026-05-04T09:00:00", "end_at": "2026-05-04T18:00:00", "title": "업무", "is_busy": true},
+    {"start_at": "2026-05-05T09:00:00", "end_at": "2026-05-05T18:00:00", "title": "업무", "is_busy": true},
+    {"start_at": "2026-05-06T09:00:00", "end_at": "2026-05-06T18:00:00", "title": "업무", "is_busy": true},
+    {"start_at": "2026-05-07T09:00:00", "end_at": "2026-05-07T18:00:00", "title": "업무", "is_busy": true},
+    {"start_at": "2026-05-08T09:00:00", "end_at": "2026-05-08T18:00:00", "title": "업무", "is_busy": true}
+  ],
+  "health": [
+    {"date": "2026-05-04", "sleep_hours": 4.2, "activity_minutes": 10, "resting_hr": 72},
+    {"date": "2026-05-05", "sleep_hours": 3.8, "activity_minutes": 5, "resting_hr": 75},
+    {"date": "2026-05-06", "sleep_hours": 4.5, "activity_minutes": 15, "resting_hr": 70},
+    {"date": "2026-05-07", "sleep_hours": 4.0, "activity_minutes": 8, "resting_hr": 73}
+  ],
+  "workouts": [
+    {"date": "2026-05-03", "type": "헬스", "duration_min": 50, "muscles": ["등", "이두"], "intensity": 3}
+  ],
+  "expected": {
+    "max_intensity": 2,
+    "should_lower_intensity": true,
+    "rationale_keywords_any_of": ["수면", "회복", "컨디션", "휴식", "피로"],
+    "no_high_intensity_slot": true
+  }
+}

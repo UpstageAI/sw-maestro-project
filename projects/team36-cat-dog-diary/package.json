@@ -1,0 +1,10 @@
+{
+  "name": "cat-dog-diary",
+  "version": "0.0.0",
+  "private": true,
+  "description": "냥멍일기 — 반려동물 사진 + 키워드 → 1인칭 시점 일기 자동 생성 서비스",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=22"
+  }
+}
