@@ -1,0 +1,26 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	form_parser(form_parser)
+	material_ingestor(material_ingestor)
+	planner(planner)
+	generator(generator)
+	verifier(verifier)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> form_parser;
+	form_parser -. &nbsp;END&nbsp; .-> __end__;
+	form_parser -. &nbsp;continue&nbsp; .-> material_ingestor;
+	generator -. &nbsp;END&nbsp; .-> __end__;
+	generator -. &nbsp;continue&nbsp; .-> verifier;
+	material_ingestor -. &nbsp;END&nbsp; .-> __end__;
+	material_ingestor -. &nbsp;continue&nbsp; .-> planner;
+	planner -. &nbsp;END&nbsp; .-> __end__;
+	planner -. &nbsp;continue&nbsp; .-> generator;
+	verifier --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
