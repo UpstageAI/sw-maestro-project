@@ -1,0 +1,149 @@
+{
+  "digest_id": "digest_20260504",
+  "date": "2026-05-04",
+  "status": "completed",
+  "item_count": 5,
+  "candidate_count": 5,
+  "selected_candidate_count": 5,
+  "source_document_ids": [
+    "huggingface_2511.07328",
+    "huggingface_2605.05242",
+    "huggingface_2604.27660",
+    "huggingface_2605.02801",
+    "huggingface_2605.02881"
+  ],
+  "groundedness_score": 1.0,
+  "digest": {
+    "digest_id": "digest_20260504",
+    "date": "2026-05-04",
+    "title": "AI Agent Daily Digest",
+    "items": [
+      {
+        "document_id": "huggingface_2511.07328",
+        "title": "Q-RAG: Long Context Multi-step Retrieval via Value-based Embedder Training",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2511.07328",
+        "published_at": "2026-05-04",
+        "summary": "Q-RAG는 강화 학습을 통해 임베더 모델을 미세 조정하여 다중 단계 검색을 수행하는 새로운 RAG 접근법을 제안한다. 기존 단일 단계 검색의 한계를 극복하고, 대규모 LLM을 그대로 활용하면서도 자원 효율적인 다중 단계 검색을 가능하게 한다.",
+        "key_points": [
+          "기존 RAG는 단일 단계 검색에 국한되어 복잡한 질문에 부적합",
+          "Q-RAG는 임베더 모델을 강화 학습으로 미세 조정하여 다중 단계 검색 수행",
+          "대규모 LLM을 그대로 사용할 수 있어 자원 효율적 대안 제공"
+        ],
+        "contribution": "Q-RAG는 강화 학습을 통해 임베더 모델을 미세 조정함으로써, 기존 다중 단계 검색 방법 대비 자원 소모를 줄이면서도 경쟁력 있는 성능을 제공하는 새로운 접근법을 제시한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "RAG",
+          "multi-step retrieval",
+          "reinforcement learning"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2511.07328"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.05242",
+        "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.05242",
+        "published_at": "2026-05-03",
+        "summary": "에이전트 검색에서 기존 임베딩 기반 검색의 한계를 극복하기 위해, 임베딩 모델이나 벡터 인덱스 없이 일반 터미널 도구를 사용해 원본 코퍼스를 직접 탐색하는 Direct Corpus Interaction(DCI) 방식을 제안한다. 이 방법은 오프라인 인덱싱이 필요 없고, 진화하는 로컬 코퍼스에 자연스럽게 적응한다.",
+        "key_points": [
+          "DCI는 임베딩 모델, 벡터 인덱스, 검색 API 없이 원본 코퍼스를 직접 탐색",
+          "grep, 파일 읽기, 쉘 명령 등 일반 터미널 도구를 활용",
+          "IR 벤치마크와 BrowseComp-Plus에서 기존 검색 방법을 능가"
+        ],
+        "contribution": "DCI는 언어 에이전트가 원본 코퍼스를 직접 탐색함으로써, 기존 의미 기반 검색의 한계를 극복하고 진화하는 로컬 코퍼스에 자연스럽게 적응하는 새로운 검색 패러다임을 제시한다.",
+        "benchmark": "BRIGHT 및 BEIR 데이터셋에서 기존 희소·밀집·리랭킹 기준선을 능가하고, BrowseComp-Plus 및 다중 홉 QA에서 강한 정확도를 달성",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "agent",
+          "retrieval",
+          "corpus interaction"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.05242"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.27660",
+        "title": "From Context to Skills: Can Language Models Learn from Context Skillfully?",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.27660",
+        "published_at": "2026-05-03",
+        "summary": "멀티에이전트 자기 플레이 루프를 통해 언어 모델이 인간 감독이나 외부 피드백 없이 문맥에 맞는 스킬을 자동으로 발견하고 정제하는 방법을 제시한다. 챌린저, 리즌어, 중립적 저버로 구성된 루프에서 실패 사례를 분석하여 스킬을 업데이트함으로써 자동화된 스킬 발견과 정제를 가능하게 한다.",
+        "key_points": [
+          "멀티에이전트 자기 플레이 루프로 문맥 기반 스킬 자동 발견",
+          "챌린저, 리즌어, 저버 에이전트가 상호작용하며 스킬을 진화",
+          "실패 사례 분석을 통해 스킬을 타겟팅하여 업데이트"
+        ],
+        "contribution": "멀티에이전트 자기 플레이 루프를 통해 인간 감독이나 외부 피드백 없이 문맥에 맞는 스킬을 자동으로 발견하고 정제하는 새로운 방법을 제시한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "multi-agent",
+          "skill augmentation",
+          "context learning"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.27660"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.02801",
+        "title": "Reinforcement Learning for LLM-based Multi-Agent Systems through Orchestration Traces",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.02801",
+        "published_at": "2026-05-04",
+        "summary": "LLM 기반 멀티에이전트 시스템에서 오케스트레이션 트레이스를 활용해 강화 학습을 적용하는 방법을 연구한다. 작업 생성, 위임, 통신, 도구 사용, 집계, 종료 결정 등 시간적 상호작용 그래프를 분석하여 보상 설계와 크레딧 할당의 세 가지 기술적 축을 제시한다.",
+        "key_points": [
+          "오케스트레이션 트레이스를 통해 시간적 상호작용 그래프 분석",
+          "보상 설계는 병렬 처리 속도, 분할 정확성, 집계 품질 등 8가지 유형 포함",
+          "크레딧 신호는 토큰부터 팀 단위까지 8가지 단위에 부착 가능"
+        ],
+        "contribution": "오케스트레이션 트레이스를 통해 LLM 기반 멀티에이전트 시스템의 보상 설계와 크레딧 할당을 체계화하여, 작업 생성, 위임, 통신, 도구 사용, 집계, 종료 결정 등 다중 에이전트 오케스트레이션을 최적화하는 방법을 제시한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "LLM-based Multi-Agent Systems",
+          "Reinforcement Learning",
+          "Orchestration Traces"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.02801"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.02881",
+        "title": "MolmoAct2: Action Reasoning Models for Real-world Deployment",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.02881",
+        "published_at": "2026-05-04",
+        "summary": "MolmoAct2는 실제 로봇 배포를 위한 완전 오픈소스 액션 추론 모델로, MolmoER이라는 공간 및 신체 추론 특화 VLM 백본을 3.3M 샘플 코퍼스로 학습하고, 저비용 플랫폼에서 수집한 세 가지 새로운 데이터셋을 공개한다.",
+        "key_points": [
+          "MolmoER은 공간 및 신체 추론에 특화된 VLM 백본",
+          "3.3M 샘플 코퍼스로 specialize-then-rehearse 레시피로 학습",
+          "저비용 플랫폼에서 수집한 세 가지 새로운 데이터셋 공개"
+        ],
+        "contribution": "MolmoAct2는 실제 로봇 배포를 위한 완전 오픈소스 액션 추론 모델로, MolmoER 백본과 저비용 플랫폼 기반 데이터셋을 통해 기존 VLA 모델의 한계를 극복한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "action reasoning model",
+          "Vision-Language-Action (VLA) models",
+          "MolmoAct2"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.02881"
+        ],
+        "llm_model": "solar-pro-3"
+      }
+    ],
+    "groundedness_score": 1.0
+  }
+}

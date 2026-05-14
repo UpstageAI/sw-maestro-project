@@ -1,0 +1,127 @@
+{
+  "digest_id": "digest_20260427",
+  "date": "2026-04-27",
+  "status": "completed",
+  "item_count": 4,
+  "candidate_count": 4,
+  "selected_candidate_count": 4,
+  "source_document_ids": [
+    "hackernews_47920787",
+    "hackernews_47916410",
+    "hackernews_47916909",
+    "hackernews_47916890"
+  ],
+  "groundedness_score": 0.4286,
+  "digest": {
+    "digest_id": "digest_20260427",
+    "date": "2026-04-27",
+    "title": "AI Agent Daily Digest",
+    "items": [
+      {
+        "document_id": "hackernews_47920787",
+        "title": "OSS Agent I built topped the TerminalBench on Gemini-3-flash-preview",
+        "source": "hackernews",
+        "url": "https://github.com/dirac-run/dirac",
+        "published_at": "2026-04-27",
+        "summary": "오픈소스 버전 에이전트가 Gemini-3-flash-preview 환경에서 TerminalBench 리더보드 1위를 기록했으며, GitHub와 실행 결과 간 차이가 없음을 확인했다.",
+        "key_points": [
+          "Gemini-3-flash-preview에서 TerminalBench 리더보드 1위 달성",
+          "GitHub에 공개된 오픈소스 버전과 실행 결과 동일",
+          "리더보드 반영 지연 및 HF PR 대기 상황",
+          "에이전트 성능에서 테스트 하네스의 중요성 강조"
+        ],
+        "contribution": "Gemini-3-flash-preview 환경에서 TerminalBench 리더보드 1위를 달성한 오픈소스 에이전트 구현",
+        "benchmark": "TerminalBench 리더보드에서 Gemini-3-flash-preview 대비 성능 평가",
+        "critique": "리더보드 반영 지연으로 인해 공식 순위 확인이 지연되고 있으며, HF PR 대기 중인 상태",
+        "tags": [
+          "OSS Agent",
+          "TerminalBench",
+          "Gemini-3-flash-preview"
+        ],
+        "evidence_document_ids": [
+          "hackernews_47920787"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "hackernews_47916410",
+        "title": "Google banks on AI edge to catch up to cloud rivals Amazon and Microsoft",
+        "source": "hackernews",
+        "url": "https://www.ft.com/content/2429f0f0-b685-4747-b425-bf8001a2e94c",
+        "published_at": "2026-04-27",
+        "summary": "구글이 AI 엣지 기술을 통해 아마존과 마이크로소프트 등 클라우드 경쟁사와의 격차를 좁히기 위한 전략을 추진하고 있다.",
+        "key_points": [
+          "AI 엣지 기술을 통한 클라우드 경쟁력 강화 전략",
+          "아마존 및 마이크로소프트와의 시장 경쟁 상황",
+          "AI 기반 클라우드 서비스 확장 계획",
+          "AI 엣지 기술의 시장 영향력 확대"
+        ],
+        "contribution": "AI 엣지 기술을 활용한 클라우드 서비스 경쟁력 강화 전략 제시",
+        "benchmark": "클라우드 경쟁사(아마존, 마이크로소프트)와의 비교 평가",
+        "critique": "AI 엣지 기술의 실제 성능 및 시장 적용 범위에 대한 구체적 데이터 부재",
+        "tags": [
+          "AI edge",
+          "cloud rivals",
+          "agent"
+        ],
+        "evidence_document_ids": [
+          "hackernews_47916410"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "hackernews_47916909",
+        "title": "EvanFlow – A TDD driven feedback loop for Claude Code",
+        "source": "hackernews",
+        "url": "https://github.com/evanklem/evanflow",
+        "published_at": "2026-04-27",
+        "summary": "Claude Code를 위한 TDD 기반 피드백 루프 도구인 EvanFlow를 개발하여 코드 품질 향상과 개발 효율성 개선을 지원한다.",
+        "key_points": [
+          "Claude Code용 TDD 기반 피드백 루프 도구",
+          "테스트 주도 개발(TDD)을 통한 코드 개선",
+          "Claude Code와의 통합 및 활용",
+          "개발자 피드백 루프 자동화"
+        ],
+        "contribution": "Claude Code에 TDD 기반 피드백 루프를 적용하여 코드 품질 및 개발 효율성을 개선하는 도구 제공",
+        "benchmark": "Claude Code와의 통합 및 TDD 기반 피드백 루프 적용",
+        "critique": "Claude Code 외 다른 모델과의 호환성 및 확장성에 대한 정보 부재",
+        "tags": [
+          "TDD",
+          "feedback loop",
+          "Claude Code"
+        ],
+        "evidence_document_ids": [
+          "hackernews_47916909"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "hackernews_47916890",
+        "title": "TurboQuant: A first-principles walkthrough",
+        "source": "hackernews",
+        "url": "https://arkaung.github.io/interactive-turboquant/",
+        "published_at": "2026-04-27",
+        "summary": "TurboQuant의 기본 원리부터 구현까지 단계별로 설명하는 워크스루를 제공한다.",
+        "key_points": [
+          "TurboQuant의 기본 원리 설명",
+          "단계별 구현 워크스루 제공",
+          "인터랙티브 튜토리얼 형식",
+          "양자화 및 최적화 기법 소개"
+        ],
+        "contribution": "TurboQuant의 기본 원리부터 구현까지 단계별로 설명하는 인터랙티브 워크스루 제공",
+        "benchmark": "TurboQuant의 기본 원리 및 구현 방법에 대한 단계별 평가",
+        "critique": "실제 성능 수치나 비교 실험 결과가 명시되지 않음",
+        "tags": [
+          "TurboQuant",
+          "first-principles",
+          "walkthrough"
+        ],
+        "evidence_document_ids": [
+          "hackernews_47916890"
+        ],
+        "llm_model": "solar-pro-3"
+      }
+    ],
+    "groundedness_score": 0.4286
+  }
+}

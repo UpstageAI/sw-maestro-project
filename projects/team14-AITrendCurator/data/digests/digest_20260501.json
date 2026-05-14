@@ -1,0 +1,231 @@
+{
+  "digest_id": "digest_20260501",
+  "date": "2026-05-01",
+  "status": "completed",
+  "item_count": 8,
+  "candidate_count": 9,
+  "selected_candidate_count": 9,
+  "source_document_ids": [
+    "huggingface_2604.27419",
+    "huggingface_2604.28139",
+    "huggingface_2604.27351",
+    "huggingface_2604.28157",
+    "huggingface_2604.28158",
+    "hackernews_47977694",
+    "huggingface_2604.28181",
+    "huggingface_2604.27505",
+    "huggingface_2604.28185"
+  ],
+  "groundedness_score": 1.0,
+  "digest": {
+    "digest_id": "digest_20260501",
+    "date": "2026-05-01",
+    "title": "AI Agent Daily Digest",
+    "items": [
+      {
+        "document_id": "huggingface_2604.27419",
+        "title": "InteractWeb-Bench: Can Multimodal Agent Escape Blind Execution in Interactive Website Generation?",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.27419",
+        "published_at": "2026-04-30",
+        "summary": "멀티모달 대형 언어 모델과 코딩 에이전트의 발전으로 웹사이트 개발이 수동 프로그래밍에서 에이전트 기반 프로젝트 수준 코드 합성으로 전환되고 있다. 기존 벤치마크는 이상적인 가정을 전제로 하지만, 실제 개발은 비전문가 사용자의 모호하고 저품질 지시와 모델 이해 사이의 의미적 불일치로 인한 '블라인드 실행'이라는 병목 현상을 겪는다. 이를 해결하기 위해 InteractWeb-Bench는 비전문가 저코드 사용자 조건에서 웹사이트 생성을 위한 최초의 멀티모달 인터랙티브 벤치마크를 제시한다.",
+        "key_points": [
+          "비전문가 저코드 사용자 조건에서 웹사이트 생성을 위한 최초의 멀티모달 인터랙티브 벤치마크",
+          "4가지 유형의 사용자 에이전트를 도입하여 블라인드 실행 문제를 해결",
+          "기존 벤치마크의 이상화된 가정(정형화된 입력, 정적 실행 설정)을 비판"
+        ],
+        "contribution": "비전문가 저코드 사용자 조건에서 발생하는 의미적 불일치와 블라인드 실행 문제를 해결하기 위해 4가지 유형의 사용자 에이전트를 포함한 InteractWeb-Bench 벤치마크를 제안",
+        "benchmark": "InteractWeb-Bench에서 4가지 유형의 사용자 에이전트를 활용한 웹사이트 생성 평가",
+        "critique": "비전문가 저코드 사용자 조건에 초점을 맞추어 단일 도메인 데이터에서만 평가",
+        "tags": [
+          "multimodal agent",
+          "interactive website generation",
+          "agent-based code synthesis"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.27419"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.28139",
+        "title": "Claw-Eval-Live: A Live Agent Benchmark for Evolving Real-World Workflows",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.28139",
+        "published_at": "2026-04-30",
+        "summary": "LLM 에이전트는 소프트웨어 도구, 비즈니스 서비스, 로컬 작업공간을 가로지르는 종단간 작업을 완료해야 하지만, 기존 벤치마크는 고정된 작업 집합을 동결하고 최종 응답만 평가하여 진화하는 워크플로우 수요를 평가하기 어렵다. Claw-Eval-Live는 공개 워크플로우 수요 신호에서 갱신 가능한 신호 계층과 재현 가능한 시간 스탬프 릴리즈 스냅샷을 분리하여 라이브 벤치마크를 제공한다. 각 릴리즈는 ClawHub Top-500 스킬을 사용하여 구성되며, 고정된 픽스처, 서비스, 작업공간, 평가자로 물질화된다.",
+        "key_points": [
+          "공개 워크플로우 수요 신호에서 갱신 가능한 신호 계층과 재현 가능한 릴리즈 스냅샷 분리",
+          "ClawHub Top-500 스킬을 활용한 작업 구성",
+          "고정된 픽스처, 서비스, 작업공간, 평가자를 통한 재현 가능한 평가"
+        ],
+        "contribution": "진화하는 워크플로우 수요를 평가하기 위해 갱신 가능한 신호 계층과 재현 가능한 시간 스탬프 릴리즈 스냅샷을 제공하는 Claw-Eval-Live 벤치마크를 제안",
+        "benchmark": "ClawHub Top-500 스킬을 사용한 공개 워크플로우 수요 신호 기반 작업 구성",
+        "critique": "공개 워크플로우 수요 신호에 의존하여 특정 도메인이나 비공개 워크플로우에 대한 평가가 제한됨",
+        "tags": [
+          "agent",
+          "workflow",
+          "benchmark"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.28139"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.27351",
+        "title": "Heterogeneous Scientific Foundation Model Collaboration",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.27351",
+        "published_at": "2026-04-30",
+        "summary": "에이전틱 대형 언어 모델 시스템은 강력한 능력을 보여주지만, 언어를 보편적 인터페이스로 사용하는 것은 과학적 분야에서 한계가 있다. 과학 분야에서는 자연어 외의 전문 작업을 해결하기 위해 도메인 특화 기초 모델이 개발되었다. Eywa는 언어 중심 시스템을 확장하여 과학 기초 모델을 통합하는 이질적 에이전트 프레임워크로, 언어 모델이 비언어적 데이터 모달리티에 대한 추론을 안내할 수 있도록 설계되었다.",
+        "key_points": [
+          "언어 중심 시스템을 과학 기초 모델로 확장하는 이질적 에이전트 프레임워크",
+          "언어 모델이 비언어적 데이터 모달리티에 대한 추론을 안내",
+          "도메인 특화 기초 모델을 활용한 예측적 추론 지원"
+        ],
+        "contribution": "언어 중심 시스템을 확장하여 과학 기초 모델을 통합하는 이질적 에이전트 프레임워크 Eywa를 제안",
+        "benchmark": "Eywa 프레임워크에서 언어 모델이 비언어적 데이터 모달리티에 대한 추론을 안내하는 실험",
+        "critique": "도메인 특화 기초 모델에 의존하여 언어 모델의 범용성 활용 범위가 제한됨",
+        "tags": [
+          "heterogeneous agentic framework",
+          "language-centric systems",
+          "domain-specific foundation models",
+          "Eywa"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.27351"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.28157",
+        "title": "FlashRT: Towards Computationally and Memory Efficient Red-Teaming for Prompt Injection and Knowledge Corruption",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.28157",
+        "published_at": "2026-04-30",
+        "summary": "Gemini-3.1-Pro와 Qwen-3.5 같은 장문 컨텍스트 대형 언어 모델은 검색 증강 생성, 자율 에이전트, AI 어시스턴트 등 다양한 실제 응용에 사용되지만, 프롬프트 인젝션과 지식 오염 같은 보안 위협이 존재한다. 기존 휴리스틱 기반 레드팀은 약한 공격을 생성하지만, 최적화 기반 레드팀은 더 강력한 공격을 생성하지만 계산 자원과 GPU 메모리가 많이 필요하다. FlashRT는 장문 컨텍스트 LLM에 대해 계산 및 메모리 효율적인 최적화 기반 레드팀을 제안한다.",
+        "key_points": [
+          "Gemini-3.1-Pro와 Qwen-3.5 같은 장문 컨텍스트 LLM의 보안 위협 대응",
+          "최적화 기반 레드팀의 계산 및 메모리 효율성 개선",
+          "프롬프트 인젝션과 지식 오염에 대한 정량적 위험 평가"
+        ],
+        "contribution": "장문 컨텍스트 LLM에 대해 계산 및 메모리 효율적인 최적화 기반 레드팀을 제공하는 FlashRT를 제안",
+        "benchmark": "Gemini-3.1-Pro와 Qwen-3.5를 대상으로 한 프롬프트 인젝션 및 지식 오염 공격",
+        "critique": "최적화 기반 레드팀의 계산 및 메모리 효율성 개선에도 불구하고 여전히 상당한 자원 요구",
+        "tags": [
+          "prompt injection",
+          "knowledge corruption",
+          "retrieval-augmented generation",
+          "autonomous agents",
+          "LLM security"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.28157"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "hackernews_47977694",
+        "title": "Show HN: AI CAD Harness",
+        "source": "hackernews",
+        "url": "https://fusion.adam.new/install",
+        "published_at": "2026-05-01",
+        "summary": "Adam은 CAD 애플리케이션 내에서 네이티브로 작동하는 AI CAD Harness로, 모델 비종속적이며 각 작업 유형에 대해 가장 성능이 좋은 프론티어 모델을 선택한다. 기존 CAD 도구와 달리 Adam은 특정 연구실에 종속되지 않고 내부 벤치마크를 통해 최적의 모델을 동적으로 선택한다.",
+        "key_points": [
+          "CAD 애플리케이션 내에서 네이티브로 작동하는 AI CAD Harness",
+          "모델 비종속적이며 작업 유형에 따라 최적의 프론티어 모델 동적 선택",
+          "다양한 CAD 프로그램과의 통합 구축"
+        ],
+        "contribution": "CAD 애플리케이션 내에서 네이티브로 작동하며 모델 비종속적으로 최적의 프론티어 모델을 선택하는 AI CAD Harness를 제안",
+        "benchmark": "내부 벤치마크를 통해 각 작업 유형에 대해 가장 성능이 좋은 프론티어 모델 선택",
+        "critique": "특정 CAD 프로그램에 대한 통합이 아직 제한적이며, 모든 프로그램에 대한 완전한 지원 부족",
+        "tags": [
+          "AI CAD Harness",
+          "in-CAD agent",
+          "CAD as code"
+        ],
+        "evidence_document_ids": [
+          "hackernews_47977694"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.28181",
+        "title": "Synthetic Computers at Scale for Long-Horizon Productivity Simulation",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.28181",
+        "published_at": "2026-04-30",
+        "summary": "Synthetic Computers는 장기 생산성 시뮬레이션을 위해 설계된 환경으로, 한 에이전트가 작업을 시작하고 다른 에이전트가 사용자 역할을 맡아 컴퓨터를 계속 사용한다. 약 1,000개의 합성 컴퓨터를 생성하고 장기 시뮬레이션을 실행하며, 각 실행은 8시간 이상의 에이전트 런타임과 평균 2,000턴 이상을 필요로 한다. 이러한 시뮬레이션은 풍부한 경험 학습 신호를 생성하여 도메인 내 및 도메인 외 생산성 평가에서 에이전트 성능을 크게 향상시킨다.",
+        "key_points": [
+          "한 에이전트가 작업을 시작하고 다른 에이전트가 사용자 역할을 맡는 장기 시뮬레이션 환경",
+          "1,000개의 합성 컴퓨터에서 8시간 이상의 런타임과 2,000턴 이상의 장기 시뮬레이션",
+          "도메인 내 및 도메인 외 생산성 평가에서 에이전트 성능 향상 검증"
+        ],
+        "contribution": "1,000개의 합성 컴퓨터에서 8시간 이상의 런타임과 2,000턴 이상의 장기 시뮬레이션을 통해 생산성 평가",
+        "benchmark": "1,000개의 합성 컴퓨터에서 8시간 이상의 런타임과 2,000턴 이상의 장기 시뮬레이션",
+        "critique": "시뮬레이션에 필요한 에이전트 런타임이 길어 실제 배포 시 추론 비용이 높음",
+        "tags": [
+          "Synthetic Computers",
+          "long-horizon productivity",
+          "agent"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.28181"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.27505",
+        "title": "Leveraging Verifier-Based Reinforcement Learning in Image Editing",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.27505",
+        "published_at": "2026-04-30",
+        "summary": "RLHF는 텍스트-이미지 생성에 중요한 패러다임이지만, 이미지 편집에는 적용이 미흡하다. 주요 병목 현상은 모든 편집 작업에 대한 견고한 일반 보상 모델의 부재이다. Edit-R1은 체인-오브-생각(CoT) 검증기 기반 추론 보상 모델(RRM)을 구축하고 이를 활용하여 이미지 편집을 수행한다. Edit-RRM은 지시를 개별 원칙으로 분해하고 각 원칙에 대해 편집된 이미지를 평가하여 편향된 보상을 방지한다.",
+        "key_points": [
+          "RLHF의 이미지 편집 적용 한계와 일반 보상 모델 부재 문제",
+          "체인-오브-생각 검증기 기반 추론 보상 모델(RRM) 구축",
+          "지시를 개별 원칙으로 분해하고 각 원칙에 대한 평가를 통한 편향 방지"
+        ],
+        "contribution": "체인-오브-생각 검증기 기반 추론 보상 모델(RRM)을 구축하여 이미지 편집의 편향된 보상을 해결하는 Edit-R1 프레임워크 제안",
+        "benchmark": "Edit-RRM을 활용한 이미지 편집 작업에서 지시 분해 및 원칙별 평가",
+        "critique": "모든 편집 작업에 대한 견고한 일반 보상 모델 구축의 어려움",
+        "tags": [
+          "reinforcement learning",
+          "image editing",
+          "verifier-based reasoning reward model"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.27505"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.28185",
+        "title": "Visual Generation in the New Era: An Evolution from Atomic Mapping to Agentic World Modeling",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.28185",
+        "published_at": "2026-04-30",
+        "summary": "최근 시각 생성 모델은 사실성, 타이포그래피, 지시 따르기, 인터랙티브 편집에서 큰 진전을 이루었지만, 공간 추론, 지속적 상태, 장기 일관성, 인과 이해에서 여전히 어려움을 겪는다. 이를 해결하기 위해 Atomic Generation, Conditional Generation, In-Context Generation, Agentic Generation, World-Modeling Generation의 5단계 분류 체계를 제안하며, 수동 렌더링에서 인터랙티브하고 에이전트 기반의 세계 인식 생성기로의 전환을 제시한다.",
+        "key_points": [
+          "시각 생성 모델의 공간 추론, 지속적 상태, 장기 일관성, 인과 이해 한계",
+          "Atomic Generation부터 World-Modeling Generation까지의 5단계 분류 체계",
+          "수동 렌더링에서 인터랙티브하고 에이전트 기반의 세계 인식 생성기로의 전환"
+        ],
+        "contribution": "시각 생성 모델을 수동 렌더링에서 인터랙티브하고 에이전트 기반의 세계 인식 생성기로 전환하기 위한 5단계 분류 체계 제안",
+        "benchmark": "Agentic Generation과 World-Modeling Generation의 기술적 드라이버 분석",
+        "critique": "Agentic World Modeling은 아직 초기 단계로, 실제 환경에서의 장기 일관성 검증 부족",
+        "tags": [
+          "Agentic Generation",
+          "World-Modeling Generation",
+          "intelligent visual generation"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.28185"
+        ],
+        "llm_model": "solar-pro-3"
+      }
+    ],
+    "groundedness_score": 1.0
+  }
+}

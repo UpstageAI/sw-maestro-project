@@ -1,0 +1,228 @@
+{
+  "digest_id": "digest_20260509",
+  "date": "2026-05-09",
+  "status": "completed",
+  "item_count": 8,
+  "candidate_count": 8,
+  "selected_candidate_count": 8,
+  "source_document_ids": [
+    "huggingface_2605.08715",
+    "huggingface_2605.07177",
+    "huggingface_2605.08678",
+    "huggingface_2605.07510",
+    "huggingface_2605.09163",
+    "huggingface_2605.00425",
+    "huggingface_2605.09131",
+    "huggingface_2605.07210"
+  ],
+  "groundedness_score": 1.0,
+  "digest": {
+    "digest_id": "digest_20260509",
+    "date": "2026-05-09",
+    "title": "AI Agent Daily Digest",
+    "items": [
+      {
+        "document_id": "huggingface_2605.08715",
+        "title": "AgentForesight: Online Auditing for Early Failure Prediction in Multi-Agent Systems",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.08715",
+        "published_at": "2026-05-09",
+        "summary": "AgentForesight는 코딩, 수학, 에이전트 도메인에서 수집된 AFTraj-2K 궤적을 기반으로 한 온라인 감사 시스템으로, 실패 경계에서 위험 예측 사전 학습을 거친 후 정밀한 단계 수준 감사 능력을 갖춘 AgentForesight-7B 모델을 제안한다.",
+        "key_points": [
+          "AFTraj-2K 궤적 데이터셋을 구축하여 안전/위험 궤적을 엄격히 선별",
+          "위험 예측 사전 학습 후 단계 수준 감사 능력으로의 미세 조정",
+          "AFTraj-2K 및 외부 Who&When 벤치마크에서 성능 향상"
+        ],
+        "contribution": "AgentForesight-7B는 coarse-to-fine 강화 학습 레시피를 통해 위험 예측 사전과 정밀한 단계 수준 감사 능력을 결합하여 다중 에이전트 시스템의 조기 실패 예측을 수행한다.",
+        "benchmark": "AFTraj-2K 및 외부 Who&When 벤치마크에서 평가",
+        "critique": "AgentForesight-7B는 7B 규모의 소형 모델이지만, 다중 도메인 궤적에 대한 엄격한 선별 파이프라인이 필요하며, 외부 벤치마크에 대한 구체적인 성능 수치는 명시되지 않았다.",
+        "tags": [
+          "multi-agent systems",
+          "online auditing",
+          "failure prediction"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.08715"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.07177",
+        "title": "HyperEyes: Dual-Grained Efficiency-Aware Reinforcement Learning for Parallel Multimodal Search Agents",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.07177",
+        "published_at": "2026-05-08",
+        "summary": "HyperEyes는 시각 다중 엔티티 및 텍스트 다중 제약 조건 쿼리를 위한 병렬 처리 가능한 데이터 합성 파이프라인을 구축하고, TRACE(Tool-use Reference-Adaptive Cost Efficiency) 보상 및 On-Policy Distillation을 통해 도구 호출 효율성을 개선하는 듀얼 그레인 강화 학습 프레임워크이다.",
+        "key_points": [
+          "시각 다중 엔티티 및 텍스트 다중 제약 조건 쿼리를 위한 병렬 처리 가능한 데이터 합성 파이프라인",
+          "TRACE 보상을 통한 불필요한 도구 호출 억제",
+          "On-Policy Distillation을 통한 실패 롤아웃의 밀집 토큰 수준 교정 신호 주입"
+        ],
+        "contribution": "HyperEyes는 매크로 수준의 TRACE 보상과 마이크로 수준의 On-Policy Distillation을 결합한 듀얼 그레인 효율성 인식 강화 학습 프레임워크로, 병렬 다중 모달 검색 에이전트의 도구 사용 효율성을 개선한다.",
+        "benchmark": "효율성 지향 궤적을 사용한 TRACE 보상 및 On-Policy Distillation 평가",
+        "critique": "TRACE 보상은 훈련 중 참조가 단조롭게 조여지는 방식으로 설계되었으나, 실제 환경에서의 도구 호출 비용 절감 효과는 명시되지 않았다.",
+        "tags": [
+          "multimodal search agents",
+          "parallel multimodal search agent",
+          "reinforcement learning"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.07177"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.08678",
+        "title": "MLS-Bench: A Holistic and Rigorous Assessment of AI Systems on Building Better AI",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.08678",
+        "published_at": "2026-05-09",
+        "summary": "MLS-Bench는 12개 도메인에서 140개의 과제를 통해 AI 시스템이 기존 ML 방법을 적용하는 것을 넘어 일반화되고 확장 가능한 ML 방법을 발명할 수 있는지 평가하는 벤치마크로, 현재 에이전트들이 인간 설계 방법을 능가하지 못함을 보여준다.",
+        "key_points": [
+          "12개 도메인에서 140개의 과제를 통해 ML 방법 발명 능력 평가",
+          "기존 ML 방법을 능가하는 에이전트 성능 미달 확인",
+          "AI 시스템이 ML 방법을 발견하고 개선할 수 있는지 검증"
+        ],
+        "contribution": "MLS-Bench는 AI 시스템이 기존 ML 방법을 적용하는 것을 넘어 일반화되고 확장 가능한 ML 방법을 발명할 수 있는지 평가하는 벤치마크로, 12개 도메인의 140개 과제를 통해 에이전트 능력을 rigorously 평가한다.",
+        "benchmark": "12개 도메인에서 140개의 과제를 통해 ML 방법 발명 능력 평가",
+        "critique": "MLS-Bench는 AI 시스템이 ML 방법을 발명할 수 있는지 평가하지만, 구체적인 평가 지표나 baseline 모델과의 비교 결과는 명시되지 않았다.",
+        "tags": [
+          "AI systems",
+          "MLS-Bench",
+          "agent"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.08678"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.07510",
+        "title": "InterLV-Search: Benchmarking Interleaved Multimodal Agentic Search",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.07510",
+        "published_at": "2026-05-08",
+        "summary": "InterLV-Search는 자동화된 파이프라인으로 구성된 Level 1과 Level 2, 그리고 기계 주도 인간 감독 오픈 웹 파이프라인으로 구성된 Level 3의 세 단계로 시각-언어 증거 검색을 평가하며, InterLV-Agent를 통해 표준화된 도구 사용 및 평가를 제공한다.",
+        "key_points": [
+          "Level 1과 Level 2는 자동화된 파이프라인, Level 3는 기계 주도 인간 감독 오픈 웹 파이프라인으로 구성",
+          "InterLV-Agent를 통해 표준화된 도구 사용 및 궤적 로깅 제공",
+          "현재 다중 모달 에이전트의 시각 증거 탐색 및 통합 능력 한계 확인"
+        ],
+        "contribution": "InterLV-Search는 세 단계의 시각-언어 증거 검색 벤치마크와 InterLV-Agent를 통해 다중 모달 에이전틱 검색의 시각 증거 탐색, 검색 제어, 다중 모달 증거 통합 능력을 평가한다.",
+        "benchmark": "Level 1, Level 2, Level 3의 세 단계 시각-언어 증거 검색 평가",
+        "critique": "InterLV-Search는 현재 시스템이 50% 미만의 정확도를 보이며 시각 증거 탐색 및 통합에 어려움을 겪는다는 점을 지적하지만, 구체적인 성능 개선 방법이나 baseline 모델은 제시되지 않았다.",
+        "tags": [
+          "InterLV-Search",
+          "multimodal agentic search",
+          "Interleaved Language-Vision Agentic Search"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.07510"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.09163",
+        "title": "FORTIS: Benchmarking Over-Privilege in Agent Skills",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.09163",
+        "published_at": "2026-05-09",
+        "summary": "FORTIS는 사용자 의도와 구체적 작업 실행 사이의 중간 기술 계층에서 에이전트가 최소한의 충분한 기술을 선택하고, 해당 기술이 허용하는 범위를 넘어 더 넓은 도구나 행동을 사용하지 않는지 평가하는 벤치마크로, 10개의 프론티어 모델과 3개 도메인에서 과특권 행동이 일반적임을 확인한다.",
+        "key_points": [
+          "중간 기술 계층에서 최소한의 충분한 기술 선택 여부 평가",
+          "선택된 기술 범위를 넘어 더 넓은 도구나 행동 사용 여부 평가",
+          "10개 프론티어 모델과 3개 도메인에서 과특권 행동이 일반적임을 확인"
+        ],
+        "contribution": "FORTIS는 에이전트가 중간 기술 계층에서 최소한의 충분한 기술을 선택하고, 해당 기술 범위를 넘어 더 넓은 도구나 행동을 사용하지 않는지 평가하는 벤치마크로, 과특권 행동을 정량화한다.",
+        "benchmark": "10개 프론티어 모델과 3개 도메인에서 과특권 행동 평가",
+        "critique": "FORTIS는 과특권 행동이 일반적임을 보여주지만, 과특권을 줄이기 위한 구체적인 기술이나 훈련 방법은 제시되지 않았다.",
+        "tags": [
+          "agent skills",
+          "over-privilege",
+          "benchmarking"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.09163"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.00425",
+        "title": "AEM: Adaptive Entropy Modulation for Multi-Turn Agentic Reinforcement Learning",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.00425",
+        "published_at": "2026-05-08",
+        "summary": "AEM은 다중 턴 작업에서 희소한 결과 보상만으로 개별 단계에 대한 신용 할당을 개선하기 위해 강화 학습 중 엔트로피 역학을 적응적으로 변조하는 감독 없는 신용 할당 방법으로, 기존 프로세스 보상 모델이나 보조 자기 감독 신호의 복잡성을 피한다.",
+        "key_points": [
+          "희소한 결과 보상만으로 개별 단계에 대한 신용 할당 개선",
+          "강화 학습 중 엔트로피 역학을 적응적으로 변조",
+          "감독 없는 방법으로 프로세스 보상 모델이나 보조 자기 감독 신호의 복잡성 회피"
+        ],
+        "contribution": "AEM은 다중 턴 에이전트 강화 학습에서 희소한 결과 보상만으로 개별 단계에 대한 신용 할당을 개선하기 위해 강화 학습 중 엔트로피 역학을 적응적으로 변조하는 감독 없는 방법을 제안한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "AEM은 희소한 결과 보상만으로 신용 할당을 개선하지만, 실제 환경에서의 성능 향상 정도나 다른 방법과의 비교 결과는 명시되지 않았다.",
+        "tags": [
+          "agent",
+          "reinforcement learning",
+          "LLM agents"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.00425"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.09131",
+        "title": "MCP-Cosmos: World Model-Augmented Agents for Complex Task Execution in MCP Environments",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.09131",
+        "published_at": "2026-05-09",
+        "summary": "MCP-Cosmos는 MCP 환경에서 에이전트가 실행 시간 역학을 고려한 예측적 작업 자동화를 가능하게 하기 위해 생성적 World Model을 MCP 생태계에 통합하는 프레임워크로, BYOWM(Bring Your Own World Model) 전략을 통해 상태 전이를 시뮬레이션하고 계획을 정제한다.",
+        "key_points": [
+          "MCP 환경에서 실행 시간 역학을 고려한 예측적 작업 자동화",
+          "BYOWM 전략을 통해 상태 전이 시뮬레이션 및 계획 정제",
+          "MCP, World Model, Agent의 세 가지 기술을 통합"
+        ],
+        "contribution": "MCP-Cosmos는 MCP 환경에서 생성적 World Model을 통합하여 에이전트가 상태 전이를 시뮬레이션하고 계획을 정제할 수 있도록 하는 BYOWM 전략을 통해 예측적 작업 자동화를 가능하게 한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "MCP-Cosmos는 World Model을 통해 예측적 자동화를 가능하게 하지만, 실제 MCP 환경에서의 성능 평가나 다른 접근법과의 비교 결과는 명시되지 않았다.",
+        "tags": [
+          "MCP-Cosmos",
+          "World Model",
+          "Agents",
+          "Task Execution"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.09131"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.07210",
+        "title": "DiffRetriever: Parallel Representative Tokens for Retrieval with Diffusion Language Models",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.07210",
+        "published_at": "2026-05-08",
+        "summary": "DiffRetriever는 확산 언어 모델에서 K개의 마스크된 위치를 프롬프트에 추가하고 단일 양방향 전방 패스로 모든 K를 읽어 다중 대표 토큰 검색을 가능하게 하는 방법으로, 단일 토큰 디코딩보다 모든 확산 모델에서 성능을 향상시킨다.",
+        "key_points": [
+          "확산 언어 모델에서 K개의 마스크된 위치를 프롬프트에 추가",
+          "단일 양방향 전방 패스로 모든 K 대표 토큰 병렬 생성",
+          "모든 확산 모델에서 단일 토큰 대비 성능 향상"
+        ],
+        "contribution": "DiffRetriever는 확산 언어 모델에서 K개의 마스크된 위치를 프롬프트에 추가하고 단일 전방 패스로 모든 K를 읽어 병렬 대표 토큰 검색을 가능하게 하는 방법을 제안한다.",
+        "benchmark": "모든 확산 모델에서 단일 토큰 대비 성능 향상",
+        "critique": "DiffRetriever는 확산 언어 모델에서 병렬 대표 토큰 검색을 가능하게 하지만, 실제 검색 태스크에서의 정확도나 다른 검색 방법과의 비교 결과는 명시되지 않았다.",
+        "tags": [
+          "DiffRetriever",
+          "retriever",
+          "diffusion language models"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.07210"
+        ],
+        "llm_model": "solar-pro-3"
+      }
+    ],
+    "groundedness_score": 1.0
+  }
+}

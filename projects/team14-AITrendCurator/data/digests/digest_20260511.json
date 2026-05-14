@@ -1,0 +1,72 @@
+{
+  "digest_id": "digest_20260511",
+  "date": "2026-05-11",
+  "status": "completed",
+  "item_count": 2,
+  "candidate_count": 2,
+  "selected_candidate_count": 2,
+  "source_document_ids": [
+    "hackernews_48090276",
+    "hackernews_48100227"
+  ],
+  "groundedness_score": 1.0,
+  "digest": {
+    "digest_id": "digest_20260511",
+    "date": "2026-05-11",
+    "title": "AI Agent Daily Digest",
+    "items": [
+      {
+        "document_id": "hackernews_48090276",
+        "title": "Show HN: adamsreview – better multi-agent PR reviews for Claude Code",
+        "source": "hackernews",
+        "url": "https://github.com/adamjgmiller/adamsreview",
+        "published_at": "2026-05-11",
+        "summary": "adamsreview는 Claude Code 플러그인 기반의 다중 에이전트 PR 리뷰 도구로, 병렬 서브 에이전트와 검증 단계를 통해 기존 리뷰 기능보다 실제 버그를 더 많이 포착하고 오탐을 줄인다.",
+        "key_points": [
+          "병렬 서브 에이전트를 활용한 다단계 PR 리뷰 수행",
+          "JSON 기반 지속 상태 저장 및 컨텍스트 클리어 기능",
+          "Codex CLI와 PR 봇 코멘트를 통한 선택적 앙상블 리뷰",
+          "실제 PR에서 기존 리뷰 대비 버그 포착률 향상 및 오탐 감소"
+        ],
+        "contribution": "Claude Code에 병렬 서브 에이전트와 검증 패스를 도입하여 더 깊고 정확한 PR 리뷰를 제공하는 플러그인 세트를 구현했다.",
+        "benchmark": "실제 PR에서 Claude의 내장 리뷰, UltraReview, CodeRabbit, Greptile, Codex 내장 리뷰 대비 버그 포착률 향상 및 오탐 감소",
+        "critique": "단일 도메인 PR 데이터에 국한된 평가이며, 대규모 코드베이스나 다양한 프로그래밍 언어에 대한 일반화 성능은 검증되지 않았다.",
+        "tags": [
+          "multi-agent",
+          "PR reviews",
+          "Claude Code"
+        ],
+        "evidence_document_ids": [
+          "hackernews_48090276"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "hackernews_48100227",
+        "title": "Show HN: E2a – Open-source email gateway for AI agents",
+        "source": "hackernews",
+        "url": "https://github.com/Mnexa-AI/e2a",
+        "published_at": "2026-05-11",
+        "summary": "E2a는 AI 에이전트를 위한 오픈소스 이메일 게이트웨이로, 이메일 스레딩을 에이전트 대화 스레딩과 일치시키고, 인간 개입 검토 및 빠른 온보딩/오프보딩을 지원한다.",
+        "key_points": [
+          "에이전트 대화 스레딩과 일관된 이메일 스레딩 유지",
+          "아웃바운드 이메일에 대한 인간 개입 검토 기능",
+          "에이전트 이메일 주소의 빠른 온보딩 및 오프보딩",
+          "로컬 에이전트를 위한 WebSocket 및 클라우드 에이전트를 위한 at-least-once 웹훅 전달"
+        ],
+        "contribution": "에이전트 시스템에 이메일 트리거를 제공하기 위해 독립적인 이메일 게이트웨이 서비스를 구축하고, 스레드 일관성 및 인간 검토 기능을 구현했다.",
+        "benchmark": "에이전트 시스템 내에서 이메일 트리거 및 대화 스레딩 일관성 테스트",
+        "critique": "DMARC 미지원, 단일 VM 및 단일 Postgres 기반의 고가용성 미구현, 앱 레이어 이메일 데이터 암호화 및 SOC 2/HIPAA 준수 미확보",
+        "tags": [
+          "AI agents",
+          "email gateway"
+        ],
+        "evidence_document_ids": [
+          "hackernews_48100227"
+        ],
+        "llm_model": "solar-pro-3"
+      }
+    ],
+    "groundedness_score": 1.0
+  }
+}

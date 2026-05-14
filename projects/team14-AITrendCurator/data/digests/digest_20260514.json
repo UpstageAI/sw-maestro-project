@@ -1,0 +1,159 @@
+{
+  "digest_id": "digest_20260514",
+  "date": "2026-05-14",
+  "status": "completed",
+  "item_count": 5,
+  "candidate_count": 5,
+  "selected_candidate_count": 5,
+  "source_document_ids": [
+    "huggingface_2605.12975",
+    "huggingface_2605.12913",
+    "huggingface_2605.13037",
+    "huggingface_2605.13481",
+    "huggingface_2605.12925"
+  ],
+  "groundedness_score": 1.0,
+  "digest": {
+    "digest_id": "digest_20260514",
+    "date": "2026-05-14",
+    "title": "AI Agent Daily Digest",
+    "items": [
+      {
+        "document_id": "huggingface_2605.12975",
+        "title": "Retrieval is Cheap, Show Me the Code: Executable Multi-Hop Reasoning for Retrieval-Augmented Generation",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.12975",
+        "published_at": "2026-05-13",
+        "summary": "코드 전문 언어 모델의 학습 방식을 차용해 다중 홉 RAG를 프로그램 합성과 실행으로 재구성한 \\pyrag 프레임워크를 제안한다. 중간 상태를 변수로 노출하고 실행 기반 피드백을 통해 전체 추론 과정을 검사 가능하게 하며, 컴파일러 기반 자가 복구 및 실행 기반 적응적 검색을 추가 학습 없이 구현한다.",
+        "key_points": [
+          "다중 홉 RAG를 프로그램 합성과 실행으로 재구성",
+          "중간 상태를 변수로 노출하고 실행 기반 피드백 제공",
+          "컴파일러 기반 자가 복구 및 실행 기반 적응적 검색 지원",
+          "PopQA, HotpotQA 등 5개 QA 벤치마크에서 기존 베이스라인 대비 성능 향상"
+        ],
+        "contribution": "다중 홉 RAG를 프로그램 합성과 실행으로 재구성하여 중간 상태 노출, 실행 기반 피드백, 컴파일러 기반 자가 복구 및 실행 기반 적응적 검색을 추가 학습 없이 가능하게 하는 \\pyrag 프레임워크를 제안한다.",
+        "benchmark": "PopQA, HotpotQA, 2WikiMultihopQA, MuSiQue, Bamboogle 등 5개 QA 벤치마크에서 실험",
+        "critique": "프로그램 합성과 실행 기반 접근은 추론 과정의 결정성을 보장하지만, 복잡한 추론 경로에서의 실행 오류 전파 가능성과 코드 생성의 추가 오버헤드가 한계로 지적될 수 있다.",
+        "tags": [
+          "Retrieval-Augmented Generation (RAG)",
+          "Multi-hop",
+          "Program Synthesis",
+          "Python"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.12975"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.12913",
+        "title": "Revisiting DAgger in the Era of LLM-Agents",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.12913",
+        "published_at": "2026-05-13",
+        "summary": "장기적 LM 에이전트의 다중 턴 상호작용에서 초기 실수가 후속 상태 분포를 왜곡하는 문제를 해결하기 위해 DAgger 알고리즘을 재방문한다. 학생 정책과 교사 정책의 턴 단위 보간을 통해 수집된 궤적을 감독 학습으로 훈련함으로써 오프-폴리시 교사 궤적의 공변량 이동 문제와 온-폴리시 롤아웃의 희소 피드백 문제를 동시에 완화한다.",
+        "key_points": [
+          "장기적 LM 에이전트의 다중 턴 상호작용에서 초기 실수의 영향 문제",
+          "DAgger 알고리즘을 턴 단위 보간 방식으로 재방문",
+          "학생-교사 정책 혼합 궤적을 감독 학습으로 훈련",
+          "오프-폴리시 교사 궤적의 공변량 이동과 온-폴리시 희소 피드백 문제 동시 완화"
+        ],
+        "contribution": "턴 단위 보간을 통해 학생 정책과 교사 정책을 혼합한 궤적을 수집하고, 이를 감독 학습으로 훈련함으로써 오프-폴리시 교사 궤적의 공변량 이동과 온-폴리시 희소 피드백 문제를 동시에 해결하는 DAgger 기반 학습 방법을 제안한다.",
+        "benchmark": "Long-horizon LM agents의 다중 턴 상호작용 환경에서 실험",
+        "critique": "DAgger의 턴 단위 보간 방식은 궤적 수집 비용이 증가하며, 교사 정책의 품질이 학생 정책 수렴에 직접적인 영향을 미치는 한계가 있다.",
+        "tags": [
+          "LLM-Agents",
+          "DAgger",
+          "Dataset Aggregation",
+          "Multi-turn Interaction"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.12913"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.13037",
+        "title": "MAP: A Map-then-Act Paradigm for Long-Horizon Interactive Agent Reasoning",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.13037",
+        "published_at": "2026-05-13",
+        "summary": "장기적 상호작용 에이전트 추론을 위해 Map-then-Act 패러다임을 제안한다. (1) Task-Specific Mapping으로 구조화된 인지 지도를 구축하고, (2) Map-Guided Planning으로 지도 기반 계획을 수립하며, (3) Knowledge-Augmented Execution으로 지도를 기반으로 작업을 해결한다. MAP-2K 데이터셋을 통해 지도 기반 학습이 전문가 실행 트레이젝토리보다 우수함을 입증한다.",
+        "key_points": [
+          "Task-Specific Mapping을 통한 구조화된 인지 지도 구축",
+          "Map-Guided Planning으로 지도 기반 계획 수립",
+          "Knowledge-Augmented Execution으로 지도 기반 작업 해결",
+          "MAP-2K 데이터셋을 통해 지도 기반 학습이 전문가 실행 트레이젝토리보다 우수함 입증"
+        ],
+        "contribution": "Task-Specific Mapping, Map-Guided Planning, Knowledge-Augmented Execution의 세 단계로 구성된 Map-then-Act 패러다임을 제안하여 장기 호라이즌 상호작용 에이전트 추론을 개선한다.",
+        "benchmark": "ARC-AGI-3에서 25개 게임 환경 중 22개에서 프론티어 모델 성능 향상, MAP-2K 데이터셋을 통한 실험",
+        "critique": "인지 지도 구축 단계에서 계산 비용이 증가하며, 지도 생성의 정확도가 전체 작업 성공률에 직접적인 영향을 미치는 한계가 있다.",
+        "tags": [
+          "interactive agent reasoning",
+          "Map-then-Act Paradigm",
+          "MAP-2K",
+          "ARC-AGI-3"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.13037"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.13481",
+        "title": "PersonalAI 2.0: Enhancing knowledge graph traversal/retrieval with planning mechanism for Personalized LLM Agents",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.12925",
+        "published_at": "2026-05-13",
+        "summary": "외부 지식 그래프(KG)를 활용한 PersonalAI 2.0(PAI-2) 프레임워크를 제안한다. 동적 다단계 쿼리 처리 파이프라인을 통해 GraphRAG의 한계를 극복하고, 추출된 엔티티와 매칭된 그래프 정점, 생성된 단서 쿼리를 기반으로 적응적 반복 정보 검색을 수행한다. LightRAG, RAPTOR, HippoRAG 2 등 기존 방법 대비 6개 벤치마크에서 사실적 정답 생성 정확도를 향상시킨다.",
+        "key_points": [
+          "외부 지식 그래프(KG)를 활용한 PersonalAI 2.0 프레임워크 제안",
+          "동적 다단계 쿼리 처리 파이프라인을 통한 GraphRAG 한계 극복",
+          "추출된 엔티티와 매칭된 그래프 정점, 생성된 단서 쿼리를 기반으로 적응적 반복 정보 검색 수행",
+          "Natural Questions, TriviaQA 등 6개 벤치마크에서 LightRAG, RAPTOR, HippoRAG 2 대비 사실적 정답 생성 정확도 향상"
+        ],
+        "contribution": "동적 다단계 쿼리 처리 파이프라인을 통해 GraphRAG의 한계를 극복하고, 추출된 엔티티와 매칭된 그래프 정점, 생성된 단서 쿼리를 기반으로 적응적 반복 정보 검색을 수행하는 PersonalAI 2.0 프레임워크를 제안한다.",
+        "benchmark": "Natural Questions, TriviaQA, HotpotQA, 2WikiMultihopQA, MuSiQue, DiaASQ 등 6개 벤치마크에서 LightRAG, RAPTOR, HippoRAG 2와 비교 평가",
+        "critique": "지식 그래프의 규모와 복잡도가 증가할수록 쿼리 처리 지연이 발생하며, 단서 쿼리 생성의 정확도가 전체 검색 성능에 직접적인 영향을 미치는 한계가 있다.",
+        "tags": [
+          "LLM based systems",
+          "external knowledge graphs",
+          "Graph Retrieval-Augmented Generation",
+          "PersonalAI 2.0"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.13481"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.12925",
+        "title": "AgentLens: Revealing The Lucky Pass Problem in SWE-Agent Evaluation",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.12925",
+        "published_at": "2026-05-13",
+        "summary": "SWE-agent의 프로세스 수준 평가를 위한 AgentLens 프레임워크와 AgentLens-Bench 데이터셋을 소개한다. 1,815개의 궤적을 품질 점수, 낭비 신호, 분기점, 47개의 Prefix Tree Acceptor(PTA) 참조로 주석 처리하고, 컨텍스트 민감 의도 라벨러를 통해 행동을 탐색, 구현, 검증, 오케스트레이션으로 분류한다. 품질 점수는 Lucky, Solid, Ideal 등급으로 구분하며, Lucky Pass의 5가지 반복 메커니즘을 규명한다.",
+        "key_points": [
+          "SWE-agent의 프로세스 수준 평가를 위한 AgentLens 프레임워크 제안",
+          "1,815개의 궤적을 품질 점수, 낭비 신호, 분기점, 47개의 PTA 참조로 주석 처리",
+          "컨텍스트 민감 의도 라벨러를 통해 행동을 탐색, 구현, 검증, 오케스트레이션으로 분류",
+          "품질 점수를 Lucky, Solid, Ideal 등급으로 구분하고 Lucky Pass의 5가지 반복 메커니즘 규명"
+        ],
+        "contribution": "SWE-agent의 프로세스 수준 평가를 위한 AgentLens 프레임워크와 1,815개의 궤적을 품질 점수, 낭비 신호, 분기점, 47개의 Prefix Tree Acceptor(PTA) 참조로 주석 처리한 AgentLens-Bench 데이터셋을 공개한다.",
+        "benchmark": "AgentLens-Bench에서 8개 모델 백엔드에 대한 평가",
+        "critique": "AgentLens는 궤적 수집 및 주석 비용이 높으며, 품질 점수와 의도 라벨링이 궤적 히스토리에 의존하므로 초기 분기점 이후의 궤적에 대한 평가가 제한적일 수 있다.",
+        "tags": [
+          "SWE-agent",
+          "AgentLens",
+          "process-level assessment",
+          "Lucky Pass Problem"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.12925"
+        ],
+        "llm_model": "solar-pro-3"
+      }
+    ],
+    "groundedness_score": 1.0
+  }
+}

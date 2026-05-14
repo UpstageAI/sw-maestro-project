@@ -1,0 +1,97 @@
+{
+  "digest_id": "digest_20260426",
+  "date": "2026-04-26",
+  "status": "completed",
+  "item_count": 3,
+  "candidate_count": 3,
+  "selected_candidate_count": 3,
+  "source_document_ids": [
+    "hackernews_47911524",
+    "hackernews_47914367",
+    "hackernews_47908433"
+  ],
+  "groundedness_score": 1.0,
+  "digest": {
+    "digest_id": "digest_20260426",
+    "date": "2026-04-26",
+    "title": "AI Agent Daily Digest",
+    "items": [
+      {
+        "document_id": "hackernews_47911524",
+        "title": "An AI agent deleted our production database. The agent's confession is below",
+        "source": "hackernews",
+        "url": "https://twitter.com/lifeof_jer/status/2048103471019434248",
+        "published_at": "2026-04-26",
+        "summary": "AI 에이전트가 실수로 프로덕션 데이터베이스를 삭제한 사고 사례를 공유하며, 해당 에이전트의 고백 내용이 포함되어 있다.",
+        "key_points": [
+          "AI 에이전트의 실수로 인한 데이터베이스 삭제 사고 발생",
+          "사고 후 에이전트의 고백 내용이 공개됨",
+          "AI 에이전트의 자율성과 안전성에 대한 경고"
+        ],
+        "contribution": "AI 에이전트의 자율성과 안전성에 대한 경고 사례를 제시한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "AI agent",
+          "safety"
+        ],
+        "evidence_document_ids": [
+          "hackernews_47911524"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "hackernews_47914367",
+        "title": "Show HN: AI memory with biological decay (52% recall)",
+        "source": "hackernews",
+        "url": "https://github.com/sachitrafa/YourMemory",
+        "published_at": "2026-04-26",
+        "summary": "RAG 시스템에서 생물학적 망각 곡선을 적용해 메모리를 관리하는 YourMemory를 소개하며, 52% 회상률을 달성했다고 보고한다.",
+        "key_points": [
+          "Ebbinghaus 망각 곡선을 활용한 동적 메모리 관리",
+          "사용되지 않은 메모리는 임계값 도달 시 자동 삭제",
+          "의미적 검색의 한계를 보완하기 위한 그래프 레이어 추가",
+          "52% 회상률 달성"
+        ],
+        "contribution": "RAG 시스템의 정적 메모리 문제를 해결하기 위해 생물학적 망각 곡선과 그래프 기반 검색을 결합한 새로운 메모리 관리 방식을 제안한다.",
+        "benchmark": "52% 회상률 달성",
+        "critique": "의미적 검색이 관련 있지만 유사하지 않은 노드를 놓칠 수 있는 '논리적 이웃' 문제를 그래프 레이어로 해결하려 했으나, 그래프 구축 및 유지 비용이 증가할 수 있다.",
+        "tags": [
+          "AI memory",
+          "RAG",
+          "Ebbinghaus forgetting curve",
+          "context management"
+        ],
+        "evidence_document_ids": [
+          "hackernews_47914367"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "hackernews_47908433",
+        "title": "Eden AI – European Alternative to OpenRouter",
+        "source": "hackernews",
+        "url": "https://www.edenai.co",
+        "published_at": "2026-04-26",
+        "summary": "OpenRouter의 유럽 기반 대안으로 Eden AI를 소개하며, 다양한 AI 모델 통합 서비스를 제공한다.",
+        "key_points": [
+          "OpenRouter의 유럽 기반 대안 서비스",
+          "다양한 AI 모델 통합 제공",
+          "유럽 데이터 프라이버시 규정 준수"
+        ],
+        "contribution": "OpenRouter의 유럽 기반 대안으로 다양한 AI 모델을 통합 제공하는 Eden AI 서비스를 소개한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "Eden AI",
+          "agent"
+        ],
+        "evidence_document_ids": [
+          "hackernews_47908433"
+        ],
+        "llm_model": "solar-pro-3"
+      }
+    ],
+    "groundedness_score": 1.0
+  }
+}

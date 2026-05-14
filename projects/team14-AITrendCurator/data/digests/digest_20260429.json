@@ -1,0 +1,265 @@
+{
+  "digest_id": "digest_20260429",
+  "date": "2026-04-29",
+  "status": "completed",
+  "item_count": 9,
+  "candidate_count": 12,
+  "selected_candidate_count": 10,
+  "source_document_ids": [
+    "huggingface_2604.25917",
+    "huggingface_2604.25203",
+    "huggingface_2604.25727",
+    "huggingface_2604.25256",
+    "huggingface_2604.25914",
+    "hackernews_47949066",
+    "hackernews_47947525",
+    "huggingface_2604.25719",
+    "huggingface_2604.25427",
+    "huggingface_2604.25819"
+  ],
+  "groundedness_score": 0.96,
+  "digest": {
+    "digest_id": "digest_20260429",
+    "date": "2026-04-29",
+    "title": "AI Agent Daily Digest",
+    "items": [
+      {
+        "document_id": "huggingface_2604.25917",
+        "title": "Recursive Multi-Agent Systems",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.25917",
+        "published_at": "2026-04-28",
+        "summary": "단일 모델의 반복적 추론을 다중 에이전트 시스템으로 확장하여 협업 자체를 재귀적으로 확장할 수 있는지 탐구한 연구로, RecursiveMAS 프레임워크를 통해 이질적인 에이전트 간 협업 루프를 경량화된 RecursiveLink 모듈로 연결하고 전체 시스템을 통합된 잠재 공간 재귀 계산으로 구현한다.",
+        "key_points": [
+          "단일 모델의 반복적 추론 원리를 다중 에이전트 시스템으로 확장",
+          "RecursiveLink 모듈을 통해 이질적인 에이전트 간 협업 루프 연결",
+          "전체 시스템을 통합된 잠재 공간 재귀 계산으로 표현",
+          "내부-외부 루프 학습 알고리즘으로 전체 시스템 공동 최적화"
+        ],
+        "contribution": "RecursiveMAS 프레임워크를 제안하여 이질적인 에이전트 간 협업 루프를 경량화된 RecursiveLink 모듈로 연결하고, 전체 시스템을 통합된 잠재 공간 재귀 계산으로 표현함으로써 에이전트 협업 자체를 재귀적으로 확장할 수 있는 새로운 스케일링 축을 제시한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "RecursiveLink 모듈이 경량화되어 있으나, 실제 협업 루프에서의 추론 비용 증가나 확장성 한계에 대한 구체적 실험 결과는 제시되지 않았다.",
+        "tags": [
+          "Recursive Multi-Agent Systems",
+          "RecursiveMAS",
+          "multi-agent framework",
+          "agent collaboration"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.25917"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.25203",
+        "title": "BARRED: Synthetic Training of Custom Policy Guardrails via Asymmetric Debate",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.25203",
+        "published_at": "2026-04-28",
+        "summary": "비대칭 토론을 통해 라벨 정확성을 검증하는 BARRED 프레임워크를 제안하여, 소규모 언어 모델이 합성 데이터로 미세 조정 시 상용 LLM 및 전용 가드레일 모델을 능가하는 성능을 달성함을 입증한다.",
+        "key_points": [
+          "비대칭 토론을 통해 라벨 정확성 검증",
+          "합성 데이터로 소규모 언어 모델 미세 조정",
+          "상용 LLM 및 전용 가드레일 모델 대비 성능 우위",
+          "차원 분해와 토론 기반 검증의 중요성 확인"
+        ],
+        "contribution": "BARRED 프레임워크를 통해 인간 주석 없이도 고품질 합성 데이터를 생성하여 소규모 언어 모델을 효과적으로 미세 조정할 수 있는 확장 가능한 커스텀 가드레일 훈련 방법을 제시한다.",
+        "benchmark": "다양한 커스텀 정책에 대해 소규모 언어 모델을 합성 데이터로 미세 조정한 결과, 상용 LLM 및 전용 가드레일 모델을 능가하는 성능을 달성함",
+        "critique": "합성 데이터 생성 과정에서 토론 기반 검증의 계산 비용이 증가할 수 있으며, 실제 배포 환경에서의 추론 지연에 대한 평가는 제시되지 않았다.",
+        "tags": [
+          "BARRED",
+          "guardrails",
+          "custom policies",
+          "multi-agent debate"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.25203"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.25727",
+        "title": "Toward Scalable Terminal Task Synthesis via Skill Graphs",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.25727",
+        "published_at": "2026-04-28",
+        "summary": "시나리오 기반 스킬 그래프를 활용한 SkillSynth 프레임워크를 제안하여 터미널 에이전트의 훈련 데이터 부족 문제를 해결하고, 다양한 명령어 라인 스킬 간 연결을 통해 고품질 실행 궤적을 자동으로 생성한다.",
+        "key_points": [
+          "시나리오 기반 스킬 그래프 구축",
+          "다양한 명령어 라인 스킬 간 연결",
+          "고품질 실행 궤적 자동 생성",
+          "기존 터미널 태스크 합성 방법의 다양성 한계 극복"
+        ],
+        "contribution": "SkillSynth 프레임워크를 통해 대규모 스킬 그래프를 구축하고 시나리오를 중간 전환 노드로 활용하여 터미널 에이전트의 훈련 데이터를 자동으로 합성함으로써 실행 궤적의 다양성과 품질을 동시에 향상시킨다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "스킬 그래프 구축 시 시나리오 정의의 주관성이 결과에 영향을 줄 수 있으며, 실제 터미널 환경에서의 일반화 성능에 대한 평가는 제시되지 않았다.",
+        "tags": [
+          "terminal agents",
+          "skill graph",
+          "task synthesis"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.25727"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.25256",
+        "title": "AutoResearchBench: Benchmarking AI Agents on Complex Scientific Literature Discovery",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.25256",
+        "published_at": "2026-04-28",
+        "summary": "AI 에이전트의 과학적 문헌 탐색 능력을 평가하기 위해 Deep Research와 Wide Research 두 가지 태스크 유형을 포함한 AutoResearchBench 벤치마크를 제시한다.",
+        "key_points": [
+          "Deep Research: 특정 목표 논문 추적",
+          "Wide Research: 조건 충족 논문 집합 수집",
+          "기존 벤치마크 대비 에이전트 웹 탐색 능력 평가",
+          "과학적 연구 과정에서의 문헌 탐색 평가"
+        ],
+        "contribution": "AutoResearchBench 벤치마크를 통해 AI 에이전트의 과학적 문헌 탐색 능력을 Deep Research와 Wide Research 두 가지 태스크 유형으로 체계적으로 평가할 수 있는 표준화된 평가 프레임워크를 제공한다.",
+        "benchmark": "Deep Research(특정 목표 논문 추적)와 Wide Research(조건 충족 논문 집합 수집) 두 가지 태스크 유형을 포함한 벤치마크",
+        "critique": "벤치마크가 주로 영어 기반 문헌에 초점을 맞추고 있어 다국어 과학 문헌 탐색에 대한 평가는 제한적이다.",
+        "tags": [
+          "AI agents",
+          "scientific literature discovery",
+          "benchmark"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.25256"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "hackernews_47949066",
+        "title": "Show HN: DAC – open-source dashboard as code tool for agents and humans",
+        "source": "hackernews",
+        "url": "https://github.com/bruin-data/dac",
+        "published_at": "2026-04-29",
+        "summary": "Go 언어로 구현된 단일 바이너리 대시보드 도구 DAC를 소개하며, YAML과 JSX를 사용해 정적·동적 대시보드를 정의하고 10개 이상의 SQL 백엔드를 지원한다.",
+        "key_points": [
+          "Go 언어로 구현된 단일 바이너리 도구",
+          "YAML(정적)과 JSX(동적)를 사용한 대시보드 정의",
+          "10개 이상의 SQL 백엔드 지원",
+          "duckdb 기반 샘플 대시보드 자동 생성"
+        ],
+        "contribution": "Go 언어로 구현된 단일 바이너리 대시보드 도구 DAC를 통해 YAML과 JSX로 정적·동적 대시보드를 정의하고, 다양한 SQL 백엔드를 지원하며, duckdb 기반 샘플 대시보드를 자동으로 생성할 수 있는 오픈 소스 솔루션을 제공한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "대시보드 정의 시 JSX의 동적 기능이 복잡해질 경우 성능 저하가 발생할 수 있으며, 대규모 사용자 환경에서의 확장성 평가는 제시되지 않았다.",
+        "tags": [
+          "agent",
+          "dashboard as code",
+          "open-source"
+        ],
+        "evidence_document_ids": [
+          "hackernews_47949066"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "hackernews_47947525",
+        "title": "Letting AI play my game – building an agentic test harness to help play-testing",
+        "source": "hackernews",
+        "url": "https://blog.jeffschomay.com/letting-ai-play-my-game",
+        "published_at": "2026-04-29",
+        "summary": "게임 플레이 테스트를 위해 AI 에이전트를 활용한 테스트 하네스를 구축하여, 게임 내 다양한 상황을 자동으로 탐색하고 버그를 발견하는 방법을 소개한다.",
+        "key_points": [
+          "AI 에이전트를 활용한 게임 플레이 테스트",
+          "자동 상황 탐색 및 버그 발견",
+          "에이전트 기반 테스트 하네스 구축",
+          "게임 개발 과정에서의 AI 활용"
+        ],
+        "contribution": "에이전트 기반 테스트 하네스를 구축하여 게임 내 다양한 상황을 자동으로 탐색하고 버그를 발견함으로써, 게임 개발 과정에서의 AI 활용 가능성을 제시한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "에이전트의 탐색 전략이 게임 내 특정 버그 유형에 편향될 수 있으며, 인간 테스터와의 비교 평가는 제시되지 않았다.",
+        "tags": [
+          "agentic",
+          "test harness"
+        ],
+        "evidence_document_ids": [
+          "hackernews_47947525"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.25719",
+        "title": "Step-Audio-R1.5 Technical Report",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.25719",
+        "published_at": "2026-04-28",
+        "summary": "오디오 언어 모델에서 Chain-of-Thought 추론을 강화하기 위해 RLVR(검증 보상 강화 학습)을 사용하지만, 연속적인 청각 정보를 이산적인 텍스트 라벨로 축소하는 '검증 보상 함정' 문제를 지적한다.",
+        "key_points": [
+          "오디오 언어 모델에서 Chain-of-Thought 추론 확장",
+          "RLVR(검증 보상 강화 학습) 사용",
+          "연속 청각 정보를 이산 텍스트 라벨로 축소하는 '검증 보상 함정' 문제",
+          "오디오 지능의 진정한 발전 여부 의문 제기"
+        ],
+        "contribution": "오디오 언어 모델에서 Chain-of-Thought 추론을 강화하기 위해 RLVR을 사용하지만, 연속적인 청각 정보를 이산적인 텍스트 라벨로 축소하는 '검증 보상 함정' 문제를 지적하며, 진정한 오디오 지능 발전을 위한 새로운 접근 필요성을 제기한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "RLVR이 표준화된 객관적 지표에서 높은 점수를 얻지만, 실제 청각적 맥락 이해 능력과의 괴리가 존재할 수 있으며, 인간 평가와의 비교는 제시되지 않았다.",
+        "tags": [
+          "audio language models",
+          "Chain-of-Thought reasoning",
+          "Reinforcement Learning with Verified Rewards",
+          "Reinforcement Learning from Human Feedback"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.25719"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.25427",
+        "title": "A Systematic Post-Train Framework for Video Generation",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.25427",
+        "published_at": "2026-04-28",
+        "summary": "비디오 생성 모델의 후처리 프레임워크로, GRPO(그룹 상대 정책 최적화)를 활용한 RLHF 단계, 프롬프트 강화, 추론 최적화를 통합하여 시각적 품질, 시간적 일관성, 지시 따르기를 개선한다.",
+        "key_points": [
+          "GRPO(그룹 상대 정책 최적화)를 활용한 RLHF 단계",
+          "프롬프트 강화를 통한 사용자 입력 개선",
+          "추론 최적화를 통한 시스템 효율성 향상",
+          "시각적 품질, 시간적 일관성, 지시 따르기 개선"
+        ],
+        "contribution": "GRPO(그룹 상대 정책 최적화)를 활용한 RLHF 단계, 프롬프트 강화, 추론 최적화를 통합한 체계적인 후처리 프레임워크를 제시하여 비디오 생성 모델의 시각적 품질, 시간적 일관성, 지시 따르기를 동시에 개선한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "GRPO 기반 RLHF가 계산 비용을 증가시킬 수 있으며, 실제 배포 환경에서의 추론 지연에 대한 평가는 제시되지 않았다.",
+        "tags": [
+          "video generation",
+          "post-train framework",
+          "instruction-following policy"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.25427"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.25819",
+        "title": "Mutual Forcing: Dual-Mode Self-Evolution for Fast Autoregressive Audio-Video Character Generation",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.25819",
+        "published_at": "2026-04-28",
+        "summary": "단일 가중치 공유 모델 내에서 few-step과 multi-step 생성 모드를 통합하여 자기 증류(self-distillation)를 가능하게 하는 Mutual Forcing 방법을 제안하여, 오디오-비디오 캐릭터 생성의 훈련-추론 일관성을 향상시킨다.",
+        "key_points": [
+          "단일 가중치 공유 모델 내 few-step과 multi-step 생성 모드 통합",
+          "자기 증류(self-distillation)를 통한 few-step 모드 개선",
+          "훈련-추론 일관성 향상",
+          "기존 Self-Forcing 대비 양방향 교사 모델 불필요"
+        ],
+        "contribution": "단일 가중치 공유 모델 내에서 few-step과 multi-step 생성 모드를 통합하여 자기 증류를 가능하게 하는 Mutual Forcing 방법을 제안하여, 오디오-비디오 캐릭터 생성의 훈련-추론 일관성을 향상시킨다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "few-step 모드가 multi-step 모드의 역사적 맥락을 생성함으로써 훈련-추론 일관성을 개선하지만, 실제 생성 품질에서의 성능 저하 가능성은 제시되지 않았다.",
+        "tags": [
+          "audio-video generation",
+          "autoregressive model",
+          "self-distillation"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.25819"
+        ],
+        "llm_model": "solar-pro-3"
+      }
+    ],
+    "groundedness_score": 0.96
+  }
+}

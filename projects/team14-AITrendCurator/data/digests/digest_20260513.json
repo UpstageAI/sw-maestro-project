@@ -1,0 +1,286 @@
+{
+  "digest_id": "digest_20260513",
+  "date": "2026-05-13",
+  "status": "completed",
+  "item_count": 10,
+  "candidate_count": 10,
+  "selected_candidate_count": 10,
+  "source_document_ids": [
+    "huggingface_2605.12493",
+    "huggingface_2605.12460",
+    "huggingface_2605.11436",
+    "huggingface_2605.11518",
+    "huggingface_2605.12481",
+    "huggingface_2605.12477",
+    "huggingface_2605.05630",
+    "huggingface_2605.12500",
+    "huggingface_2605.12495",
+    "huggingface_2605.12070"
+  ],
+  "groundedness_score": 0.8462,
+  "digest": {
+    "digest_id": "digest_20260513",
+    "date": "2026-05-13",
+    "title": "AI Agent Daily Digest",
+    "items": [
+      {
+        "document_id": "huggingface_2605.12493",
+        "title": "LongMemEval-V2: Evaluating Long-Term Agent Memory Toward Experienced Colleagues",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.12493",
+        "published_at": "2026-05-12",
+        "summary": "LongMemEval-V2는 웹 에이전트의 장기 기억을 평가하기 위해 정적 상태 회상, 동적 상태 추적, 워크플로우 지식, 환경 특이점, 전제 인식 등 5가지 핵심 기억 능력을 정의하고, 최대 500개의 궤적과 1억 1500만 토큰을 포함한 히스토리 기반 질문 쌍을 통해 메모리 시스템의 성능을 측정한다.",
+        "key_points": [
+          "5가지 핵심 기억 능력 정의",
+          "최대 500개 궤적·115M 토큰 히스토리 사용",
+          "AgentRunbook-R(효율 RAG 기반)과 AgentRunbook-C(코딩 에이전트 기반) 두 가지 메모리 방법 제안",
+          "AgentRunbook-C가 72.5% 평균 정확도로 최고 성능 달성"
+        ],
+        "contribution": "AgentRunbook-R(효율 RAG 기반 메모리)과 AgentRunbook-C(코딩 에이전트를 활용한 파일 기반 메모리) 두 가지 메모리 방법을 제안하여 장기 기억 평가 문제를 해결한다.",
+        "benchmark": "AgentRunbook-C가 72.5% 평균 정확도를 달성함",
+        "critique": "AgentRunbook-C는 코딩 에이전트를 활용한 파일 기반 접근으로, 복잡한 환경 특이점 및 전제 인식 처리에 효과적이지만, 구현 복잡도가 높고 추가 인프라 비용이 발생할 수 있다.",
+        "tags": [
+          "LongMemEval-V2",
+          "memory systems",
+          "web agents",
+          "memory abilities"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.12493"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.12460",
+        "title": "Multi-Stream LLMs: Unblocking Language Models with Parallel Streams of Thoughts, Inputs and Outputs",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.12460",
+        "published_at": "2026-05-12",
+        "summary": "단일 스트림의 한계를 극복하기 위해 생각, 입력, 출력이 병렬로 흐르는 멀티스트림 LLM을 제안하여, 에이전트가 읽기와 동시에 행동하거나 쓰기와 동시에 반응할 수 있도록 하여 자율 에이전트의 효율성을 향상시킨다.",
+        "key_points": [
+          "단일 스트림의 한계(읽기와 행동 동시 불가 등) 해결",
+          "생각, 입력, 출력이 병렬로 흐르는 멀티스트림 구조",
+          "에이전트가 읽기와 동시에 행동하거나 쓰기와 동시에 반응 가능"
+        ],
+        "contribution": "생각, 입력, 출력이 병렬로 흐르는 멀티스트림 LLM 구조를 제안하여, 에이전트가 읽기와 동시에 행동하거나 쓰기와 동시에 반응할 수 있도록 하여 자율 에이전트의 효율성을 향상시킨다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "멀티스트림 구조는 병렬 처리를 가능하게 하지만, 모델 아키텍처와 학습 파이프라인에 대한 구체적인 구현 세부사항이 부족하여 실제 적용 시 복잡도가 증가할 수 있다.",
+        "tags": [
+          "multi-stream",
+          "autonomous agents",
+          "instruction-tuning"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.12460"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.11436",
+        "title": "Agent-BRACE: Decoupling Beliefs from Actions in Long-Horizon Tasks via Verbalized State Uncertainty",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.11436",
+        "published_at": "2026-05-12",
+        "summary": "Agent-BRACE는 LLM 에이전트를 믿음 상태 모델과 정책 모델로 분리하여, 믿음 상태를 자연어 주장과 확신 수준(확실~알 수 없음)으로 구조화하고, 이를 기반으로 장기 호라이즌 부분 관측 환경에서 행동을 선택하도록 학습한다.",
+        "key_points": [
+          "LLM 에이전트를 믿음 상태 모델과 정책 모델로 분리",
+          "믿음 상태를 자연어 주장과 확신 수준(확실~알 수 없음)으로 구조화",
+          "장기 호라이즌 부분 관측 환경에서 명시적 불확실성 하에 행동 선택 학습"
+        ],
+        "contribution": "Agent-BRACE는 믿음 상태를 자연어 주장과 확신 수준으로 구조화하고, 이를 기반으로 정책 모델이 장기 호라이즌 부분 관측 환경에서 명시적 불확실성 하에 행동을 선택하도록 학습한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "Agent-BRACE는 믿음 상태를 자연어 주장과 확신 수준으로 구조화하여 장기 호라이즌 부분 관측 환경에서 효과적이지만, 믿음 상태 생성의 정확도와 확신 수준 주석의 품질에 따라 성능이 크게 좌우될 수 있다.",
+        "tags": [
+          "agent",
+          "belief state",
+          "LLM agent",
+          "policy model"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.11436"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.11518",
+        "title": "AutoLLMResearch: Training Research Agents for Automating LLM Experiment Configuration -- Learning from Cheap, Optimizing Expensive",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.11518",
+        "published_at": "2026-05-12",
+        "summary": "AutoLLMResearch는 저비용 실험에서 일반화된 원리를 학습하고 고비용 LLM 설정에서 유망한 구성을 효율적으로 식별하는 에이전트 프레임워크를 제안하며, LLMConfig-Gym(다중 충실도 환경)과 장기 호라이즌 MDP 기반 훈련 파이프라인을 핵심 구성 요소로 한다.",
+        "key_points": [
+          "저비용 실험에서 일반화된 원리 학습",
+          "고비용 LLM 설정에서 유망한 구성 효율적 식별",
+          "LLMConfig-Gym(다중 충실도 환경)과 장기 호라이즌 MDP 기반 훈련 파이프라인"
+        ],
+        "contribution": "AutoLLMResearch는 저비용 실험에서 일반화된 원리를 학습하고 고비용 LLM 설정에서 유망한 구성을 효율적으로 식별하는 에이전트 프레임워크를 제안한다.",
+        "benchmark": "LLMConfig-Gym은 100만 GPU 시간 이상의 검증 가능한 실험 결과를 포함하는 다중 충실도 환경을 제공함",
+        "critique": "AutoLLMResearch는 다중 충실도 실험 환경을 활용하지만, 실제 고비용 실험에서의 일반화 성능과 계산 비용 최적화에 대한 구체적인 평가가 부족하여 실제 적용 시 한계가 있을 수 있다.",
+        "tags": [
+          "agent",
+          "LLM",
+          "experiment",
+          "automation"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.11518"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.12481",
+        "title": "ToolCUA: Towards Optimal GUI-Tool Path Orchestration for Computer Use Agents",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.12481",
+        "published_at": "2026-05-12",
+        "summary": "ToolCUA는 GUI와 툴을 동시에 고려하는 하이브리드 액션 공간을 통해 컴퓨터 사용 에이전트의 GUI-툴 경로 오케스트레이션을 최적화하여, 기존 대비 66% 성능 향상과 GUI 전용 설정 대비 3.9% 개선을 달성한다.",
+        "key_points": [
+          "GUI와 툴을 동시에 고려하는 하이브리드 액션 공간",
+          "기존 대비 66% 성능 향상",
+          "GUI 전용 설정 대비 3.9% 개선"
+        ],
+        "contribution": "ToolCUA는 GUI와 툴을 동시에 고려하는 하이브리드 액션 공간을 통해 컴퓨터 사용 에이전트의 GUI-툴 경로 오케스트레이션을 최적화하여, 기존 대비 66% 성능 향상을 달성한다.",
+        "benchmark": "기존 대비 66% 성능 향상, GUI 전용 설정 대비 3.9% 개선",
+        "critique": "ToolCUA는 하이브리드 액션 공간을 통해 GUI-툴 오케스트레이션을 개선하지만, 복잡한 GUI 환경에서의 실시간 경로 계획 및 오류 복구 메커니즘에 대한 구체적인 평가가 부족하다.",
+        "tags": [
+          "Computer Use Agents",
+          "GUI-Tool path orchestration",
+          "agent"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.12481"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.12477",
+        "title": "MEME: Multi-entity & Evolving Memory Evaluation",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.12477",
+        "published_at": "2026-05-12",
+        "summary": "MEME는 다중 엔티티와 진화하는 축을 포함한 6가지 작업을 정의하여, 기존 단일 엔티티 업데이트만 평가하는 벤치마크의 한계를 극복하고, 100개의 제어된 에피소드에서 6가지 메모리 시스템을 평가하여 의존성 추론(Cascade: 3%, Absence: 1%)에서 모든 시스템이 붕괴됨을 확인한다.",
+        "key_points": [
+          "다중 엔티티와 진화하는 축을 포함한 6가지 작업 정의",
+          "100개의 제어된 에피소드에서 6가지 메모리 시스템 평가",
+          "의존성 추론(Cascade: 3%, Absence: 1%)에서 모든 시스템 붕괴"
+        ],
+        "contribution": "MEME는 다중 엔티티와 진화하는 축을 포함한 6가지 작업을 정의하여, 기존 단일 엔티티 업데이트만 평가하는 벤치마크의 한계를 극복하고, 의존성 추론에서 모든 시스템이 붕괴됨을 확인한다.",
+        "benchmark": "100개의 제어된 에피소드에서 6가지 메모리 시스템을 평가함",
+        "critique": "MEME는 다중 엔티티와 진화하는 축을 포함한 6가지 작업을 정의하지만, 실제 장기 운영 환경에서의 지속성과 확장성 평가가 부족하여 실제 적용 시 한계가 있을 수 있다.",
+        "tags": [
+          "LLM-based agents",
+          "memory systems",
+          "memory paradigms"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.12477"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.05630",
+        "title": "One Turn Too Late: Response-Aware Defense Against Hidden Malicious Intent in Multi-Turn Dialogue",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.05630",
+        "published_at": "2026-05-12",
+        "summary": "One Turn Too Late는 다중 턴 대화에서 숨겨진 악의적 의도를 탐지하기 위해, 후보 응답을 전달했을 때 누적된 상호작용이 해로운 행동을 가능하게 하는 시점을 턴 단위로 식별하여 조기 거부 없이 정확한 개입 시점을 결정한다.",
+        "key_points": [
+          "다중 턴 대화에서 숨겨진 악의적 의도 탐지",
+          "후보 응답 전달 시 해로운 행동을 가능하게 하는 시점 식별",
+          "조기 거부 없이 정확한 턴 단위 개입"
+        ],
+        "contribution": "One Turn Too Late는 다중 턴 대화에서 숨겨진 악의적 의도를 탐지하기 위해, 후보 응답을 전달했을 때 해로운 행동을 가능하게 하는 시점을 턴 단위로 식별하여 조기 거부 없이 정확한 개입을 수행한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "One Turn Too Late는 턴 단위 개입을 통해 악의적 의도를 탐지하지만, 실제 대화에서의 다양한 공격 패턴과 방어 메커니즘에 대한 구체적인 평가가 부족하여 실제 적용 시 한계가 있을 수 있다.",
+        "tags": [
+          "multi-turn dialogue",
+          "hidden malicious intent",
+          "large language models",
+          "harmful action",
+          "turn-level monitor"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.05630"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.12500",
+        "title": "SenseNova-U1: Unifying Multimodal Understanding and Generation with NEO-unify Architecture",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.12500",
+        "published_at": "2026-05-12",
+        "summary": "SenseNova-U1은 8B 밀집 모델과 30B-A3B 혼합 전문가 모델을 기반으로, 텍스트 이해, 비전-언어 인식, 지식 추론, 에이전트 의사결정, 공간 지능 등 다양한 영역에서 기존 이해 전용 VLM과 경쟁하며, 생성 품질도 높은 시맨틱 일관성과 시각적 충실도를 보인다.",
+        "key_points": [
+          "8B 밀집 모델과 30B-A3B 혼합 전문가 모델 기반",
+          "텍스트 이해, 비전-언어 인식, 지식 추론, 에이전트 의사결정, 공간 지능 등 다양한 영역에서 기존 VLM과 경쟁",
+          "높은 시맨틱 일관성과 시각적 충실도의 생성 품질"
+        ],
+        "contribution": "SenseNova-U1은 8B 밀집 모델과 30B-A3B 혼합 전문가 모델을 기반으로, 텍스트 이해, 비전-언어 인식, 지식 추론, 에이전트 의사결정, 공간 지능 등 다양한 영역에서 기존 이해 전용 VLM과 경쟁하며, 생성 품질도 높은 시맨틱 일관성과 시각적 충실도를 보인다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "SenseNova-U1은 다양한 영역에서 높은 성능을 보이지만, 실제 환경에서의 안정성과 실시간 처리 능력에 대한 구체적인 평가가 부족하여 실제 적용 시 한계가 있을 수 있다.",
+        "tags": [
+          "multimodal understanding",
+          "agent",
+          "decision-making",
+          "world model"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.12500"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.12495",
+        "title": "AlphaGRPO: Unlocking Self-Reflective Multimodal Generation in UMMs via Decompositional Verifiable Reward",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.12495",
+        "published_at": "2026-05-12",
+        "summary": "AlphaGRPO는 사용자 요청을 원자적·검증 가능한 의미 및 품질 질문으로 분해하고, 일반 MLLM이 이를 평가하여 신뢰할 수 있는 피드백을 제공하는 DVReward를 사용하여, GenEval, TIIF-Bench, DPG-Bench, WISE 등 멀티모달 생성 벤치마크에서 견고한 성능 향상을 달성한다.",
+        "key_points": [
+          "사용자 요청을 원자적·검증 가능한 의미 및 품질 질문으로 분해",
+          "일반 MLLM이 DVReward를 통해 신뢰할 수 있는 피드백 제공",
+          "GenEval, TIIF-Bench, DPG-Bench, WISE 등 멀티모달 생성 벤치마크에서 견고한 성능 향상"
+        ],
+        "contribution": "AlphaGRPO는 사용자 요청을 원자적·검증 가능한 의미 및 품질 질문으로 분해하고, 일반 MLLM이 DVReward를 통해 신뢰할 수 있는 피드백을 제공하는 자기 성찰적 강화 학습 방법을 사용하여, 멀티모달 생성 벤치마크에서 견고한 성능 향상을 달성한다.",
+        "benchmark": "GenEval, TIIF-Bench, DPG-Bench, WISE 등 멀티모달 생성 벤치마크에서 견고한 성능 향상",
+        "critique": "AlphaGRPO는 DVReward를 통해 자기 성찰적 학습을 가능하게 하지만, 분해된 질문의 품질과 MLLM의 평가 정확도에 따라 성능이 크게 좌우될 수 있으며, 복잡한 사용자 요청에 대한 처리 한계가 있을 수 있다.",
+        "tags": [
+          "multimodal generation",
+          "self-reflective",
+          "reinforcement learning"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.12495"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.12070",
+        "title": "Missing Old Logits in Asynchronous Agentic RL: Semantic Mismatch and Repair Methods for Off-Policy Correction",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.12070",
+        "published_at": "2026-05-12",
+        "summary": "비동기 에이전트 RL에서 PPO 스타일 오프-폴리시 보정 시, 지연된 업데이트와 부분 롤아웃으로 인해 과거 훈련 측 로짓이 손실되는 'Missing Old Logits' 문제를 식별하고, 훈련-추론 불일치 항과 정책 노후화 항을 분리하여 보정하는 방법을 제안한다.",
+        "key_points": [
+          "비동기 RL에서 PPO 스타일 오프-폴리시 보정 시 과거 훈련 측 로짓 손실 문제 식별",
+          "훈련-추론 불일치 항과 정책 노후화 항을 분리하여 보정",
+          "지연된 업데이트와 부분 롤아웃으로 인한 로짓 손실 문제 해결"
+        ],
+        "contribution": "Missing Old Logits in Asynchronous Agentic RL은 비동기 RL에서 PPO 스타일 오프-폴리시 보정 시 지연된 업데이트와 부분 롤아웃으로 인해 과거 훈련 측 로짓이 손실되는 문제를 식별하고, 훈련-추론 불일치 항과 정책 노후화 항을 분리하여 보정하는 방법을 제안한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "Missing Old Logits in Asynchronous Agentic RL은 과거 로짓 손실을 보정하는 방법을 제안하지만, 실제 대규모 환경에서의 계산 비용과 보정 정확도에 대한 구체적인 평가가 부족하여 실제 적용 시 한계가 있을 수 있다.",
+        "tags": [
+          "asynchronous agentic RL",
+          "off-policy correction",
+          "PPO-style"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.12070"
+        ],
+        "llm_model": "solar-pro-3"
+      }
+    ],
+    "groundedness_score": 0.8462
+  }
+}

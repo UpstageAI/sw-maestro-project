@@ -1,0 +1,290 @@
+{
+  "digest_id": "digest_20260428",
+  "date": "2026-04-28",
+  "status": "completed",
+  "item_count": 10,
+  "candidate_count": 15,
+  "selected_candidate_count": 10,
+  "source_document_ids": [
+    "huggingface_2604.24198",
+    "huggingface_2604.24479",
+    "huggingface_2604.24003",
+    "hackernews_47938417",
+    "huggingface_2604.24583",
+    "hackernews_47942492",
+    "huggingface_2604.24764",
+    "hackernews_47936312",
+    "huggingface_2604.24300",
+    "huggingface_2604.21106"
+  ],
+  "groundedness_score": 0.9048,
+  "digest": {
+    "digest_id": "digest_20260428",
+    "date": "2026-04-28",
+    "title": "AI Agent Daily Digest",
+    "items": [
+      {
+        "document_id": "huggingface_2604.24198",
+        "title": "Rewarding the Scientific Process: Process-Level Reward Modeling for Agentic Data Analysis",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.24198",
+        "published_at": "2026-04-27",
+        "summary": "환경 인식 생성 프로세스 보상 모델(DataPRM)은 중간 실행 상태를 자율적으로 탐색해 침묵 오류를 탐지하고, 수정 가능한 근거 오류와 복구 불가능한 실수를 구분하는 ternary 보상 전략을 사용한다. 8K개의 고품질 훈련 인스턴스를 다양성 기반 궤적 생성과 지식 증강 단계 수준 주석을 통해 구축하여, 4B 파라미터의 정책 LLM이 Best-of-N 추론에서 ScienceAgentBench와 DABStep에서 각각 7.21%, 11.28% 성능 향상을 달성한다.",
+        "key_points": [
+          "환경 인식 생성 프로세스 보상 모델(DataPRM) 설계",
+          "중간 실행 상태 자율 탐색 및 침묵 오류 탐지",
+          "수정 가능한 근거 오류와 복구 불가능한 실수를 구분하는 ternary 보상 전략",
+          "8K 고품질 훈련 인스턴스로 4B 파라미터 정책 LLM의 Best-of-N 추론 성능 향상"
+        ],
+        "contribution": "Agentic 데이터 분석을 위한 환경 인식 생성 프로세스 보상 모델(DataPRM)을 제안하고, 다양성 기반 궤적 생성과 지식 증강 단계 수준 주석을 통해 8K개의 고품질 훈련 인스턴스를 구축하여 4B 파라미터 정책 LLM의 추론 성능을 크게 향상시킨다.",
+        "benchmark": "ScienceAgentBench에서 7.21%, DABStep에서 11.28% 성능 향상",
+        "critique": "단일 도메인 데이터에서의 평가만 수행되었으며, 다양한 과학 분야나 복잡한 환경에서의 일반화 가능성은 아직 검증되지 않았다.",
+        "tags": [
+          "agent",
+          "process reward model",
+          "data analysis"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.24198"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.24479",
+        "title": "Zero-to-CAD: Agentic Synthesis of Interpretable CAD Programs at Million-Scale Without Real Data",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.24479",
+        "published_at": "2026-04-27",
+        "summary": "에이전트 기반 접근법을 통해 약 100만 개의 실행 가능, 가독성, 편집 가능한 CAD 시퀀스를 합성하고, 기하학적 다양성을 위해 10만 개의 고품질 모델을 선별했다. 합성 데이터로 비전-언어 모델을 미세 조정하여 다중 뷰 이미지에서 편집 가능한 CAD 프로그램을 재구성하는 데 GPT-5.2를 포함한 강력한 기준선을 능가하며, 실제 건설 이력 훈련 데이터 없이도 시퀀스 생성 능력을 효과적으로 부트스트랩한다.",
+        "key_points": [
+          "에이전트 기반 접근법으로 100만 개의 실행 가능 CAD 시퀀스 합성",
+          "기하학적 다양성을 위한 10만 개 고품질 모델 선별",
+          "합성 데이터로 비전-언어 모델 미세 조정 및 GPT-5.2 대비 성능 향상",
+          "실제 건설 이력 데이터 없이 CAD AI 시퀀스 생성 능력 부트스트랩"
+        ],
+        "contribution": "실제 데이터 없이 에이전트 기반 합성으로 100만 개의 실행 가능 CAD 시퀀스를 생성하고, 기하학적 다양성을 갖춘 10만 개 모델을 선별하여 비전-언어 모델을 미세 조정함으로써 CAD AI 생성 능력을 효과적으로 부트스트랩한다.",
+        "benchmark": "GPT-5.2를 포함한 강력한 기준선 대비 성능 향상",
+        "critique": "합성 데이터의 다양성은 보장되나, 실제 CAD 설계 작업에서의 복잡한 사용자 요구사항이나 도메인 특화 지식 반영 여부는 검증되지 않았다.",
+        "tags": [
+          "agentic",
+          "AI Agent",
+          "CAD",
+          "synthesis",
+          "executable CAD sequences"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.24479"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.24003",
+        "title": "Stabilizing Efficient Reasoning with Step-Level Advantage Selection",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.24003",
+        "published_at": "2026-04-27",
+        "summary": "짧은 컨텍스트 윈도우에서 GRPO를 사용한 사후 훈련은 추론 압축을 유도하지만 훈련 불안정성과 정확도 저하를 초래한다. 이를 해결하기 위해 추론 단계 수준에서 장점을 선택하는 SAS(Step-level Advantage Selection)를 제안하여, 각 단계의 장점을 기반으로 보상 신호를 생성하고, 긴 추론 트레이스를 효율적으로 압축하면서도 정확도를 유지한다.",
+        "key_points": [
+          "짧은 컨텍스트 윈도우에서 GRPO 사후 훈련의 추론 압축 효과",
+          "훈련 불안정성과 정확도 저하 문제",
+          "단계 수준 장점 선택(SAS)을 통한 보상 신호 생성",
+          "긴 추론 트레이스의 효율적 압축과 정확도 유지"
+        ],
+        "contribution": "단계 수준 장점 선택(SAS)을 통해 짧은 컨텍스트 윈도우에서의 추론 압축을 안정화하며, 긴 추론 트레이스를 효율적으로 압축하면서도 정확도를 유지하는 새로운 효율적인 추론 방법을 제안한다.",
+        "benchmark": "GRPO 대비 훈련 불안정성 감소 및 정확도 유지",
+        "critique": "SAS는 단계 수준 장점을 활용하지만, 매우 긴 추론 트레이스에서의 계산 오버헤드와 실시간 적용 가능성은 아직 검증되지 않았다.",
+        "tags": [
+          "efficient reasoning",
+          "step-level advantage selection",
+          "LLMs"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.24003"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "hackernews_47938417",
+        "title": "A good AGENTS.md is a model upgrade. A bad one is worse than no docs at all",
+        "source": "hackernews",
+        "url": "https://www.augmentcode.com/blog/how-to-write-good-agents-dot-md-files",
+        "published_at": "2026-04-28",
+        "summary": "AGENTS.md 문서는 에이전트 시스템의 구조와 동작을 명확히 기술하여 모델 업그레이드와 같은 효과를 낼 수 있다. 반면, 부실한 문서는 오히려 혼란을 초래하고 시스템 성능을 저하시킬 수 있다. 따라서 AGENTS.md는 에이전트 설계의 핵심 문서로, 정확하고 일관된 정보를 제공해야 한다.",
+        "key_points": [
+          "AGENTS.md는 에이전트 시스템의 구조와 동작을 명확히 기술",
+          "정확한 문서는 모델 업그레이드와 같은 효과",
+          "부실 문서는 혼란과 성능 저하를 초래",
+          "에이전트 설계의 핵심 문서로 정확하고 일관된 정보 제공 필요"
+        ],
+        "contribution": "AGENTS.md 문서의 중요성을 강조하며, 정확하고 일관된 문서화가 에이전트 시스템의 성능 향상과 유지보수에 필수적임을 제시한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "문서 작성 가이드라인은 제시되었으나, 실제 다양한 에이전트 프레임워크에서의 적용 사례나 정량적 효과는 검증되지 않았다.",
+        "tags": [
+          "AGENTS.md",
+          "agents"
+        ],
+        "evidence_document_ids": [
+          "hackernews_47938417"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.24583",
+        "title": "Improving Vision-language Models with Perception-centric Process Reward Models",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.24583",
+        "published_at": "2026-04-27",
+        "summary": "Perceval을 활용한 지각 중심 프로세스 보상 모델(Perceval PRM)을 통해 토큰 수준 장점을 적용하여 환각 구간을 식별하고, 추론 단계에서 오류 부분을 잘라내어 재생성하거나 반성하도록 유도한다. 이는 기존 시퀀스 수준 GRPO 대비 세밀한 감독 신호를 제공하며, 다양한 도메인의 VLM에서 추론 성능을 크게 향상시킨다.",
+        "key_points": [
+          "Perceval을 활용한 지각 중심 프로세스 보상 모델(Perceval PRM) 설계",
+          "토큰 수준 장점을 통한 환각 구간 식별 및 오류 부분 잘라내기",
+          "추론 단계에서 재생성 또는 반성 유도",
+          "시퀀스 수준 GRPO 대비 세밀한 감독 신호 제공"
+        ],
+        "contribution": "Perceval을 활용한 지각 중심 프로세스 보상 모델을 통해 토큰 수준 장점을 적용하여 환각 구간을 식별하고, 추론 단계에서 오류 부분을 잘라내어 재생성하거나 반성하도록 유도함으로써 다양한 VLM의 추론 성능을 향상시킨다.",
+        "benchmark": "시퀀스 수준 GRPO 대비 다양한 도메인 VLM에서 추론 성능 향상",
+        "critique": "Perceval은 환각 구간을 식별하지만, 복잡한 다중 모달 입력에서의 오류 식별 정확도와 실시간 적용 가능성은 아직 검증되지 않았다.",
+        "tags": [
+          "vision-language models",
+          "reinforcement learning",
+          "process reward model"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.24583"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "hackernews_47942492",
+        "title": "Regression: malware reminder on every read still causes subagent refusals",
+        "source": "hackernews",
+        "url": "https://github.com/anthropics/claude-code/issues/49363",
+        "published_at": "2026-04-28",
+        "summary": "Claude Managed Agents에서 매 읽기 작업에 악성코드 스캔 시스템 프롬프트를 추가하면, 스캔 후 코드가 악성코드가 아님을 확인했음에도 불구하고 쓰기 작업을 거부하는 버그가 발생한다. 이로 인해 에이전트가 작업을 중단하고, 사용자는 불필요한 토큰 비용을 지불하게 된다. 이 문제는 Hacker News 토론을 통해 이전에 보고된 바 있으나, 아직 완전히 해결되지 않았다.",
+        "key_points": [
+          "매 읽기 작업에 악성코드 스캔 시스템 프롬프트 추가",
+          "스캔 후 코드가 악성코드가 아님을 확인했음에도 쓰기 작업 거부",
+          "에이전트 작업 중단 및 불필요한 토큰 비용 발생",
+          "Hacker News 토론을 통해 이전에 보고된 버그"
+        ],
+        "contribution": "Claude Managed Agents에서 매 읽기 작업에 악성코드 스캔 프롬프트를 추가할 경우 발생하는 쓰기 작업 거부 버그를 보고하고, 이로 인한 작업 중단과 토큰 비용 낭비를 지적한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "버그의 근본 원인은 시스템 프롬프트의 해석 오류로 추정되나, 정확한 원인 분석과 해결 방안은 문서에 명시되지 않았다.",
+        "tags": [
+          "Claude Managed Agents",
+          "subagent refusals"
+        ],
+        "evidence_document_ids": [
+          "hackernews_47942492"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.24764",
+        "title": "World-R1: Reinforcing 3D Constraints for Text-to-Video Generation",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.24764",
+        "published_at": "2026-04-27",
+        "summary": "World-R1은 강화 학습을 통해 비디오 생성 모델을 3D 제약 조건에 정렬하는 프레임워크로, Flow-GRPO를 사용하여 사전 훈련된 3D 기초 모델과 비전-언어 모델의 피드백을 통해 구조적 일관성을 강제한다. 기존 아키텍처 수정 없이 주기적 분리 훈련 전략을 통해 기하학적 일관성과 시각적 품질을 균형 있게 향상시킨다.",
+        "key_points": [
+          "Flow-GRPO를 활용한 강화 학습 기반 3D 제약 정렬 프레임워크",
+          "사전 훈련된 3D 기초 모델과 비전-언어 모델의 피드백 활용",
+          "주기적 분리 훈련 전략을 통한 기하학적 일관성과 시각적 품질 균형",
+          "기존 아키텍처 수정 없이 구조적 일관성 강제"
+        ],
+        "contribution": "Flow-GRPO를 사용하여 사전 훈련된 3D 기초 모델과 비전-언어 모델의 피드백을 통해 비디오 생성 모델을 3D 제약 조건에 정렬하는 World-R1 프레임워크를 제안한다.",
+        "benchmark": "Flow-GRPO를 사용한 강화 학습 기반 3D 제약 정렬",
+        "critique": "Flow-GRPO는 3D 기초 모델과 비전-언어 모델의 피드백에 의존하므로, 이러한 모델의 정확도와 일관성이 최종 비디오 생성 품질에 직접적인 영향을 미친다.",
+        "tags": [
+          "video generation",
+          "3D constraints",
+          "reinforcement learning"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.24764"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "hackernews_47936312",
+        "title": "Show HN: Drive any macOS app in the background without stealing the cursor",
+        "source": "hackernews",
+        "url": "https://github.com/trycua/cua",
+        "published_at": "2026-04-28",
+        "summary": "Cua 드라이버를 사용하여 Claude Code와 같은 에이전트가 macOS 앱을 백그라운드에서 구동할 수 있다. 에이전트는 앱 동작을 기록하고, 스크린샷, 액션, 클릭 마커를 캡처하여 제품 데모를 생성한다. 또한 Vercel의 agent-browser와 같은 브라우저 사용 CLI를 대체하고, 시각적 버그 재현, 코드 편집, UI 검증 등의 다양한 개발 루프 QA 작업에 활용할 수 있다.",
+        "key_points": [
+          "Cua 드라이버를 통한 macOS 앱 백그라운드 구동",
+          "에이전트 동작 기록 및 스크린샷, 액션, 클릭 마커 캡처",
+          "제품 데모 생성 및 Vercel agent-browser 대체",
+          "시각적 버그 재현, 코드 편집, UI 검증 등의 개발 루프 QA 작업 활용"
+        ],
+        "contribution": "Cua 드라이버를 통해 Claude Code와 같은 에이전트가 macOS 앱을 백그라운드에서 구동하고, 앱 동작을 기록하여 제품 데모를 생성하며, 다양한 개발 루프 QA 작업에 활용할 수 있도록 한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "Cua 드라이버는 macOS 앱 구동에 효과적이지만, 복잡한 사용자 인터페이스나 실시간 상호작용이 필요한 작업에서의 안정성과 성능은 아직 검증되지 않았다.",
+        "tags": [
+          "agent",
+          "computer-use",
+          "background execution",
+          "macOS app"
+        ],
+        "evidence_document_ids": [
+          "hackernews_47936312"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.24300",
+        "title": "ReVSI: Rebuilding Visual Spatial Intelligence Evaluation for Accurate Assessment of VLM 3D Reasoning",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.24300",
+        "published_at": "2026-04-27",
+        "summary": "ReVSI는 VLM의 3D 추론 능력을 정확히 평가하기 위한 벤치마크와 프로토콜로, 각 QA 쌍이 모델의 실제 입력에 대해 답변 가능하고 정확하도록 재주석 및 재생성을 수행한다. 381개 장면의 5개 데이터셋을 대상으로 객체와 기하학을 재주석하고, 편향 완화와 인간 검증을 통해 QA 쌍을 재생성하며, 다양한 프레임 예산(16/32/64/all)과 객체 가시성 메타데이터를 제공하여 평가 통제성을 향상시킨다.",
+        "key_points": [
+          "ReVSI 벤치마크와 프로토콜을 통한 VLM 3D 추론 능력 정확한 평가",
+          "381개 장면의 5개 데이터셋 재주석 및 QA 쌍 재생성",
+          "편향 완화와 인간 검증을 통한 데이터 품질 향상",
+          "다양한 프레임 예산과 객체 가시성 메타데이터를 통한 평가 통제성 향상"
+        ],
+        "contribution": "ReVSI 벤치마크와 프로토콜을 통해 VLM의 3D 추론 능력을 정확히 평가할 수 있도록, 381개 장면의 5개 데이터셋을 재주석하고 QA 쌍을 재생성하여 데이터 품질을 향상시킨다.",
+        "benchmark": "381개 장면의 5개 데이터셋 재주석 및 QA 쌍 재생성",
+        "critique": "ReVSI는 평가 통제성을 향상시켰으나, 실제 VLM의 추론 과정에서 발생하는 오류 패턴을 정량적으로 분석하는 기능은 아직 부족하다.",
+        "tags": [
+          "vision-language model",
+          "spatial intelligence",
+          "evaluation"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.24300"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.21106",
+        "title": "How Much Is One Recurrence Worth? Iso-Depth Scaling Laws for Looped Language Models",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.21106",
+        "published_at": "2026-04-27",
+        "summary": "Iso-Depth 스케일링 법칙을 통해 루프 언어 모델의 반복 깊이(r)가 모델 성능에 미치는 영향을 정량화한다. r=4일 때 410M 루프 모델은 580M 비루프 모델과 동등한 성능을 보이지만, 1B 비루프 모델의 훈련 비용을 소모한다. Truncated backpropagation은 φ를 0.38로 낮추어 루프 메커니즘이 제대로 훈련되지 않았음을 나타내며, hyperconnections은 φ를 0.65로 높여 진정한 용량 증가를 나타낸다.",
+        "key_points": [
+          "Iso-Depth 스케일링 법칙을 통한 루프 깊이(r)의 성능 영향 정량화",
+          "r=4일 때 410M 루프 모델이 580M 비루프 모델과 동등한 성능",
+          "Truncated backpropagation은 φ를 0.38로 낮추어 루프 메커니즘 훈련 부족 표시",
+          "hyperconnections은 φ를 0.65로 높여 진정한 용량 증가 표시"
+        ],
+        "contribution": "Iso-Depth 스케일링 법칙을 통해 루프 언어 모델의 반복 깊이(r)가 모델 성능에 미치는 영향을 정량화하고, Truncated backpropagation과 hyperconnections이 루프 메커니즘의 훈련 상태와 용량 증가에 미치는 영향을 분석한다.",
+        "benchmark": "r=4일 때 410M 루프 모델이 580M 비루프 모델과 동등한 성능",
+        "critique": "Iso-Depth 스케일링 법칙은 루프 메커니즘의 훈련 상태를 φ 값으로 나타내지만, 실제 추론 속도나 메모리 사용량에 대한 정량적 분석은 제공되지 않았다.",
+        "tags": [
+          "looped language model",
+          "recurrence",
+          "scaling laws"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.21106"
+        ],
+        "llm_model": "solar-pro-3"
+      }
+    ],
+    "groundedness_score": 0.9048
+  }
+}

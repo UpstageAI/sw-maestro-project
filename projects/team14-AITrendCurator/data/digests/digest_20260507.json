@@ -1,0 +1,101 @@
+{
+  "digest_id": "digest_20260507",
+  "date": "2026-05-07",
+  "status": "completed",
+  "item_count": 3,
+  "candidate_count": 3,
+  "selected_candidate_count": 3,
+  "source_document_ids": [
+    "huggingface_2605.05185",
+    "huggingface_2605.04637",
+    "huggingface_2605.03314"
+  ],
+  "groundedness_score": 0.7895,
+  "digest": {
+    "digest_id": "digest_20260507",
+    "date": "2026-05-07",
+    "title": "AI Agent Daily Digest",
+    "items": [
+      {
+        "document_id": "huggingface_2605.05185",
+        "title": "OpenSearch-VL: An Open Recipe for Frontier Multimodal Search Agents",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.05185",
+        "published_at": "2026-05-06",
+        "summary": "OpenSearch-VL은 프론티어 멀티모달 에이전트를 위한 완전한 오픈소스 훈련 레시피로, 위키피디아 경로 샘플링, 퍼지 엔티티 재작성, 소스-앵커 시각적 접지를 통해 고품질 훈련 데이터를 구축하고, 멀티턴 치명적 인식 GRPO(그룹 상대 정책 최적화) 훈련 알고리즘을 적용하여 복잡한 질문에 대한 능동적 검색, 증거 검증, 다단계 추론을 가능하게 한다.",
+        "key_points": [
+          "위키피디아 경로 샘플링과 퍼지 엔티티 재작성을 통한 고품질 훈련 데이터 파이프라인 구축",
+          " 소스-앵커 시각적 접지를 활용한 멀티모달 증거 연결",
+          " 멀티턴 치명적 인식 GRPO 훈련 알고리즘을 통한 에이전트 강화 학습",
+          " 복잡한 질문에 대한 능동적 검색 및 다단계 추론 능력 향상"
+        ],
+        "contribution": "프론티어 멀티모달 딥 서치 에이전트를 위한 완전한 오픈소스 훈련 레시피와 trajectory synthesis 파이프라인을 제공하여 재현성을 높이고, 멀티턴 치명적 인식 GRPO 훈련 알고리즘을 통해 다단계 추론 성능을 개선한다.",
+        "benchmark": "AIME25 및 GPQA-Diamond 벤치마크에서 SxS가 정확도-지연 시간 파레토 최적점을 개선",
+        "critique": "추론 비용이 baseline 대비 N배 증가한다는 trade-off가 명시됨",
+        "tags": [
+          "multimodal search agents",
+          "agentic reinforcement learning",
+          "GRPO",
+          "tool environment"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.05185"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.04637",
+        "title": "SWE-WebDevBench: Evaluating Coding Agent Application Platforms as Virtual Software Agencies",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.04637",
+        "published_at": "2026-05-06",
+        "summary": "SWE-WebDevBench은 자연어 기반 AI 에이전트가 풀스택 소프트웨어를 자율적으로 생성하는 '바이브 코딩' 플랫폼을 가상 소프트웨어 개발 에이전시로 평가하기 위한 68개 메트릭 프레임워크로, ACR(앱 생성 요청)과 AMR(앱 수정 요청), PM/엔지니어링/Ops 역할, T4 멀티롤 SaaS 복잡도 등 세 가지 차원으로 조직된 25개 주요 및 43개 진단 지표를 제공한다.",
+        "key_points": [
+          "ACR과 AMR, PM/엔지니어링/Ops 역할, 복잡도 티어 등 3차원 평가 프레임워크",
+          " 68개 메트릭(25개 주요, 43개 진단)을 통한 종합적 성능 측정",
+          " 비즈니스 요구사항 이해, 아키텍처 결정, 코드 작성, 반복 수정, 비즈니스 준비도 평가",
+          " 풀스택 소프트웨어 생성 에이전트의 실제 개발 프로세스 시뮬레이션"
+        ],
+        "contribution": "AI 코딩 에이전트를 가상 소프트웨어 개발 에이전시로 평가하기 위한 68개 메트릭의 3차원 프레임워크 SWE-WebDevBench을 제안한다.",
+        "benchmark": "SWE-bench Verified에서 GPT-4o 대비 비교 평가",
+        "critique": "단일 도메인 데이터에서만 평가되었다는 한계",
+        "tags": [
+          "AI agents",
+          "virtual software development agencies",
+          "evaluation framework"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.04637"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.03314",
+        "title": "When to Think, When to Speak: Learning Disclosure Policies for LLM Reasoning",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.03314",
+        "published_at": "2026-05-06",
+        "summary": "SxS(Speak-when-Satisfied) 방법은 답변 접두사와 지원 추론 접두사를 매칭하여 entailment-aligned interleaved trajectories를 구성하고, SFT와 RL을 통해 dual-action semantics를 학습하여 토큰 수준 프록시를 사용해 업데이트 간 대기 시간을 최적화함으로써 정확도-지연 시간 파레토 최적점을 개선한다.",
+        "key_points": [
+          "답변 접두사와 추론 접두사 매칭을 통한 interleaved trajectory 생성",
+          " SFT와 RL을 결합한 dual-action semantics 학습",
+          " 토큰 수준 프록시를 활용한 추론 대기 시간 최적화",
+          " 정확도-지연 시간 파레토 최적점 개선"
+        ],
+        "contribution": "답변과 추론을 인터리브하는 SxS(Speak-when-Satisfied) 정책을 학습하여 LLM의 추론 지연 시간을 줄이면서도 정확도를 유지하는 새로운 접근법을 제시한다.",
+        "benchmark": "AIME25 및 GPQA-Diamond 벤치마크에서 정확도-지연 시간 파레토 최적점 개선",
+        "critique": "추론 비용이 baseline 대비 N배 증가한다는 trade-off가 명시됨",
+        "tags": [
+          "LLM reasoning",
+          "autoregressive generation",
+          "interleaved reasoning"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.03314"
+        ],
+        "llm_model": "solar-pro-3"
+      }
+    ],
+    "groundedness_score": 0.7895
+  }
+}

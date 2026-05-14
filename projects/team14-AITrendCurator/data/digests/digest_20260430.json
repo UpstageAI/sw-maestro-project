@@ -1,0 +1,175 @@
+{
+  "digest_id": "digest_20260430",
+  "date": "2026-04-30",
+  "status": "completed",
+  "item_count": 6,
+  "candidate_count": 6,
+  "selected_candidate_count": 6,
+  "source_document_ids": [
+    "huggingface_2604.26752",
+    "huggingface_2604.23758",
+    "huggingface_2604.26904",
+    "huggingface_2604.26779",
+    "huggingface_2604.26694",
+    "huggingface_2604.26951"
+  ],
+  "groundedness_score": 0.88,
+  "digest": {
+    "digest_id": "digest_20260430",
+    "date": "2026-04-30",
+    "title": "AI Agent Daily Digest",
+    "items": [
+      {
+        "document_id": "huggingface_2604.26752",
+        "title": "GLM-5V-Turbo: Toward a Native Foundation Model for Multimodal Agents",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.26752",
+        "published_at": "2026-04-29",
+        "summary": "GLM-5V-Turbo는 이미지, 비디오, 웹페이지, 문서, GUI 등 다양한 이질적 컨텍스트를 인식·해석·행동할 수 있는 네이티브 멀티모달 에이전트를 위한 기초 모델로, 언어 추론뿐 아니라 멀티모달 인식을 핵심 구성 요소로 통합하여 도구 사용 및 실행 능력을 강화한다.",
+        "key_points": [
+          "멀티모달 인식을 언어 모델의 보조 인터페이스가 아닌 핵심 추론·계획·실행 요소로 통합",
+          "모델 설계, 멀티모달 학습, 강화 학습, 툴체인 확장, 에이전트 프레임워크와의 통합 개선",
+          "다양한 이질적 컨텍스트(시각, 문서, GUI 등)에서의 에이전트 성능 향상"
+        ],
+        "contribution": "멀티모달 인식을 언어 모델의 핵심 구성 요소로 통합하여 도구 사용 및 실행 능력을 강화한 네이티브 멀티모달 에이전트 기초 모델을 제시한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "multimodal agents",
+          "agent frameworks",
+          "tool use",
+          "reasoning",
+          "planning"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.26752"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.23758",
+        "title": "Agentic Fusion of Large Atomic and Language Models to Accelerate Superconductors Discovery",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.23758",
+        "published_at": "2026-04-29",
+        "summary": "ElementsClaw는 대형 원자 모델(LAMs)과 대형 언어 모델(LLM)을 결합한 에이전트 프레임워크로, 원자 규모 수치 계산을 위한 LAM 도구와 고수준 의미 추론을 위한 LLM을 조율하여 AI 기반 신소재 발견을 고립된 프로세스에서 통합적 프로세스로 전환한다.",
+        "key_points": [
+          "LAMs와 LLM을 결합한 에이전트 프레임워크 ElementsClaw 제시",
+          "10억 파라미터 모델 Elements를 기반으로 한 원자 규모 수치 계산 도구 활용",
+          "고수준 의미 추론과 원자 규모 계산을 조율하여 신소재 발견 프로세스 자동화"
+        ],
+        "contribution": "LAMs와 LLM을 결합하여 원자 규모 수치 계산과 고수준 의미 추론을 조율하는 에이전트 프레임워크 ElementsClaw를 통해 AI 기반 신소재 발견을 통합적 프로세스로 전환한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "agentic framework",
+          "Large Atomic Models (LAMs) with Large Language Models (LLMs)"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.23758"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.26904",
+        "title": "ClawGym: A Scalable Framework for Building Effective Claw Agents",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.26904",
+        "published_at": "2026-04-29",
+        "summary": "ClawGym은 Claw 스타일 개인 에이전트 개발을 위한 확장 가능한 프레임워크로, 13.5K개의 필터링된 작업으로 구성된 ClawGym-SynData 데이터셋과 현실적인 모의 작업 공간, 하이브리드 검증 메커니즘을 통해 Claw 스타일 모델의 전 주기 개발을 지원한다.",
+        "key_points": [
+          "13.5K개의 필터링된 작업으로 구성된 ClawGym-SynData 데이터셋 구축",
+          "페르소나 기반 의도와 스킬 기반 연산을 결합한 합성 데이터 생성",
+          "현실적인 모의 작업 공간과 하이브리드 검증 메커니즘을 통한 에이전트 훈련 및 평가 지원"
+        ],
+        "contribution": "Claw 스타일 개인 에이전트 개발을 위한 확장 가능한 프레임워크 ClawGym을 통해 합성 데이터 생성, 모델 훈련, 진단 평가를 전 주기로 지원한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "ClawGym",
+          "Claw-style personal agent development",
+          "Claw-style models"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.26904"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.26779",
+        "title": "Accelerating RL Post-Training Rollouts via System-Integrated Speculative Decoding",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.26779",
+        "published_at": "2026-04-29",
+        "summary": "NeMo-RL에 vLLM 백엔드를 활용한 시스템 통합형 추측 디코딩을 구현하여 RL 포스트 트레이닝 롤아웃의 생성 속도를 손실 없이 가속화하고, 동기식·비동기식 파이프라인 모두에서 추측을 가능하게 하여 롤아웃 병목 현상을 해결한다.",
+        "key_points": [
+          "NeMo-RL에 vLLM 백엔드를 활용한 시스템 통합형 추측 디코딩 구현",
+          "동기식 및 비동기식 파이프라인 모두에서 추측을 지원하여 롤아웃 생성 속도 향상",
+          "손실 없는 가속화를 통해 RL 포스트 트레이닝의 시스템 병목 현상 완화"
+        ],
+        "contribution": "NeMo-RL에 vLLM 백엔드를 활용한 시스템 통합형 추측 디코딩을 도입하여 RL 포스트 트레이닝 롤아웃의 생성 속도를 손실 없이 가속화하고 동기식·비동기식 파이프라인을 지원한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "RL post-training",
+          "speculative decoding",
+          "RL rollouts"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.26779"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.26694",
+        "title": "Unified 4D World Action Modeling from Video Priors with Asynchronous Denoising",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.26694",
+        "published_at": "2026-04-29",
+        "summary": "X-WAM은 비디오 확산 모델의 시각적 사전 지식을 활용하여 실시간 로봇 행동 실행과 고품질 4D 세계 합성(비디오 + 3D 재구성)을 단일 프레임워크에서 통합하는 Unified 4D World Model로, 경량 구조 적응을 통해 깊이 예측 분기를 추가하여 공간 정보를 효율적으로 획득한다.",
+        "key_points": [
+          "비디오 확산 모델의 시각적 사전 지식을 활용한 4D 세계 모델링",
+          "경량 구조 적응을 통해 깊이 예측 분기를 추가하여 공간 정보 효율적 획득",
+          "실시간 로봇 행동 실행과 고품질 4D 세계 합성을 단일 프레임워크에서 통합"
+        ],
+        "contribution": "비디오 확산 모델의 사전 지식을 활용하여 실시간 로봇 행동 실행과 고품질 4D 세계 합성(비디오 + 3D 재구성)을 단일 프레임워크에서 통합하는 Unified 4D World Model X-WAM을 제안한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "Unified 4D World Model",
+          "real-time robotic action execution",
+          "video + 3D reconstruction"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.26694"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.26951",
+        "title": "Turning the TIDE: Cross-Architecture Distillation for Diffusion Large Language Models",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.26951",
+        "published_at": "2026-04-29",
+        "summary": "8B 밀집 모델과 16B MoE 교사를 0.6B 학생에게 이종 파이프라인을 통해 증류하여 8개 벤치마크에서 평균 1.53점 향상시켰으며, HumanEval에서 48.78점을 달성하여 AR 기준선 대비 16.48점 향상시켰다.",
+        "key_points": [
+          "8B 밀집 모델과 16B MoE 교사를 0.6B 학생에게 이종 파이프라인을 통해 증류",
+          "8개 벤치마크에서 평균 1.53점 성능 향상",
+          "HumanEval에서 48.78점 달성하여 AR 기준선 대비 16.48점 향상"
+        ],
+        "contribution": "8B 밀집 모델과 16B MoE 교사를 0.6B 학생에게 이종 파이프라인을 통해 증류하여 8개 벤치마크에서 평균 1.53점, HumanEval에서 48.78점의 성능 향상을 달성한다.",
+        "benchmark": "8B 밀집 모델과 16B MoE 교사를 0.6B 학생에게 증류하여 8개 벤치마크에서 평균 1.53점, HumanEval에서 48.78점 향상",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "diffusion large language models",
+          "cross-architecture distillation"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.26951"
+        ],
+        "llm_model": "solar-pro-3"
+      }
+    ],
+    "groundedness_score": 0.88
+  }
+}

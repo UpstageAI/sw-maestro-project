@@ -1,0 +1,288 @@
+{
+  "digest_id": "digest_20260424",
+  "date": "2026-04-24",
+  "status": "completed",
+  "item_count": 10,
+  "candidate_count": 17,
+  "selected_candidate_count": 10,
+  "source_document_ids": [
+    "hackernews_47890841",
+    "hackernews_47888465",
+    "huggingface_2604.21193",
+    "huggingface_2604.21375",
+    "huggingface_2604.21668",
+    "huggingface_2604.21921",
+    "huggingface_2604.21889",
+    "huggingface_2604.21686",
+    "hackernews_47886517",
+    "hackernews_47897140"
+  ],
+  "groundedness_score": 0.8,
+  "digest": {
+    "digest_id": "digest_20260424",
+    "date": "2026-04-24",
+    "title": "AI Agent Daily Digest",
+    "items": [
+      {
+        "document_id": "hackernews_47890841",
+        "title": "Show HN: Browser Harness – Gives LLM freedom to complete any browser task",
+        "source": "hackernews",
+        "url": "https://github.com/browser-use/browser-harness",
+        "published_at": "2026-04-24",
+        "summary": "Browser Harness는 CDP(Chrome DevTools Protocol) 웹소켓을 지속적으로 유지하는 데몬과 최소한의 파이썬 헬퍼, 그리고 실시간으로 수정 가능한 skill.md를 핵심 개념으로 삼아 LLM이 브라우저 작업을 자율적으로 수행하도록 지원한다.",
+        "key_points": [
+          "CDP 웹소켓을 유지하는 데몬이 브라우저 자동화의 핵심 인프라로 작동",
+          "skill.md와 파이썬 헬퍼를 통해 LLM이 실시간으로 도구를 추가·수정 가능",
+          "업로드 파일 기능 미구현 시 LLM이 직접 DOM API를 활용해 함수를 생성",
+          "LLM이 CDP를 잘 이해하고 있어 복잡한 엣지 케이스를 직접 해결"
+        ],
+        "contribution": "LLM이 CDP를 활용해 브라우저 작업을 자율적으로 수행할 수 있도록 데몬, 헬퍼, skill.md 기반의 새로운 자동화 패러다임을 제시한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "LLM",
+          "browser automation",
+          "agent"
+        ],
+        "evidence_document_ids": [
+          "hackernews_47890841"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "hackernews_47888465",
+        "title": "Hear your agent suffer through your code",
+        "source": "hackernews",
+        "url": "https://github.com/AndrewVos/endless-toil",
+        "published_at": "2026-04-24",
+        "summary": "endless-toil은 LLM 에이전트가 코드를 실행하는 과정에서 발생하는 오류와 고통을 실시간으로 청취하고 시각화하여 개발자가 디버깅과 개선에 활용할 수 있도록 돕는 도구이다.",
+        "key_points": [
+          "에이전트가 코드를 실행할 때 발생하는 오류와 고통을 실시간으로 청취",
+          "에이전트의 실행 과정을 시각화하여 디버깅에 활용 가능",
+          "에이전트의 실패 원인을 개발자가 직접 확인하고 개선 가능",
+          "에이전트 기반 코드 실행의 투명성과 가시성을 향상"
+        ],
+        "contribution": "에이전트가 코드를 실행하는 과정에서 발생하는 오류와 고통을 실시간으로 청취하고 시각화하여 개발자의 디버깅과 개선을 지원한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "LLM",
+          "agent",
+          "debugging"
+        ],
+        "evidence_document_ids": [
+          "hackernews_47888465"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.21193",
+        "title": "Trust but Verify: Introducing DAVinCI -- A Framework for Dual Attribution and Verification in Claim Inference for Language Models",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.21193",
+        "published_at": "2026-04-23",
+        "summary": "DAVinCI는 LLM의 사실적 신뢰성을 높이기 위해 내부 모델 컴포넌트와 외부 소스를 동시에 참조해 주장을 생성하고, 엔테일먼트 기반 추론과 신뢰도 보정을 통해 검증하는 이중 귀속 및 검증 프레임워크이다.",
+        "key_points": [
+          "내부 모델 컴포넌트와 외부 소스를 동시에 참조해 주장을 생성",
+          "엔테일먼트 기반 추론과 신뢰도 보정을 통해 생성된 주장을 검증",
+          "FEVER와 CLIMATE-FEVER 데이터셋에서 평가",
+          "고위험 도메인에서 LLM 출력의 신뢰성과 해석 가능성을 향상"
+        ],
+        "contribution": "LLM 출력의 사실적 신뢰성을 높이기 위해 내부·외부 소스를 동시에 참조하고 엔테일먼트 기반 추론과 신뢰도 보정을 적용하는 DAVinCI 프레임워크를 제안한다.",
+        "benchmark": "FEVER 및 CLIMATE-FEVER 데이터셋에서 평가",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "LLM",
+          "verification framework",
+          "factual accuracy"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.21193"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.21375",
+        "title": "VLAA-GUI: Knowing When to Stop, Recover, and Search, A Modular Framework for GUI Automation",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.21375",
+        "published_at": "2026-04-23",
+        "summary": "VLAA-GUI는 반복 실패 시 상호작용 모드 전환, 화면 상태 지속 시 전략 변경, 검색 에이전트 호출 등 모듈형 전략을 통해 GUI 자동화를 수행하며, Opus 4.5·4.6 및 Gemini 3.1 Pro 등 5개 백본에서 OSWorld 77.5%, WindowsAgentArena 61.0%의 성능을 달성했다.",
+        "key_points": [
+          "반복 실패 시 상호작용 모드를 전환하는 i-tier 필터링 전략",
+          "화면 상태가 지속될 때 전략을 강제 변경하는 메커니즘",
+          "온라인 검색을 위한 검색 에이전트와 코드·그라운딩 에이전트를 온디맨드로 통합",
+          "Opus 4.5·4.6 및 Gemini 3.1 Pro 등 5개 백본에서 OSWorld 77.5%, WindowsAgentArena 61.0% 성능 달성"
+        ],
+        "contribution": "반복 실패 시 전략 전환, 화면 상태 지속 시 전략 변경, 검색·코딩·그라운딩 에이전트를 온디맨드로 통합하는 모듈형 GUI 자동화 프레임워크 VLAA-GUI를 제안한다.",
+        "benchmark": "Opus 4.5·4.6 및 Gemini 3.1 Pro 등 5개 백본에서 OSWorld 77.5%, WindowsAgentArena 61.0% 성능 달성",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "GUI agent",
+          "autonomous GUI agents",
+          "modular framework"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.21375"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.21668",
+        "title": "Encoder-Free Human Motion Understanding via Structured Motion Descriptions",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.21668",
+        "published_at": "2026-04-23",
+        "summary": "SMD는 관절 위치 시퀀스를 구조화된 자연어 설명으로 변환하여 LLM이 사전 학습된 신체 부위·공간 방향·움직임 의미 지식을 직접 적용하도록 하는 인코더 없는 인간 동작 이해 방법이다.",
+        "key_points": [
+          "관절 위치 시퀀스를 구조화된 자연어 설명으로 변환하는 인코더 없는 접근법",
+          "LLM이 사전 학습된 신체 부위·공간 방향·움직임 의미 지식을 직접 활용",
+          "BABEL-QA에서 66.7%, HuMMan-QA에서 90.1%의 동작 질의응답 성능 달성",
+          "HumanML3D에서 R@1 0.584, CIDEr 53.16의 동작 캡셔닝 성능 달성"
+        ],
+        "contribution": "관절 위치 시퀀스를 구조화된 자연어 설명으로 변환하여 LLM이 사전 학습된 지식을 직접 적용하는 인코더 없는 인간 동작 이해 방법 SMD를 제안한다.",
+        "benchmark": "BABEL-QA에서 66.7%, HuMMan-QA에서 90.1%의 동작 질의응답 성능 달성",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "LLM",
+          "human motion understanding",
+          "Structured Motion Description"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.21668"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.21921",
+        "title": "Context Unrolling in Omni Models",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.21921",
+        "published_at": "2026-04-23",
+        "summary": "Omni는 텍스트·이미지·동영상·3D 기하·숨겨진 표현 등 다양한 모달리티를 네이티브로 학습하여 Context Unrolling을 통해 다중 모달 정보를 명시적으로 추론하고, 이를 통해 생성 및 이해 벤치마크에서 우수한 성능을 보인다.",
+        "key_points": [
+          "텍스트, 이미지, 동영상, 3D 기하, 숨겨진 표현을 네이티브로 학습한 통합 멀티모달 모델",
+          "Context Unrolling을 통해 다중 모달 정보를 명시적으로 추론",
+          "다중 모달 생성 및 이해 벤치마크에서 우수한 성능 달성",
+          "인-컨텍스트 생성으로 텍스트, 이미지, 동영상, 3D 기하를 동시에 생성"
+        ],
+        "contribution": "다양한 모달리티를 네이티브로 학습하고 Context Unrolling을 통해 다중 모달 정보를 명시적으로 추론하는 통합 멀티모달 모델 Omni를 제안한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "multimodal model",
+          "context unrolling",
+          "reasoning"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.21921"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.21889",
+        "title": "TingIS: Real-time Risk Event Discovery from Noisy Customer Incidents at Enterprise Scale",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.21889",
+        "published_at": "2026-04-23",
+        "summary": "TingIS는 대규모 클라우드 서비스에서 발생하는 노이즈가 많은 고객 인시던트를 실시간으로 탐지하고, 효율적인 인덱싱과 LLM을 결합한 다단계 이벤트 연결 엔진을 통해 위험 이벤트를 안정적으로 추출한다.",
+        "key_points": [
+          "대규모 클라우드 서비스의 노이즈가 많은 고객 인시던트를 실시간으로 탐지",
+          "효율적인 인덱싱과 LLM을 결합한 다단계 이벤트 연결 엔진",
+          "이벤트 병합을 통해 안정적인 위험 이벤트 추출",
+          "엔터프라이즈급 인시던트 발견을 위한 엔드투엔드 시스템"
+        ],
+        "contribution": "대규모 클라우드 서비스의 노이즈가 많은 고객 인시던트를 실시간으로 탐지하고, 인덱싱과 LLM을 결합한 다단계 이벤트 연결 엔진을 통해 위험 이벤트를 안정적으로 추출하는 TingIS 시스템을 제안한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "LLM",
+          "risk event discovery",
+          "enterprise"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.21889"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.21686",
+        "title": "WorldMark: A Unified Benchmark Suite for Interactive Video World Models",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2604.21686",
+        "published_at": "2026-04-23",
+        "summary": "WorldMark는 인터랙티브 비디오 월드 모델을 평가하기 위한 통합 벤치마크 스위트로, 오프라인 지표와 함께 온라인 플랫폼 World Model Arena를 제공하여 모델 간 실시간 대결을 가능하게 한다.",
+        "key_points": [
+          "인터랙티브 비디오 월드 모델을 평가하기 위한 통합 벤치마크 스위트",
+          "오프라인 지표와 함께 온라인 플랫폼 World Model Arena 제공",
+          "모델 간 실시간 대결을 통해 성능 비교 가능",
+          "데이터, 평가 코드, 모델 출력을 공개하여 연구 재현성 지원"
+        ],
+        "contribution": "인터랙티브 비디오 월드 모델을 평가하기 위한 통합 벤치마크 스위트 WorldMark와 온라인 플랫폼 World Model Arena를 제공하여 모델 간 실시간 대결을 가능하게 한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "interactive video generation models",
+          "benchmark suite",
+          "agent"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.21686"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "hackernews_47897140",
+        "title": "Agentic AI systems violate the implicit assumptions of database design",
+        "source": "hackernews",
+        "url": "https://arpitbhayani.me/blogs/defensive-databases/",
+        "published_at": "2026-04-24",
+        "summary": "Agentic AI 시스템은 데이터베이스 설계의 암묵적 가정(예: 트랜잭션 일관성, ACID 속성)을 위반하며, 이로 인해 기존 데이터베이스와의 통합 시 예측 불가능한 동작과 성능 저하가 발생할 수 있다.",
+        "key_points": [
+          "Agentic AI 시스템은 데이터베이스의 트랜잭션 일관성 가정을 위반",
+          "ACID 속성 대신 유연한 상태 관리와 실시간 추론을 요구",
+          "기존 데이터베이스와의 통합 시 예측 불가능한 동작 발생 가능",
+          "데이터베이스 설계의 암묵적 가정을 재검토해야 함"
+        ],
+        "contribution": "Agentic AI 시스템이 데이터베이스 설계의 암묵적 가정(트랜잭션 일관성, ACID 속성)을 위반함을 지적하고, 데이터베이스 설계의 재검토 필요성을 제시한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "Agentic AI systems",
+          "database design"
+        ],
+        "evidence_document_ids": [
+          "hackernews_47897140"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "hackernews_47890841",
+        "title": "Show HN: How LLMs Work – Interactive visual guide based on Karpathy's lecture",
+        "source": "hackernews",
+        "url": "https://ynarwal.github.io/how-llms-work/",
+        "published_at": "2026-04-24",
+        "summary": "Karpathy의 'Intro to Large Language Models' 강의를 기반으로 한 인터랙티브 시각 가이드로, LLM의 내부 구조와 학습 과정을 단일 HTML 파일로 구현하여 개발자가 쉽게 복습하고 이해할 수 있도록 돕는다.",
+        "key_points": [
+          "Karpathy의 'Intro to Large Language Models' 강의 내용을 기반으로 제작",
+          "단일 HTML 파일로 인터랙티브 시각 가이드를 구현",
+          "LLM의 내부 구조와 학습 과정을 시각적으로 설명",
+          "Claude Code를 활용해 강의 트랜스크립트를 자동 변환하여 사이트 생성"
+        ],
+        "contribution": "Karpathy의 LLM 강의 트랜스크립트를 Claude Code로 자동 변환하여 단일 HTML 파일로 인터랙티브 시각 가이드를 구현한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "명시된 근거 없음",
+        "tags": [
+          "LLMs",
+          "Large Language Models",
+          "interactive guide"
+        ],
+        "evidence_document_ids": [
+          "hackernews_47890841"
+        ],
+        "llm_model": "solar-pro-3"
+      }
+    ],
+    "groundedness_score": 0.8
+  }
+}

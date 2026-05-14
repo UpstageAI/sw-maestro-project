@@ -1,0 +1,181 @@
+{
+  "digest_id": "digest_20260503",
+  "date": "2026-05-03",
+  "status": "completed",
+  "item_count": 6,
+  "candidate_count": 6,
+  "selected_candidate_count": 6,
+  "source_document_ids": [
+    "huggingface_2605.05242",
+    "huggingface_2604.27660",
+    "huggingface_2605.01214",
+    "hackernews_47982708",
+    "huggingface_2605.01284",
+    "hackernews_47985077"
+  ],
+  "groundedness_score": 1.0,
+  "digest": {
+    "digest_id": "digest_20260503",
+    "date": "2026-05-03",
+    "title": "AI Agent Daily Digest",
+    "items": [
+      {
+        "document_id": "huggingface_2605.05242",
+        "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.05242",
+        "published_at": "2026-05-03",
+        "summary": "에이전트 검색의 한계를 극복하기 위해 임베딩이나 벡터 인덱스 없이 일반 터미널 도구(grep, 파일 읽기 등)를 활용해 원시 코퍼스를 직접 탐색하는 Direct Corpus Interaction(DCI) 방식을 제안한다. IR 벤치마크와 BrowseComp-Plus, 다중 홉 QA 등 실제 에이전트 검색 과제에서 기존 희소·밀집·리랭킹 기반 검색기를 능가하는 성능을 보이며, 오프라인 인덱싱 없이도 로컬 코퍼스의 변화에 자연스럽게 적응할 수 있다.",
+        "key_points": [
+          "DCI는 임베딩 모델이나 벡터 인덱스 없이 터미널 도구를 사용해 원시 코퍼스를 직접 탐색한다",
+          "BRIGHT와 BEIR 데이터셋에서 기존 검색기 대비 높은 정확도를 달성한다",
+          "BrowseComp-Plus와 다중 홉 QA에서도 강한 성능을 보인다",
+          "오프라인 인덱싱이 필요 없어 로컬 코퍼스의 변화에 유연하게 대응한다"
+        ],
+        "contribution": "Direct Corpus Interaction(DCI)을 통해 임베딩 기반 검색 없이도 에이전트 검색 성능을 크게 향상시키는 새로운 검색 패러다임을 제시한다.",
+        "benchmark": "BRIGHT와 BEIR 데이터셋에서 기존 희소·밀집·리랭킹 기반 검색기 대비 높은 정확도 달성",
+        "critique": "DCI는 터미널 도구에 의존하므로 복잡한 검색 로직이나 대규모 코퍼스에서는 확장성이 제한될 수 있다.",
+        "tags": [
+          "retrieval",
+          "agentic search",
+          "direct corpus interaction"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.05242"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2604.27660",
+        "title": "From Context to Skills: Can Language Models Learn from Context Skillfully?",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.01214",
+        "published_at": "2026-05-03",
+        "summary": "다중 에이전트 자기 플레이 루프를 통해 언어 모델이 인간 감독이나 외부 피드백 없이 컨텍스트에 맞는 스킬을 자동으로 발견하고 정제하는 방법을 제시한다. Challenger가 탐색 과제를 생성하고 Judge가 이진 피드백을 제공하며, Proposer와 Generator가 실패 사례를 분석해 스킬을 업데이트함으로써 스킬 세트가 지속적으로 진화한다.",
+        "key_points": [
+          "Challenger, Reasoner, Judge로 구성된 다중 에이전트 자기 플레이 루프",
+          "실패 사례를 분석해 스킬을 자동으로 업데이트한다",
+          "스킬 세트가 지속적으로 진화하며 컨텍스트에 맞는 행동을 학습한다",
+          "과도한 과제 생성으로 인한 붕괴를 방지하기 위한 Cross-time Replay 메커니즘"
+        ],
+        "contribution": "다중 에이전트 자기 플레이 루프를 통해 언어 모델이 컨텍스트에 맞는 스킬을 자동으로 발견하고 정제하는 방법을 제시한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "Cross-time Replay 메커니즘은 스킬 세트의 과도한 전문화로 인한 붕괴를 방지하지만, 실제 환경에서의 일반화 성능은 아직 검증되지 않았다.",
+        "tags": [
+          "multi-agent",
+          "skill augmentation",
+          "context learning"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2604.27660"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.01214",
+        "title": "Agentic AI Systems Should Be Designed as Marginal Token Allocators",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.01214",
+        "published_at": "2026-05-02",
+        "summary": "에이전트 AI 시스템을 텍스트 생성기가 아닌 한계 토큰 할당 경제로 설계하고 평가해야 한다고 주장한다. 요청 처리 과정에서 라우터, 에이전트, 서빙 스택, 학습 파이프라인 등 네 가지 계층이 모두 한계 이익 = 한계 비용 + 지연 비용 + 위험 비용이라는 동일한 일차 조건을 해결한다는 점을 보여준다.",
+        "key_points": [
+          "에이전트 AI 시스템을 한계 토큰 할당 경제로 재설계해야 한다",
+          "라우터, 에이전트, 서빙 스택, 학습 파이프라인이 동일한 경제 원리를 따른다",
+          "각 계층이 한계 이익 = 한계 비용 + 지연 비용 + 위험 비용을 최적화한다",
+          "기존 텍스트 생성기 가격 모델과의 차이점을 강조한다"
+        ],
+        "contribution": "에이전트 AI 시스템을 한계 토큰 할당 경제로 설계하고 평가하는 새로운 프레임워크를 제시한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "실제 구현 시 각 계층 간 가격 설정과 지연 비용 측정이 복잡해질 수 있다.",
+        "tags": [
+          "agentic AI systems",
+          "marginal token allocation",
+          "AI economics"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.01214"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "hackernews_47982708",
+        "title": "Show HN: Agent-desktop – Native desktop automation CLI for AI agents",
+        "source": "hackernews",
+        "url": "https://github.com/lahfir/agent-desktop",
+        "published_at": "2026-05-02",
+        "summary": "스크린샷 기반 UI 자동화 대신 macOS의 Accessibility API와 Windows의 UI Automation을 활용해 구조화된 UI 정보를 직접 사용하는 Agent-desktop CLI를 소개한다. 픽셀 좌표 예측 대신 OS가 제공하는 요소 정보를 활용해 안정적이고 효율적인 데스크톱 자동화를 가능하게 한다.",
+        "key_points": [
+          "macOS Accessibility API와 Windows UI Automation을 활용한 구조화된 UI 정보 사용",
+          "픽셀 좌표 예측 대신 요소 정보를 직접 활용해 자동화 안정성 향상",
+          "토큰 사용량 감소와 UI 변화에 대한 강인성 확보",
+          "CLI 기반 인터페이스로 로컬에서 실행 가능"
+        ],
+        "contribution": "OS가 제공하는 구조화된 UI 정보를 직접 활용해 안정적이고 효율적인 데스크톱 자동화 CLI를 구현한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "macOS와 Windows의 API 차이 때문에 크로스 플랫폼 호환성 문제가 발생할 수 있다.",
+        "tags": [
+          "AI agents",
+          "desktop automation",
+          "Accessibility API"
+        ],
+        "evidence_document_ids": [
+          "hackernews_47982708"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.01284",
+        "title": "Chain of Evidence: Pixel-Level Visual Attribution for Iterative Retrieval-Augmented Generation",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.01284",
+        "published_at": "2026-05-02",
+        "summary": "Iterative Retrieval-Augmented Generation(iRAG)의 텍스트 기반 증거 한계를 극복하기 위해 Vision-Language Model을 활용한 픽셀 수준 시각 귀속 프레임워크 Chain of Evidence(CoE)를 제안한다. 문서 내 시각적 요소(차트, 레이아웃)를 직접 추론해 증거 위치를 정확히 표시하고, 사용자가 증거를 쉽게 찾을 수 있도록 한다.",
+        "key_points": [
+          "iRAG의 텍스트 기반 증거 한계를 극복하기 위한 시각 귀속 프레임워크",
+          "Vision-Language Model을 활용해 픽셀 수준 증거 위치를 추론한다",
+          "문서 내 시각적 요소(차트, 레이아웃)를 직접 추론해 증거 표시",
+          "사용자가 증거를 쉽게 찾을 수 있도록 증거 위치를 정확히 표시한다"
+        ],
+        "contribution": "Vision-Language Model을 활용해 픽셀 수준 시각 귀속을 제공하는 Chain of Evidence(CoE) 프레임워크를 제시한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "Vision-Language Model의 추론 비용이 높아 실시간 응용에 제약이 있을 수 있다.",
+        "tags": [
+          "Iterative Retrieval-Augmented Generation",
+          "visual attribution",
+          "Vision-Language Models"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.01284"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "hackernews_47985077",
+        "title": "Show HN: Mljar Studio – local AI data analyst that saves analysis as notebooks",
+        "source": "hackernews",
+        "url": "https://mljar.com/",
+        "published_at": "2026-05-02",
+        "summary": "로컬에서 실행되는 AI 데이터 분석 도구 Mljar Studio를 소개한다. Ollama를 통해 로컬 LLM을 사용하고, AutoML 기능으로 분류·회귀·다중 클래스 문제를 해결하며, pandas, matplotlib 등 표준 라이브러리와 PostgreSQL, MySQL 등 다양한 데이터베이스와 연동해 분석 결과를 재현 가능한 노트북 형태로 저장한다.",
+        "key_points": [
+          "Ollama를 통해 로컬 LLM을 사용해 데이터 유출 없이 분석 가능",
+          "AutoML 기능으로 분류, 회귀, 다중 클래스 문제를 자동 해결",
+          "pandas, matplotlib 등 표준 라이브러리와 다양한 데이터베이스 연동",
+          "분석 결과를 재현 가능한 노트북 형태로 저장"
+        ],
+        "contribution": "로컬 LLM과 AutoML을 결합해 재현 가능한 분석 노트북을 생성하는 AI 데이터 분석 도구를 제공한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "로컬 실행 시 GPU 자원이 제한적일 경우 대규모 데이터 처리에 성능 저하가 발생할 수 있다.",
+        "tags": [
+          "AI data analyst",
+          "local AI",
+          "reproducible notebook"
+        ],
+        "evidence_document_ids": [
+          "hackernews_47985077"
+        ],
+        "llm_model": "solar-pro-3"
+      }
+    ],
+    "groundedness_score": 1.0
+  }
+}

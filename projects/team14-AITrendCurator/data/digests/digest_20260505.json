@@ -1,0 +1,184 @@
+{
+  "digest_id": "digest_20260505",
+  "date": "2026-05-05",
+  "status": "completed",
+  "item_count": 6,
+  "candidate_count": 6,
+  "selected_candidate_count": 6,
+  "source_document_ids": [
+    "huggingface_2605.02240",
+    "huggingface_2605.02178",
+    "hackernews_48023496",
+    "huggingface_2605.02881",
+    "huggingface_2605.02661",
+    "hackernews_48026021"
+  ],
+  "groundedness_score": 1.0,
+  "digest": {
+    "digest_id": "digest_20260505",
+    "date": "2026-05-05",
+    "title": "AI Agent Daily Digest",
+    "items": [
+      {
+        "document_id": "huggingface_2605.02240",
+        "title": "PhysicianBench: Evaluating LLM Agents in Real-World EHR Environments",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.02240",
+        "published_at": "2026-05-04",
+        "summary": "PhysicianBench는 실제 임상 환경에서 LLM 에이전트의 실행 기반 검증을 통해 13개의 상용 및 오픈소스 모델 중 최고 성능 모델이 46%의 성공률(pass@1)을 기록했으나, 오픈소스 모델은 최대 19%에 그쳐 임상 워크플로우에 필요한 자율 에이전트와 현재 기술 간 격차가 크다는 것을 보여준다.",
+        "key_points": [
+          "실제 EHR 환경에서 13개 LLM 에이전트를 대상으로 한 실행 기반 벤치마크",
+          "최고 성능 모델의 pass@1 성공률 46%",
+          "오픈소스 모델의 최대 성공률 19%",
+          "임상 워크플로우에 필요한 자율 에이전트와 현재 기술 간 격차 확인"
+        ],
+        "contribution": "PhysicianBench는 실제 임상 환경에서 LLM 에이전트의 실행 기반 검증을 통해 자율 임상 에이전트의 발전 정도를 측정할 수 있는 현실적인 벤치마크를 제공한다.",
+        "benchmark": "13개의 상용 및 오픈소스 LLM 에이전트를 대상으로 pass@1 성공률을 측정",
+        "critique": "오픈소스 모델은 최대 19%의 성공률에 머물러 임상 워크플로우에 필요한 자율 에이전트와 현재 기술 간 격차가 크다.",
+        "tags": [
+          "LLM agents",
+          "physician tasks",
+          "EHR environments",
+          "long-horizon tasks",
+          "composite workflows"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.02240"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.02178",
+        "title": "T^2PO: Uncertainty-Guided Exploration Control for Stable Multi-Turn Agentic Reinforcement Learning",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.02178",
+        "published_at": "2026-05-04",
+        "summary": "T^2PO는 토큰 및 턴 수준의 정책 최적화를 통해 다중 턴 에이전트 강화 학습의 탐색 불안정성을 해결하는 불확실성 인식 프레임워크로, 토큰 수준에서는 불확실성 동역학을 모니터링하고 사고 개입을 트리거하며, 턴 수준에서는 탐색을 제어하여 복잡한 대화형 작업에서 안정적인 학습을 가능하게 한다.",
+        "key_points": [
+          "다중 턴 강화 학습의 탐색 불안정성 문제",
+          "토큰 및 턴 수준의 정책 최적화(T^2PO) 프레임워크",
+          "토큰 수준 불확실성 모니터링 및 사고 개입 트리거",
+          "복잡한 대화형 작업에서 안정적인 학습 달성"
+        ],
+        "contribution": "T^2PO는 토큰 및 턴 수준의 정책 최적화를 통해 다중 턴 에이전트 강화 학습의 탐색 불안정성을 해결하고, 복잡한 대화형 작업에서 안정적인 학습을 가능하게 하는 불확실성 인식 프레임워크를 제안한다.",
+        "benchmark": "다중 턴 강화 학습 환경에서 복잡한 대화형 작업을 대상으로 한 실험",
+        "critique": "기존 안정화 기법(미세 신용 할당, 궤적 필터링)에도 불구하고 다중 턴 설정에서 탐색 비효율성이 지속되어 학습 붕괴가 발생할 수 있다.",
+        "tags": [
+          "multi-turn reinforcement learning",
+          "agentic reinforcement learning",
+          "exploration control"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.02178"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "hackernews_48023496",
+        "title": "Show HN: Airbyte Agents – context for agents across multiple data sources",
+        "source": "hackernews",
+        "url": "https://news.ycombinator.com/item?id=48023496",
+        "published_at": "2026-05-05",
+        "summary": "Airbyte Agents는 다양한 운영 시스템에서 정보를 검색하고 액션을 취할 수 있는 통합 데이터 레이어를 제공하여, 실제 워크플로우에서 에이전트가 다중 데이터 소스에 접근할 수 있도록 지원한다.",
+        "key_points": [
+          "다양한 운영 시스템에서 정보 검색 및 액션 수행을 위한 통합 데이터 레이어",
+          "에이전트가 다중 데이터 소스에 접근할 수 있도록 지원",
+          "실제 워크플로우에서의 에이전트 활용 사례"
+        ],
+        "contribution": "Airbyte Agents는 다양한 운영 시스템에서 정보를 검색하고 액션을 취할 수 있는 통합 데이터 레이어를 제공하여, 실제 워크플로우에서 에이전트의 다중 데이터 소스 접근을 가능하게 한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "에이전트가 실제 워크플로우에서 효과적으로 활용되기 위해서는 데이터 소스의 다양성과 통합 수준이 중요하다.",
+        "tags": [
+          "Airbyte Agents",
+          "agent",
+          "context for agents",
+          "data sources"
+        ],
+        "evidence_document_ids": [
+          "hackernews_48023496"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.02881",
+        "title": "MolmoAct2: Action Reasoning Models for Real-world Deployment",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.02881",
+        "published_at": "2026-05-04",
+        "summary": "MolmoAct2는 실제 배포를 위한 완전 오픈소스 액션 추론 모델로, MolmoER이라는 공간 및 신체 추론 특화 VLM 백본을 3.3M 샘플 코퍼스로 학습하고, 저비용 플랫폼에서 실행 가능한 세 가지 새로운 데이터셋을 공개하여 기존 VLA 모델의 한계를 극복한다.",
+        "key_points": [
+          "완전 오픈소스 액션 추론 모델 MolmoAct2",
+          "공간 및 신체 추론 특화 VLM 백본 MolmoER",
+          "3.3M 샘플 코퍼스로 학습된 MolmoER",
+          "저비용 플랫폼에서 실행 가능한 세 가지 새로운 데이터셋 공개"
+        ],
+        "contribution": "MolmoAct2는 MolmoER이라는 공간 및 신체 추론 특화 VLM 백본을 3.3M 샘플 코퍼스로 학습하고, 저비용 플랫폼에서 실행 가능한 세 가지 새로운 데이터셋을 공개하여 실제 배포를 위한 완전 오픈소스 액션 추론 모델을 제공한다.",
+        "benchmark": "3.3M 샘플 코퍼스로 학습된 MolmoER VLM 백본",
+        "critique": "프론티어 모델은 폐쇄적이고, 오픈웨이트 대안은 고가의 하드웨어에 종속되며, 추론 증강 정책은 과도한 지연 시간을 초래한다.",
+        "tags": [
+          "action reasoning model",
+          "Vision-Language-Action (VLA) models",
+          "MolmoAct2"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.02881"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.02661",
+        "title": "AcademiClaw: When Students Set Challenges for AI Agents",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.02661",
+        "published_at": "2026-05-04",
+        "summary": "AcademiClaw는 학생들이 설정한 16개의 CUDA GPU 실행 과제를 Docker 샌드박스에서 실행하고, 6가지 보완적 기법을 결합한 다차원 평가 루브릭과 5단계 안전 감사를 통해 AI 에이전트의 성능을 평가하며, 토큰 소비와 출력 품질 간의 불일치를 밝혀낸다.",
+        "key_points": [
+          "학생들이 설정한 16개의 CUDA GPU 실행 과제",
+          "Docker 샌드박스에서 격리된 실행 환경",
+          "6가지 보완적 기법을 결합한 다차원 평가 루브릭",
+          "5단계 안전 감사 및 행동 분석",
+          "토큰 소비와 출력 품질 간의 불일치 발견"
+        ],
+        "contribution": "AcademiClaw는 학생들이 설정한 16개의 CUDA GPU 실행 과제를 Docker 샌드박스에서 실행하고, 다차원 평가 루브릭과 안전 감사를 통해 AI 에이전트의 성능을 평가하며, 토큰 소비와 출력 품질 간의 불일치를 밝혀낸다.",
+        "benchmark": "6가지 보완적 기법을 결합한 다차원 평가 루브릭과 5단계 안전 감사",
+        "critique": "과제 도메인에 따라 성능 경계가 뚜렷하고, 모델 간 행동 전략이 상이하며, 토큰 소비와 출력 품질 간의 불일치가 존재한다.",
+        "tags": [
+          "AI agents",
+          "AcademiClaw",
+          "benchmark",
+          "tasks",
+          "university students"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.02661"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "hackernews_48026021",
+        "title": "GLM-5V-Turbo: Toward a Native Foundation Model for Multimodal Agents",
+        "source": "hackernews",
+        "url": "https://arxiv.org/abs/2604.26752",
+        "published_at": "2026-05-05",
+        "summary": "GLM-5V-Turbo는 다중 모달 에이전트를 위한 네이티브 기반 모델로, 시각 및 언어 정보를 통합하여 에이전트의 추론과 행동 능력을 향상시키는 것을 목표로 한다.",
+        "key_points": [
+          "다중 모달 에이전트를 위한 네이티브 기반 모델",
+          "시각 및 언어 정보 통합을 통한 추론 및 행동 능력 향상",
+          "다중 모달 환경에서의 에이전트 성능 개선 목표"
+        ],
+        "contribution": "GLM-5V-Turbo는 시각 및 언어 정보를 통합하여 다중 모달 에이전트의 추론과 행동 능력을 향상시키는 네이티브 기반 모델을 제시한다.",
+        "benchmark": "명시된 근거 없음",
+        "critique": "다중 모달 에이전트를 위한 네이티브 기반 모델로서 시각 및 언어 정보를 통합하여 추론과 행동 능력을 향상시키는 것을 목표로 한다.",
+        "tags": [
+          "Multimodal Agents",
+          "Foundation Model"
+        ],
+        "evidence_document_ids": [
+          "hackernews_48026021"
+        ],
+        "llm_model": "solar-pro-3"
+      }
+    ],
+    "groundedness_score": 1.0
+  }
+}

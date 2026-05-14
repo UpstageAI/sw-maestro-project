@@ -1,0 +1,247 @@
+{
+  "digest_id": "digest_20260512",
+  "date": "2026-05-12",
+  "status": "completed",
+  "item_count": 8,
+  "candidate_count": 8,
+  "selected_candidate_count": 8,
+  "source_document_ids": [
+    "huggingface_2605.10848",
+    "huggingface_2605.10344",
+    "hackernews_48108778",
+    "huggingface_2605.09996",
+    "hackernews_48111896",
+    "huggingface_2605.10923",
+    "huggingface_2605.10488",
+    "huggingface_2605.01402"
+  ],
+  "groundedness_score": 0.9259,
+  "digest": {
+    "digest_id": "digest_20260512",
+    "date": "2026-05-12",
+    "title": "AI Agent Daily Digest",
+    "items": [
+      {
+        "document_id": "huggingface_2605.10848",
+        "title": "Rethinking Agentic Search with Pi-Serini: Is Lexical Retrieval Sufficient?",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.10848",
+        "published_at": "2026-05-11",
+        "summary": "에이전트 루프에서 LLM의 능력이 향상됨에 따라 어휘 검색기(BM25)가 충분한지 재검토한 연구로, Pi-Serini라는 검색 에이전트를 통해 검색, 탐색, 읽기 도구를 제공하고, GPT-5.5와 결합했을 때 BrowseComp-Plus에서 83.1% 답변 정확도와 94.7% 증거 회상률을 달성해 밀집 검색기를 사용하는 기존 검색 에이전트보다 우수한 성능을 보였다.",
+        "key_points": [
+          "에이전트 루프에서 LLM의 능력 향상에 따라 어휘 검색기(BM25)의 충분성을 재검토",
+          "Pi-Serini는 검색, 탐색, 읽기 도구를 갖춘 검색 에이전트",
+          "GPT-5.5와 결합 시 BrowseComp-Plus에서 83.1% 답변 정확도와 94.7% 증거 회상률 달성",
+          "밀집 검색기를 사용하는 기존 검색 에이전트보다 우수한 성능"
+        ],
+        "contribution": "Pi-Serini라는 검색 에이전트를 제안하여, 충분한 검색 깊이를 가진 어휘 검색기와 고성능 LLM의 조합이 깊은 연구 시스템에서 효과적임을 입증",
+        "benchmark": "BrowseComp-Plus에서 GPT-5.5와 결합 시 83.1% 답변 정확도와 94.7% surfaced evidence recall 달성",
+        "critique": "Pi-Serini는 GPT-5.5와 같은 고성능 LLM에 의존하며, 저성능 LLM에서는 성능이 제한될 수 있음",
+        "tags": [
+          "agent",
+          "search agent",
+          "Pi-Serini",
+          "BM25",
+          "lexical retrieval"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.10848"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.10344",
+        "title": "TMAS: Scaling Test-Time Compute via Multi-Agent Synergy",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.10344",
+        "published_at": "2026-05-11",
+        "summary": "추론 시간 동안 추가 계산을 할당하여 LLM의 추론 능력을 향상시키는 테스트 타임 스케일링의 구조화된 접근법으로, TMAS는 다중 에이전트 시너지를 통해 추론 과정을 협업 프로세스로 조직화하여 탐색과 활용의 균형을 개선한다.",
+        "key_points": [
+          "테스트 타임 스케일링을 다중 에이전트 시너지로 확장",
+          "TMAS는 전문화된 에이전트 간의 협업 프로세스로 추론을 조직화",
+          "병렬 추론 궤적을 명시적으로 조정해 탐색과 활용의 균형을 개선",
+          "기존 방법보다 더 효과적인 추론 시간 계산 확장 제공"
+        ],
+        "contribution": "TMAS 프레임워크를 제안하여, 다중 에이전트 시너지를 통해 테스트 타임 계산을 확장하고 추론 성능을 향상시킴",
+        "benchmark": "TMAS는 다중 에이전트 협업을 통해 추론 시간 계산을 확장하고, 기존 방법보다 더 효과적인 추론 성능을 달성",
+        "critique": "TMAS는 다중 에이전트 간의 협업이 필요하며, 에이전트 간 통신 오버헤드가 발생할 수 있음",
+        "tags": [
+          "multi-agent",
+          "test-time scaling",
+          "reasoning",
+          "TMAS"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.10344"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "hackernews_48108778",
+        "title": "Show HN: Statewright – Visual state machines that make AI agents reliable",
+        "source": "hackernews",
+        "url": "https://github.com/statewright/statewright",
+        "published_at": "2026-05-12",
+        "summary": "에이전트 문제 해결이 현재 매우 취약하다는 문제를 해결하기 위해 Statewright는 시각적 상태 머신을 사용하여 AI 에이전트의 신뢰성을 높이는 도구로, 작은 모델을 사용해 문제를 작게 만드는 접근법을 제시한다.",
+        "key_points": [
+          "에이전트 문제 해결이 현재 매우 취약하다는 문제 인식",
+          "Statewright는 시각적 상태 머신을 통해 AI 에이전트의 신뢰성 향상",
+          "작은 모델을 사용해 문제를 작게 만드는 접근법 제시",
+          "대규모 파라미터나 긴 컨텍스트 창 없이도 신뢰성 확보 가능"
+        ],
+        "contribution": "Statewright를 통해 시각적 상태 머신 기반의 워크플로우 오케스트레이션을 제공하여 AI 에이전트의 신뢰성을 향상시킴",
+        "benchmark": "명시된 근거 없음",
+        "critique": "에이전트 문제 해결이 현재 매우 취약하다는 점을 지적하며, 대규모 파라미터나 긴 컨텍스트 창 없이도 신뢰성 확보 가능",
+        "tags": [
+          "AI agents",
+          "state machines",
+          "reliability",
+          "workflow orchestration"
+        ],
+        "evidence_document_ids": [
+          "hackernews_48108778"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.09996",
+        "title": "Omni-Persona: Systematic Benchmarking and Improving Omnimodal Personalization",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.09996",
+        "published_at": "2026-05-11",
+        "summary": "텍스트, 이미지, 오디오를 아우르는 최초의 종합 벤치마크인 Omni-Persona를 제안하여, 다중 모달 대형 언어 모델의 개인화 능력을 체계적으로 평가하고, Calibrated Accuracy를 통해 정확한 근거와 적절한 거절을 동시에 보상한다.",
+        "key_points": [
+          "텍스트, 이미지, 오디오를 아우르는 최초의 종합 벤치마크 Omni-Persona 제안",
+          "Calibrated Accuracy를 통해 정확한 근거와 적절한 거절을 동시에 보상",
+          "4개의 태스크 그룹과 18개의 세부 태스크를 포함한 750개 항목 평가",
+          "다중 모달 개인화에서 근거 행동 진단 및 개선"
+        ],
+        "contribution": "Omni-Persona 벤치마크를 제안하여, 다중 모달 개인화의 체계적 평가와 근거 행동 진단을 위한 Calibrated Accuracy를 도입",
+        "benchmark": "Omni-Persona 벤치마크는 4개의 태스크 그룹과 18개의 세부 태스크를 포함한 750개 항목을 평가하며, Calibrated Accuracy를 통해 정확한 근거와 적절한 거절을 동시에 보상",
+        "critique": "개인화 연구가 주로 비전-언어에 국한되어 있으며, 텍스트, 이미지, 오디오를 아우르는 통합 벤치마크가 부족했음",
+        "tags": [
+          "omnimodal personalization",
+          "cross-modal routing",
+          "Calibrated Accuracy",
+          "benchmark"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.09996"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "hackernews_48111896",
+        "title": "Show HN: Needle: We Distilled Gemini Tool Calling into a 26M Model",
+        "source": "hackernews",
+        "url": "https://github.com/cactus-compute/needle",
+        "published_at": "2026-05-12",
+        "summary": "Gemini의 도구 호출을 26M 모델로 증류하여, 외부 구조화된 지식(RAG, 도구 사용, 검색 증강 생성)에 접근할 때 FFN이 필요 없음을 입증하고, FunctionGemma-270M, Qwen-0.6B, Granite-350M, LFM2.5-350M보다 단일 샷 함수 호출에서 우수한 성능을 보였다.",
+        "key_points": [
+          "Gemini의 도구 호출을 26M 모델로 증류",
+          "외부 구조화된 지식에 접근할 때 FFN이 필요 없음을 입증",
+          "FunctionGemma-270M, Qwen-0.6B, Granite-350M, LFM2.5-350M보다 단일 샷 함수 호출에서 우수한 성능",
+          "RAG, 도구 사용, 검색 증강 생성에서 일반화 가능"
+        ],
+        "contribution": "26M 크기의 Needle 모델을 통해 Gemini의 도구 호출을 증류하여, 외부 구조화된 지식에 접근할 때 FFN 없이도 우수한 성능을 달성",
+        "benchmark": "FunctionGemma-270M, Qwen-0.6B, Granite-350M, LFM2.5-350M보다 단일 샷 함수 호출에서 우수한 성능",
+        "critique": "26M 모델은 매우 작은 크기로, 복잡한 다중 도구 호출이나 긴 컨텍스트에서는 성능이 제한될 수 있음",
+        "tags": [
+          "function calling",
+          "tool use",
+          "agent",
+          "model distillation",
+          "RAG"
+        ],
+        "evidence_document_ids": [
+          "hackernews_48111896"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.10923",
+        "title": "Dynamic Skill Lifecycle Management for Agentic Reinforcement Learning",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.10923",
+        "published_at": "2026-05-11",
+        "summary": "에이전트 강화 학습에서 외부 스킬의 활성 집합을 동적으로 최적화하는 SLIM 프레임워크를 제안하여, 제한된 파라미터 용량과 스킬 간 불균형 기여도로 인해 최적 스킬 집합이 비단조적이고 태스크 및 단계에 따라 달라짐을 해결한다.",
+        "key_points": [
+          "에이전트 강화 학습에서 외부 스킬의 활성 집합을 동적으로 최적화",
+          "제한된 파라미터 용량과 스킬 간 불균형 기여도로 인해 최적 스킬 집합이 비단조적임",
+          "SLIM 프레임워크를 통해 태스크 및 단계에 따라 스킬 집합을 조정",
+          "파라미터 메모리만으로 해결할 수 없는 복잡한 태스크에 대한 성능 향상"
+        ],
+        "contribution": "SLIM 프레임워크를 제안하여, 에이전트 강화 학습에서 외부 스킬의 활성 집합을 동적으로 최적화하여 태스크 및 단계에 따라 최적의 스킬 집합을 선택",
+        "benchmark": "명시된 근거 없음",
+        "critique": "에이전트 강화 학습에서 외부 스킬의 활성 집합을 동적으로 최적화하여, 제한된 파라미터 용량과 스킬 간 불균형 기여도로 인해 최적 스킬 집합이 비단조적이고 태스크 및 단계에 따라 달라짐을 해결",
+        "tags": [
+          "agent",
+          "skill",
+          "reinforcement learning",
+          "SLIM"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.10923"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.10488",
+        "title": "DeepRefine: Agent-Compiled Knowledge Refinement via Reinforcement Learning",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.10488",
+        "published_at": "2026-05-11",
+        "summary": "에이전트 컴파일 지식 기반의 품질을 개선하기 위해 DeepRefine을 제안하여, 불완전성, 부정확성, 중복성 등의 결함을 해결하고, 사용자 쿼리에 맞춰 지식 기반을 정제하여 검색 정확도와 다운스트림 태스크 성능을 향상시킨다.",
+        "key_points": [
+          "에이전트 컴파일 지식 기반의 품질 문제(불완전성, 부정확성, 중복성) 해결",
+          "DeepRefine을 통해 지식 기반을 정제하여 검색 정확도 향상",
+          "사용자 쿼리에 맞춰 지식 기반을 정제하여 다운스트림 태스크 성능 개선",
+          "다중 턴 상호작용을 통해 지식 기반과 지속적으로 개선"
+        ],
+        "contribution": "DeepRefine을 통해 에이전트 컴파일 지식 기반의 품질을 개선하고, 사용자 쿼리에 맞춰 지식 기반을 정제하여 다운스트림 태스크 성능을 향상시킴",
+        "benchmark": "명시된 근거 없음",
+        "critique": "에이전트 컴파일 지식 기반의 품질을 개선하기 위해 DeepRefine을 제안하여, 불완전성, 부정확성, 중복성 등의 결함을 해결하고, 사용자 쿼리에 맞춰 지식 기반을 정제하여 검색 정확도와 다운스트림 태스크 성능을 향상시킴",
+        "tags": [
+          "agent-compiled knowledge bases",
+          "LLM agents",
+          "knowledge refinement",
+          "reinforcement learning",
+          "DeepRefine"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.10488"
+        ],
+        "llm_model": "solar-pro-3"
+      },
+      {
+        "document_id": "huggingface_2605.01402",
+        "title": "Injecting Distributional Awareness into MLLMs via Reinforcement Learning for Deep Imbalanced Regression",
+        "source": "huggingface",
+        "url": "https://huggingface.co/papers/2605.01402",
+        "published_at": "2026-05-11",
+        "summary": "긴 꼬리 분포에서 MLLM의 회귀 성능을 개선하기 위해 Group Relative Policy Optimization(GRPO)을 기반으로 한 분포 인식 강화 학습 프레임워크를 제안하여, Concordance Correlation Coefficient 기반 보상을 통해 예측과 실제 분포의 상관, 스케일, 평균을 정렬한다.",
+        "key_points": [
+          "긴 꼬리 분포에서 MLLM의 회귀 성능 문제 해결",
+          "Group Relative Policy Optimization(GRPO) 기반 분포 인식 강화 학습 프레임워크 제안",
+          "Concordance Correlation Coefficient 기반 보상을 통해 예측과 실제 분포 정렬",
+          "토큰 수준 SFT와 점별 회귀 보상의 한계 극복"
+        ],
+        "contribution": "Group Relative Policy Optimization(GRPO)을 기반으로 한 분포 인식 강화 학습 프레임워크를 제안하여, 긴 꼬리 분포에서 MLLM의 회귀 성능을 개선",
+        "benchmark": "Group Relative Policy Optimization(GRPO)을 기반으로 한 분포 인식 강화 학습 프레임워크를 제안하여, Concordance Correlation Coefficient 기반 보상을 통해 예측과 실제 분포의 상관, 스케일, 평균을 정렬",
+        "critique": "토큰 수준 SFT와 점별 회귀 보상은 고밀도 영역에 편향되어 긴 꼬리 성능을 저하시킴",
+        "tags": [
+          "multimodal large language models",
+          "reinforcement learning",
+          "regression",
+          "GRPO",
+          "distribution-aware"
+        ],
+        "evidence_document_ids": [
+          "huggingface_2605.01402"
+        ],
+        "llm_model": "solar-pro-3"
+      }
+    ],
+    "groundedness_score": 0.9259
+  }
+}
