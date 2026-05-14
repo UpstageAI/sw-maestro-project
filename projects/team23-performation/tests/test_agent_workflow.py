@@ -1,5 +1,7 @@
 import importlib
+import logging
 from datetime import date
+from unittest.mock import patch
 
 from performation_agent import generate_visit_guide
 from performation_agent.nodes.analyze_input import analyze_input
@@ -12,7 +14,7 @@ from performation_agent.nodes.infer_venue_from_search import infer_venue_from_se
 from performation_agent.nodes.load_venue_data import load_venue_data
 from performation_agent.nodes.search_kopis_official import search_kopis_official
 from performation_agent.nodes.summarize_information import summarize_information
-from performation_agent.workflow import NODE_SEQUENCE
+from performation_agent.workflow import NODE_SEQUENCE, _state_changes_summary, _state_log_summary
 from performation_domain import ConfidenceLabel, EventCandidate, EventInfo, VenueInfo
 
 
@@ -31,6 +33,79 @@ def test_workflow_has_expected_node_sequence() -> None:
     "assign_confidence",
     "format_response",
   )
+
+
+def test_workflow_logs_node_start_and_completion(caplog) -> None:
+  caplog.set_level(logging.INFO, logger="performation.agent.workflow")
+
+  guide = generate_visit_guide("KSPO DOME")
+
+  assert guide.venue is not None
+  assert any("[workflow 01/12] START analyze_input" in record.message for record in caplog.records)
+  assert any("[workflow 12/12] DONE  format_response" in record.message for record in caplog.records)
+  assert any("changes=" in record.message for record in caplog.records)
+  assert any("venue=KSPO DOME" in record.message for record in caplog.records)
+  assert any("guide=" in record.message for record in caplog.records)
+
+
+def test_state_log_summary_contains_demo_debug_fields() -> None:
+  summary = _state_log_summary(
+    {
+      "input_type": "venue_name",
+      "venue": VenueInfo(name="KSPO DOME"),
+      "search_queries": [{"query": "KSPO DOME 공식 정보", "purpose": "official"}],
+      "search_results": [
+        {
+          "title": "KSPO DOME",
+          "url": "https://example.com",
+          "snippet": "공식 정보",
+          "query": "KSPO DOME 공식 정보",
+        }
+      ],
+      "fallback_used": True,
+      "llm_used": False,
+    }
+  )
+
+  assert "intent=pending" in summary
+  assert "type=venue_name" in summary
+  assert "venue=KSPO DOME" in summary
+  assert "search=1q/1r" in summary
+  assert "guide=0s/0c/0t/0o" in summary
+  assert "fallback=True" in summary
+  assert "llm=False" in summary
+  assert "response=no" in summary
+
+
+def test_state_changes_summary_shows_only_changed_demo_fields() -> None:
+  changes = _state_changes_summary(
+    {"input_type": "pending"},
+    {
+      "input_type": "venue_name",
+      "venue": VenueInfo(name="KSPO DOME"),
+      "search_queries": [{"query": "KSPO DOME 공식 정보", "purpose": "official"}],
+      "summary": ["공연장 기본 정보를 확인했습니다."],
+    },
+  )
+
+  assert "input_type:pending->venue_name" in changes
+  assert "venue:none->KSPO DOME" in changes
+  assert "search_queries:0->1" in changes
+  assert "summary:0->1" in changes
+  assert "search_results" not in changes
+
+
+def test_workflow_skips_summary_work_when_info_logging_disabled(caplog) -> None:
+  caplog.set_level(logging.WARNING, logger="performation.agent.workflow")
+
+  with patch("performation_agent.workflow._state_log_summary") as summary_mock, \
+       patch("performation_agent.workflow._state_changes_summary") as changes_mock:
+    guide = generate_visit_guide("KSPO DOME")
+
+  assert guide.venue is not None
+  summary_mock.assert_not_called()
+  changes_mock.assert_not_called()
+  assert not any("[workflow" in record.message for record in caplog.records)
 
 
 def test_search_kopis_official_merges_official_results() -> None:
