@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.soma.ai13be.chat.service.ChatServiceTest" tests="14" skipped="0" failures="0" errors="0" timestamp="2026-05-08T09:32:54.413Z" hostname="MINCom" time="0.343">
+  <properties/>
+  <testcase name="rejectsSendMessageForNonExistentSession()" classname="com.soma.ai13be.chat.service.ChatServiceTest" time="0.034"/>
+  <testcase name="assignsSequentialMessageNumbers()" classname="com.soma.ai13be.chat.service.ChatServiceTest" time="0.01"/>
+  <testcase name="includesConversationHistoryInApiRequest()" classname="com.soma.ai13be.chat.service.ChatServiceTest" time="0.007"/>
+  <testcase name="throwsSolarResponseEmptyWhenApiReturnsNullContent()" classname="com.soma.ai13be.chat.service.ChatServiceTest" time="0.003"/>
+  <testcase name="rejectsSessionWithBlankTitle()" classname="com.soma.ai13be.chat.service.ChatServiceTest" time="0.001"/>
+  <testcase name="returnsEmptyHistoryForNewSession()" classname="com.soma.ai13be.chat.service.ChatServiceTest" time="0.002"/>
+  <testcase name="sendsFirstMessageAndReturnsAssistantReply()" classname="com.soma.ai13be.chat.service.ChatServiceTest" time="0.002"/>
+  <testcase name="injectsKnowledgeContextBetweenSystemPromptAndHistory()" classname="com.soma.ai13be.chat.service.ChatServiceTest" time="0.003"/>
+  <testcase name="rejectsGetHistoryForNonExistentSession()" classname="com.soma.ai13be.chat.service.ChatServiceTest" time="0.001"/>
+  <testcase name="createsSessionForExistingPersona()" classname="com.soma.ai13be.chat.service.ChatServiceTest" time="0.002"/>
+  <testcase name="rejectsSessionForNonExistentPersona()" classname="com.soma.ai13be.chat.service.ChatServiceTest" time="0.001"/>
+  <testcase name="skipsKnowledgeContextWhenNoNodes()" classname="com.soma.ai13be.chat.service.ChatServiceTest" time="0.002"/>
+  <testcase name="rejectsBlankUserMessage()" classname="com.soma.ai13be.chat.service.ChatServiceTest" time="0.001"/>
+  <testcase name="returnsMessagesOrderedBySequence()" classname="com.soma.ai13be.chat.service.ChatServiceTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

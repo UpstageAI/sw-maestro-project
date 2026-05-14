@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.soma.ai13be.common.client.SolarApiClientTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-05-08T09:32:54.757Z" hostname="MINCom" time="0.049">
+  <properties/>
+  <testcase name="includesConfiguredModelAndOptionalGenerationParameters()" classname="com.soma.ai13be.common.client.SolarApiClientTest" time="0.038"/>
+  <testcase name="sendsChatCompletionRequestAndReturnsAssistantMessage()" classname="com.soma.ai13be.common.client.SolarApiClientTest" time="0.011"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,20 @@
+[project]
+name = "ai-gateway"
+version = "0.0.0"
+description = "냥멍일기 AI Gateway (FastAPI + LangGraph)"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "pyjwt[crypto]>=2.10.0",
+    "pydantic-settings>=2.6.0",
+    "langgraph>=0.2.50",
+    "langchain-openai>=0.3.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ai_gateway"]

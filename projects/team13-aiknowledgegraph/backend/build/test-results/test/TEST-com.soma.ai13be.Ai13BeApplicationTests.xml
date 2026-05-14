@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.soma.ai13be.Ai13BeApplicationTests" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-08T09:32:50.387Z" hostname="MINCom" time="3.518">
+  <properties/>
+  <testcase name="contextLoads()" classname="com.soma.ai13be.Ai13BeApplicationTests" time="0.266"/>
+  <system-out><![CDATA[18:32:50.491 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.soma.ai13be.Ai13BeApplicationTests]: Ai13BeApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+18:32:50.551 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.soma.ai13be.Ai13BeApplication for test class com.soma.ai13be.Ai13BeApplicationTests
+18:32:50.586 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.soma.ai13be.Ai13BeApplicationTests]: Ai13BeApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+18:32:50.587 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.soma.ai13be.Ai13BeApplication for test class com.soma.ai13be.Ai13BeApplicationTests
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.6)
+
+2026-05-08T18:32:50.781+09:00  INFO 39196 --- [    Test worker] com.soma.ai13be.Ai13BeApplicationTests   : Starting Ai13BeApplicationTests using Java 21.0.10 with PID 39196 (started by minbros in /home/minbros/projects/java/AI13-BE)
+2026-05-08T18:32:50.782+09:00  INFO 39196 --- [    Test worker] com.soma.ai13be.Ai13BeApplicationTests   : No active profile set, falling back to 1 default profile: "default"
+2026-05-08T18:32:51.230+09:00  INFO 39196 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-05-08T18:32:51.267+09:00  INFO 39196 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 32 ms. Found 7 JPA repository interfaces.
+2026-05-08T18:32:51.542+09:00  INFO 39196 --- [    Test worker] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-05-08T18:32:51.571+09:00  INFO 39196 --- [    Test worker] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.12.Final
+2026-05-08T18:32:51.829+09:00  INFO 39196 --- [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-05-08T18:32:51.846+09:00  INFO 39196 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-05-08T18:32:51.934+09:00  INFO 39196 --- [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:ai13-test user=SA
+2026-05-08T18:32:51.935+09:00  INFO 39196 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-05-08T18:32:51.967+09:00  INFO 39196 --- [    Test worker] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:h2:mem:ai13-test]
+	Database driver: H2 JDBC Driver
+	Database dialect: H2Dialect
+	Database version: 2.4.240
+	Default catalog/schema: ai13-test/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: 100
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-05-08T18:32:52.459+09:00  INFO 39196 --- [    Test worker] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-05-08T18:32:52.497+09:00  INFO 39196 --- [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-05-08T18:32:52.542+09:00  INFO 39196 --- [    Test worker] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-05-08T18:32:53.631+09:00  INFO 39196 --- [    Test worker] com.soma.ai13be.Ai13BeApplicationTests   : Started Ai13BeApplicationTests in 3.011 seconds (process running for 3.82)
+2026-05-08T18:32:53.633+09:00  WARN 39196 --- [    Test worker] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-05-08T18:32:53.633+09:00  WARN 39196 --- [    Test worker] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+]]></system-out>
+  <system-err><![CDATA[Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+WARNING: A Java agent has been loaded dynamically (/home/minbros/.gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy-agent/1.17.8/f09415827a71be7ed621c7bd02550678f28bc81c/byte-buddy-agent-1.17.8.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+</testsuite>

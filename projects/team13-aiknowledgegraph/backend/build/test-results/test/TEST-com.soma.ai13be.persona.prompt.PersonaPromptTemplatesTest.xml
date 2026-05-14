@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.soma.ai13be.persona.prompt.PersonaPromptTemplatesTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-05-08T09:32:56.207Z" hostname="MINCom" time="0.002">
+  <properties/>
+  <testcase name="createsSystemPromptForPromptGeneration()" classname="com.soma.ai13be.persona.prompt.PersonaPromptTemplatesTest" time="0.0"/>
+  <testcase name="createsUserPromptWithDomainName()" classname="com.soma.ai13be.persona.prompt.PersonaPromptTemplatesTest" time="0.0"/>
+  <testcase name="usesGeneralDomainWhenDomainNameIsBlank()" classname="com.soma.ai13be.persona.prompt.PersonaPromptTemplatesTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

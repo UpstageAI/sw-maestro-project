@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "Kairos",
+    "slug": "kairos",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "kairos",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#eef0f3"
+      }
+    },
+    "plugins": [
+      "expo-notifications"
+    ]
+  }
+}
