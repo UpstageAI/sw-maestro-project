@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.soma.ai13be.knowledge.controller.InternalKnowledgeGraphControllerTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-05-08T09:32:55.886Z" hostname="MINCom" time="0.071">
+  <properties/>
+  <testcase name="createsNodeThroughInternalEndpoint()" classname="com.soma.ai13be.knowledge.controller.InternalKnowledgeGraphControllerTest" time="0.007"/>
+  <testcase name="returnsNotFoundWhenCreatingInternalEdgeForUnknownNode()" classname="com.soma.ai13be.knowledge.controller.InternalKnowledgeGraphControllerTest" time="0.004"/>
+  <testcase name="createsEdgeThroughInternalEndpoint()" classname="com.soma.ai13be.knowledge.controller.InternalKnowledgeGraphControllerTest" time="0.007"/>
+  <system-out><![CDATA[2026-05-08T18:32:55.929+09:00  INFO 39196 --- [    Test worker] o.s.mock.web.MockServletContext          : Initializing Spring TestDispatcherServlet ''
+2026-05-08T18:32:55.929+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-05-08T18:32:55.929+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+2026-05-08T18:32:55.941+09:00  INFO 39196 --- [    Test worker] o.s.mock.web.MockServletContext          : Initializing Spring TestDispatcherServlet ''
+2026-05-08T18:32:55.942+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-05-08T18:32:55.942+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+2026-05-08T18:32:55.949+09:00  INFO 39196 --- [    Test worker] o.s.mock.web.MockServletContext          : Initializing Spring TestDispatcherServlet ''
+2026-05-08T18:32:55.950+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-05-08T18:32:55.950+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

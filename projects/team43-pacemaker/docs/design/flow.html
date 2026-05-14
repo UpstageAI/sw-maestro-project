@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>43조 운동 스케줄링 에이전트 — 시스템 플로우</title>
+<style>
+  :root {
+    --c1: #dbeafe; --c1-b: #2563eb;
+    --c2: #dcfce7; --c2-b: #16a34a;
+    --c3: #fef3c7; --c3-b: #ca8a04;
+    --c4: #ede9fe; --c4-b: #7c3aed;
+    --c5: #ffe4e6; --c5-b: #e11d48;
+    --bg: #fafafa;
+    --fg: #0f172a;
+    --muted: #64748b;
+    --line: #e2e8f0;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Segoe UI", Roboto, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 48px 32px 80px;
+  }
+  header {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 24px;
+    margin-bottom: 48px;
+  }
+  .badge {
+    display: inline-block;
+    background: #0f172a;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.02em;
+  }
+  h1 {
+    font-size: 32px;
+    margin: 16px 0 8px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    margin: 0;
+  }
+  .meta {
+    margin-top: 16px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  section {
+    margin-bottom: 64px;
+  }
+  h2 {
+    font-size: 22px;
+    margin: 0 0 6px;
+    font-weight: 700;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  h2 .num {
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    font-size: 18px;
+  }
+  .lead {
+    color: var(--muted);
+    font-size: 14px;
+    margin: 0 0 20px;
+    max-width: 780px;
+  }
+  .diagram {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 28px 20px;
+    overflow-x: auto;
+  }
+  .diagram .mermaid { display: flex; justify-content: center; }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
+    font-size: 13px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 14px;
+  }
+  .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .d1 { background: var(--c1-b); }
+  .d2 { background: var(--c2-b); }
+  .d3 { background: var(--c3-b); }
+  .d4 { background: var(--c4-b); }
+  .d5 { background: var(--c5-b); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 24px;
+    font-size: 14px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  th, td {
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  th {
+    background: #f8fafc;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  tr:last-child td { border-bottom: none; }
+  td code {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace;
+    font-size: 12.5px;
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .slice-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 6px;
+  }
+  .t1 { background: var(--c1); color: var(--c1-b); }
+  .t2 { background: var(--c2); color: var(--c2-b); }
+  .t3 { background: var(--c3); color: var(--c3-b); }
+  .t4 { background: var(--c4); color: var(--c4-b); }
+  .t5 { background: var(--c5); color: var(--c5-b); }
+
+  footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <span class="badge">5/4 킥오프 공유용 · plan.md 반영판</span>
+  <h1>43조 — 맞춤형 운동 스케줄링 에이전트</h1>
+  <p class="subtitle">로컬 JSON으로 페르소나 일정·건강·운동기록을 관리하고, 이번 주 맞춤 운동 스케줄을 자동 생성·등록하는 LangGraph Agent + FastAPI 게이트웨이 + Flutter Web UI</p>
+  <p class="meta">작성일 2026-05-03 · 5명 역할 분담 (A 노준영 / B 박장우 / C 이유준 / D 박영준 / E 신승민) · MVP 기간 5/4 ~ 5/10</p>
+</header>
+
+<section>
+  <h2><span class="num">01</span>시스템 한눈에 보기</h2>
+  <p class="lead">Flutter Web UI가 FastAPI 게이트웨이를 통해 (1) 로컬 JSON 데이터를 REST CRUD하고, (2) LangGraph Agent에 SSE 스트림으로 채팅한다. F7 등록 버튼도 같은 <code>POST /data/calendar</code>를 호출한다. 색상은 5명의 담당 슬라이스(A~E).</p>
+  <div class="diagram">
+    <pre class="mermaid">
+flowchart LR
+  U([사용자]):::user
+  FE[["Flutter Web<br/>frontend/"]]:::s1
+  CARDS[좌·중앙 카드 4종<br/>일정·컨디션·운동·피로도]:::s1
+  CHATUI[채팅 UI · SSE 클라이언트<br/>frontend/lib/chat/]:::s2
+  BE[["FastAPI 게이트웨이<br/>backend/main.py"]]:::s4
+  RDATA[/data/* CRUD<br/>backend/api/data.py]:::s4
+  RCHAT[/agent/chat SSE<br/>backend/api/chat.py]:::s4
+  AG{{"LangGraph Agent<br/>agent/graph.py · nodes.py"}}:::s3
+  MEM[(체크포인터<br/>memory/)]:::s3
+  TOOLS[CRUD Tool<br/>tools/data_tools.py]:::s5
+  D1[(calendar.json)]:::s5
+  D2[(health.json)]:::s5
+  D3[(workouts.json)]:::s5
+
+  U -- 클릭 / 채팅 --> FE
+  FE --> CARDS & CHATUI
+  CARDS -- "GET/POST/PATCH/DELETE /data/*" --> BE
+  CHATUI -- "POST /agent/chat (SSE)" --> BE
+  BE --> RDATA & RCHAT
+  RDATA --> TOOLS
+  RCHAT --> AG
+  AG <--> MEM
+  AG -- "@tool 래퍼" --> TOOLS
+  TOOLS --> D1 & D2 & D3
+  RCHAT -. ChatChunk 시퀀스 .-> CHATUI
+  RDATA -. JSON 응답 .-> CARDS
+  FE -- 응답 + 추천 + 레이더 --> U
+
+  classDef user fill:#0f172a,color:#fff,stroke:#0f172a;
+  classDef s1 fill:#dbeafe,stroke:#2563eb,color:#0f172a;
+  classDef s2 fill:#dcfce7,stroke:#16a34a,color:#0f172a;
+  classDef s3 fill:#fef3c7,stroke:#ca8a04,color:#0f172a;
+  classDef s4 fill:#ede9fe,stroke:#7c3aed,color:#0f172a;
+  classDef s5 fill:#ffe4e6,stroke:#e11d48,color:#0f172a;
+    </pre>
+  </div>
+  <div class="legend">
+    <span class="chip"><span class="dot d1"></span>A · Flutter FE 대시보드 (노준영)</span>
+    <span class="chip"><span class="dot d2"></span>B · 채팅 UI + 프로토콜 (박장우)</span>
+    <span class="chip"><span class="dot d3"></span>C · LangGraph Agent (이유준)</span>
+    <span class="chip"><span class="dot d4"></span>D/E · FastAPI 라우터(공유)</span>
+    <span class="chip"><span class="dot d5"></span>D/E · CRUD Tool + 데이터 (박영준 · 신승민)</span>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">02</span>사용자 인터랙션 흐름</h2>
+  <p class="lead">앱 진입부터 일정 등록까지의 한 세션. 채팅 추론은 SSE로 토큰/툴콜/제안 청크가 순차 도달. F7 등록은 <code>POST /data/calendar</code>로 슬롯 1건씩 추가되며, 멀티턴 재조정 후엔 직전 슬롯들을 DELETE로 비우고 새로 쓴다. 빨간 외곽선 박스는 <strong>JSON 데이터에 실제 쓰기가 발생하는 단계</strong>.</p>
+  <div class="diagram">
+    <pre class="mermaid">
+flowchart TD
+  A([앱 진입]):::start
+  B["좌측 카드 3종 자동 로드<br/>F1 일정 · F2 컨디션 · F3 운동이력<br/>(GET /data/*)"]:::ui
+  C[가운데 부위별 피로도 레이더<br/>F5 — Flutter 위젯]:::ui
+  D{{사용자 채팅 입력<br/>예: 이번 주 운동 일정 추천}}:::input
+  E["LangGraph Agent 추론<br/>F4 ReAct 3단계 · SSE 스트림"]:::agent
+  F["text·tool_call·proposal 청크<br/>채팅·카드·레이더 갱신"]:::ui
+  G{다음 액션?}:::decision
+  H["멀티턴 재조정 F6<br/>예: 화요일은 빼줘"]:::input
+  I["캘린더에 등록 버튼 클릭 F7"]:::ui
+  K{세션에 기존<br/>등록 슬롯 있음?}:::decision
+  L["DELETE /data/calendar/{id}<br/>이전 슬롯 제거"]:::write
+  M["각 WorkoutSlot 을<br/>POST /data/calendar"]:::write
+  N[등록된 id 목록<br/>세션 저장]:::ui
+  O["N개 일정 등록 완료 토스트<br/>F1 카드 refetch"]:::ui
+  J([세션 종료 / 재조정 반복]):::start
+
+  A --> B --> C --> D --> E --> F --> G
+  G -- 재조정 --> H --> E
+  G -- 등록 --> I --> K
+  K -- 예 --> L --> M
+  K -- 아니오 --> M
+  M --> N --> O --> J
+
+  classDef start fill:#0f172a,color:#fff,stroke:#0f172a;
+  classDef ui fill:#dbeafe,stroke:#2563eb,color:#0f172a;
+  classDef input fill:#f1f5f9,stroke:#64748b,color:#0f172a;
+  classDef agent fill:#fef3c7,stroke:#ca8a04,color:#0f172a;
+  classDef decision fill:#fef9c3,stroke:#ca8a04,color:#0f172a;
+  classDef write fill:#fee2e2,stroke:#dc2626,color:#0f172a,stroke-width:2px;
+    </pre>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">03</span>LangGraph 에이전트 노드 흐름</h2>
+  <p class="lead">시스템 프롬프트로 ReAct 3단계(일정→건강→운동)를 강제한다. 멀티턴 수정 요청은 체크포인터에서 이전 상태를 복원해 <code>refine_node</code>로 진입한다. 진입점은 <code>run_agent_stream(user_input, thread_id)</code> — async iterator로 <code>ChatChunk</code>를 yield한다.</p>
+  <div class="diagram">
+    <pre class="mermaid">
+flowchart TD
+  IN([POST /agent/chat]):::io
+  CK{{이전 thread_id?<br/>체크포인터 조회}}:::mem
+  TH[think_node<br/>LLM이 다음 액션 결정]:::node
+  CT1[call_tool_node<br/>get_calendar]:::tool
+  CT2[call_tool_node<br/>get_health]:::tool
+  CT3[call_tool_node<br/>get_workouts]:::tool
+  CS[compose_schedule_node<br/>빈 시간 + 강도 + 부위 매칭]:::node
+  RF[refine_node<br/>해당 일자만 변경]:::node
+  OUT([SSE: text → tool_call → proposal → done<br/>ChatChunk 시퀀스]):::io
+
+  IN --> CK
+  CK -- 신규 세션 --> TH
+  CK -- 멀티턴 수정 --> RF
+  TH --> CT1 --> CT2 --> CT3 --> CS --> OUT
+  RF --> CS
+
+  subgraph REACT [ReAct 3단계 강제 - prompts.py SYSTEM_PROMPT]
+    CT1
+    CT2
+    CT3
+  end
+
+  classDef io fill:#0f172a,color:#fff,stroke:#0f172a;
+  classDef node fill:#ede9fe,stroke:#7c3aed,color:#0f172a;
+  classDef tool fill:#fef3c7,stroke:#ca8a04,color:#0f172a;
+  classDef mem fill:#e0f2fe,stroke:#0284c7,color:#0f172a;
+  style REACT fill:#fafafa,stroke:#cbd5e1,stroke-dasharray: 4 4;
+    </pre>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">04</span>슬라이스 ↔ 모듈 ↔ 인터페이스 매핑</h2>
+  <p class="lead">5명이 각자 어디를 만들고 어떤 함수/엔드포인트로 다른 슬라이스와 만나는지. 시그니처는 이미 락 — 변경은 <code>[interface-change]</code> PR + 5명 react 후 머지.</p>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 18%">슬라이스</th>
+        <th style="width: 30%">담당 디렉토리·파일</th>
+        <th>외부에 노출하는 인터페이스</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="slice-tag t1">A</span>Flutter Web FE <small>(노준영)</small></td>
+        <td>
+          <code>frontend/</code> 전체<br/>
+          <code>frontend/lib/cards/</code> (calendar/health/workouts/fatigue)<br/>
+          <code>frontend/lib/api/</code> (REST 클라이언트)
+        </td>
+        <td>
+          BE의 <code>GET /data/*</code> 호출<br/>
+          좌측 카드 3종 + 가운데 피로도 레이더 위젯
+        </td>
+      </tr>
+      <tr>
+        <td><span class="slice-tag t2">B</span>Chat UI + 프로토콜 <small>(박장우)</small></td>
+        <td>
+          <code>frontend/lib/chat/</code><br/>
+          <code>backend/api/chat.py</code> 스펙 합의 (C와)
+        </td>
+        <td>
+          BE의 <code>POST /agent/chat</code> SSE 클라이언트<br/>
+          <code>ChatChunk</code> type별 payload 표 정의 (schemas/CLAUDE.md)
+        </td>
+      </tr>
+      <tr>
+        <td><span class="slice-tag t3">C</span>LangGraph Agent <small>(이유준)</small></td>
+        <td>
+          <code>agent/graph.py</code><br/>
+          <code>agent/nodes.py</code><br/>
+          <code>agent/prompts.py</code><br/>
+          <code>memory/</code>
+        </td>
+        <td>
+          <code>async run_agent_stream(user_input, thread_id) -&gt; AsyncIterator[ChatChunk]</code><br/>
+          think · call_tool · compose_schedule · refine 노드<br/>
+          체크포인터(InMemorySaver → SqliteSaver 옵션)
+        </td>
+      </tr>
+      <tr>
+        <td><span class="slice-tag t4">D</span>CRUD calendar+workouts + Tech Lead <small>(박영준)</small></td>
+        <td>
+          <code>tools/data_tools.py</code> (calendar + workouts CRUD 8개)<br/>
+          <code>data/calendar.json</code>, <code>data/workouts.json</code><br/>
+          <code>backend/api/data.py</code> 위임<br/>
+          (Tech Lead) 매일 EOD main 점검
+        </td>
+        <td>
+          <code>get_/create_/update_/delete_calendar_event</code><br/>
+          <code>get_/create_/update_/delete_workout</code><br/>
+          KPI 1·3 시나리오 매칭 코드
+        </td>
+      </tr>
+      <tr>
+        <td><span class="slice-tag t5">E</span>CRUD Tool + 시나리오 <small>(신승민)</small></td>
+        <td>
+          health CRUD 4개 + scenarios 5개 적재 주도 + 프롬프트 튜닝 주도<br/>
+          (D는 calendar/workouts CRUD 8개 + Tech Lead)
+        </td>
+        <td>
+          D와 동일 패턴, 다른 도메인
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<footer>
+  외부 LLM 호출은 <code>agent/nodes.py</code> 한 곳에서만. FastAPI 라우터(<code>backend/api/</code>)는 비즈니스 로직 금지 — 검증·직렬화·에러 매핑만. Mock-first — 다른 슬라이스 미완성이어도 더미 데이터/501 stub으로 단독 실행. 데이터 모델 변경은 <code>schemas/CLAUDE.md</code> 절차 준수. <strong>실제 Google Calendar / Apple Health 미연동</strong> — 모든 데이터는 <code>data/*.json</code>.
+</footer>
+
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: "default",
+    flowchart: { htmlLabels: true, curve: "basis" },
+    securityLevel: "loose",
+    fontFamily: '-apple-system, "Apple SD Gothic Neo", "Pretendard", sans-serif'
+  });
+</script>
+</body>
+</html>

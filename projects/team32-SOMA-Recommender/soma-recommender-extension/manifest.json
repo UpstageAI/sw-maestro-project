@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "SOMA Recommender",
+  "description": "Personalized recommendation helper for SW Maestro participants.",
+  "version": "0.1.0",
+  "action": {
+    "default_popup": "src/popup/index.html",
+    "default_title": "SOMA Recommender"
+  },
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.swmaestro.ai/sw/mypage/userAnswer/history.do*",
+        "https://swmaestro.ai/sw/mypage/userAnswer/history.do*"
+      ],
+      "js": ["src/content.js"]
+    }
+  ],
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": [
+    "https://www.swmaestro.ai/sw/mypage/userAnswer/history.do*",
+    "https://swmaestro.ai/sw/mypage/userAnswer/history.do*",
+    "http://localhost:8000/*",
+    "http://127.0.0.1:8000/*"
+  ]
+}

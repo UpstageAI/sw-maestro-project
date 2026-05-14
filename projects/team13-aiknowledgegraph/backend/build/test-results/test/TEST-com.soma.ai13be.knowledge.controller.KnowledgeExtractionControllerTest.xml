@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.soma.ai13be.knowledge.controller.KnowledgeExtractionControllerTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-05-08T09:32:55.957Z" hostname="MINCom" time="0.053">
+  <properties/>
+  <testcase name="extractsKnowledgeFromFreeText()" classname="com.soma.ai13be.knowledge.controller.KnowledgeExtractionControllerTest" time="0.006"/>
+  <testcase name="rejectsBlankText()" classname="com.soma.ai13be.knowledge.controller.KnowledgeExtractionControllerTest" time="0.003"/>
+  <system-out><![CDATA[2026-05-08T18:32:55.997+09:00  INFO 39196 --- [    Test worker] o.s.mock.web.MockServletContext          : Initializing Spring TestDispatcherServlet ''
+2026-05-08T18:32:55.997+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-05-08T18:32:55.997+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+2026-05-08T18:32:56.007+09:00  INFO 39196 --- [    Test worker] o.s.mock.web.MockServletContext          : Initializing Spring TestDispatcherServlet ''
+2026-05-08T18:32:56.007+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-05-08T18:32:56.007+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

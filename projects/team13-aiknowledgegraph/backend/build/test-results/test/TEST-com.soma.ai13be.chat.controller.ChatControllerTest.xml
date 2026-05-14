@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.soma.ai13be.chat.controller.ChatControllerTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-05-08T09:32:53.908Z" hostname="MINCom" time="0.504">
+  <properties/>
+  <testcase name="returnsEmptyArrayForNewSession()" classname="com.soma.ai13be.chat.controller.ChatControllerTest" time="0.182"/>
+  <testcase name="createsSession()" classname="com.soma.ai13be.chat.controller.ChatControllerTest" time="0.041"/>
+  <testcase name="returnsNotFoundWhenSessionDoesNotExist()" classname="com.soma.ai13be.chat.controller.ChatControllerTest" time="0.014"/>
+  <testcase name="returnsBadRequestWhenTitleIsBlank()" classname="com.soma.ai13be.chat.controller.ChatControllerTest" time="0.007"/>
+  <testcase name="returnsNotFoundWhenPersonaDoesNotExist()" classname="com.soma.ai13be.chat.controller.ChatControllerTest" time="0.006"/>
+  <testcase name="sendsMessageAndReturnsAssistantReply()" classname="com.soma.ai13be.chat.controller.ChatControllerTest" time="0.007"/>
+  <testcase name="returnsMessageHistory()" classname="com.soma.ai13be.chat.controller.ChatControllerTest" time="0.009"/>
+  <system-out><![CDATA[2026-05-08T18:32:54.079+09:00  INFO 39196 --- [    Test worker] o.s.mock.web.MockServletContext          : Initializing Spring TestDispatcherServlet ''
+2026-05-08T18:32:54.079+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-05-08T18:32:54.081+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-05-08T18:32:54.284+09:00  INFO 39196 --- [    Test worker] o.s.mock.web.MockServletContext          : Initializing Spring TestDispatcherServlet ''
+2026-05-08T18:32:54.285+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-05-08T18:32:54.285+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+2026-05-08T18:32:54.337+09:00  INFO 39196 --- [    Test worker] o.s.mock.web.MockServletContext          : Initializing Spring TestDispatcherServlet ''
+2026-05-08T18:32:54.337+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-05-08T18:32:54.337+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+2026-05-08T18:32:54.360+09:00  INFO 39196 --- [    Test worker] o.s.mock.web.MockServletContext          : Initializing Spring TestDispatcherServlet ''
+2026-05-08T18:32:54.360+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-05-08T18:32:54.360+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+2026-05-08T18:32:54.373+09:00  INFO 39196 --- [    Test worker] o.s.mock.web.MockServletContext          : Initializing Spring TestDispatcherServlet ''
+2026-05-08T18:32:54.373+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-05-08T18:32:54.374+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+2026-05-08T18:32:54.388+09:00  INFO 39196 --- [    Test worker] o.s.mock.web.MockServletContext          : Initializing Spring TestDispatcherServlet ''
+2026-05-08T18:32:54.388+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-05-08T18:32:54.388+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+2026-05-08T18:32:54.402+09:00  INFO 39196 --- [    Test worker] o.s.mock.web.MockServletContext          : Initializing Spring TestDispatcherServlet ''
+2026-05-08T18:32:54.402+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-05-08T18:32:54.402+09:00  INFO 39196 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

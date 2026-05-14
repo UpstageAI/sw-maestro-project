@@ -1,0 +1,21 @@
+이름: 강서아
+이메일: seoa.kang@example.com
+연락처: 010-7788-9900
+
+[한 줄 소개]
+대시보드와 데이터 밀도 높은 UI 구현 경험이 있는 프론트엔드 지원자입니다.
+
+[기술]
+React, TypeScript, API Integration, Data Visualization, GitHub
+
+[프로젝트]
+- React 기반 관리자 대시보드에서 표, 필터, 상세 패널을 구현했습니다.
+- 차트 라이브러리를 활용해 사용량 추이를 시각화했습니다.
+- 백엔드 API 응답 구조가 바뀌어도 프론트에서 안정적으로 대응하도록 타입을 관리했습니다.
+
+[협업]
+- 디자이너와 함께 컴포넌트 재사용 규칙을 정리했습니다.
+
+GitHub: https://github.com/vercel
+포트폴리오: https://example.com/seoa-dashboard
+

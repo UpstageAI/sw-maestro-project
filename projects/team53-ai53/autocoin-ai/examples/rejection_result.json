@@ -1,0 +1,6 @@
+{
+  "be_rejection_evidence": {
+    "reason_codes": ["MIN_NOTIONAL_NOT_MET"],
+    "notes": "Deterministic revalidation blocked the order before submit."
+  }
+}

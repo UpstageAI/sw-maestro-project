@@ -1,0 +1,21 @@
+이름: 오하린
+이메일: harin.oh@example.com
+연락처: 010-4455-6677
+
+[한 줄 소개]
+주니어 수준이지만 학습 속도와 구현 집요함이 강점인 지원자입니다.
+
+[기술]
+Python, FastAPI, SQL, GitHub
+
+[프로젝트]
+- 학교 팀 프로젝트에서 게시판 API와 기본적인 인증 기능을 맡았습니다.
+- README에 실행 방법과 트러블슈팅 메모를 남겼습니다.
+- SQL 조인과 페이징 구현을 직접 해보며 개념을 익혔습니다.
+
+[아쉬운 점]
+- 운영 환경 경험과 대규모 협업 경험은 아직 제한적입니다.
+
+GitHub: https://github.com/fastapi
+포트폴리오: https://example.com/harin-growth
+

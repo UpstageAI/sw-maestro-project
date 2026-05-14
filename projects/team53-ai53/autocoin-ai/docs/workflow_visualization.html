@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoCoin AI — 워크플로우 시각화</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; line-height: 1.6; }
+    header { background: linear-gradient(135deg, #1a1f2e 0%, #0f1117 100%); border-bottom: 1px solid #2d3748; padding: 2rem; text-align: center; }
+    header h1 { font-size: 1.8rem; font-weight: 700; color: #fff; }
+    header p { color: #94a3b8; margin-top: 0.5rem; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+    section { margin-bottom: 3rem; }
+    h2 { font-size: 1.3rem; font-weight: 600; color: #63b3ed; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #2d3748; }
+    h3 { font-size: 1rem; font-weight: 600; color: #9ae6b4; margin: 1.2rem 0 0.6rem; }
+    p, li { color: #cbd5e0; font-size: 0.92rem; }
+    ul { padding-left: 1.2rem; }
+    li { margin-bottom: 0.3rem; }
+    .diagram-box { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 10px; padding: 1.5rem; margin: 1rem 0; }
+    .legend { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1rem 0; }
+    .legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
+    .dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+    .dot-llm { background: #4299e1; }
+    .dot-det { background: #48bb78; }
+    .dot-react { background: #ed8936; }
+    .dot-end { background: #718096; }
+    .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 700px) { .compare-grid { grid-template-columns: 1fr; } }
+    .tag { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-left: 0.4rem; vertical-align: middle; }
+    .tag-llm { background: #2b4c7e; color: #90cdf4; }
+    .tag-det { background: #1c4532; color: #9ae6b4; }
+    .tag-react { background: #7b341e; color: #fbd38d; }
+    table { width: 100%; border-collapse: collapse; margin-top: 0.8rem; font-size: 0.88rem; }
+    th { background: #2d3748; color: #a0aec0; padding: 0.5rem 0.8rem; text-align: left; font-weight: 600; }
+    td { padding: 0.5rem 0.8rem; border-bottom: 1px solid #2d3748; color: #cbd5e0; }
+    tr:last-child td { border-bottom: none; }
+    code { background: #2d3748; padding: 0.1rem 0.4rem; border-radius: 3px; font-size: 0.82rem; color: #fbd38d; }
+    .highlight-box { background: #1a2744; border-left: 3px solid #4299e1; padding: 0.8rem 1rem; border-radius: 0 6px 6px 0; margin: 1rem 0; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>AutoCoin AI — 에이전틱 워크플로우</h1>
+  <p>기존 결정론 파이프라인 → LLM + ReAct 기반 에이전틱 파이프라인 비교</p>
+</header>
+
+<div class="container">
+
+  <!-- Legend -->
+  <section>
+    <div class="legend">
+      <div class="legend-item"><div class="dot dot-llm"></div> LLM 노드 (Gemini 2.5)</div>
+      <div class="legend-item"><div class="dot dot-react"></div> ReAct 노드 (Tool-calling Loop)</div>
+      <div class="legend-item"><div class="dot dot-det"></div> 결정론 노드 (코드 기반, LLM 없음)</div>
+      <div class="legend-item"><div class="dot dot-end"></div> 종료 / 라우팅</div>
+    </div>
+  </section>
+
+  <!-- Before vs After -->
+  <section>
+    <h2>📊 기존 vs 새 그래프 비교</h2>
+    <div class="compare-grid">
+      <div>
+        <h3>기존 그래프 (Legacy)</h3>
+        <div class="diagram-box">
+          <div class="mermaid">
+flowchart TD
+  S([시작]) --> policy["🟢 policy\n정책 검증"]
+  policy -- FAILED --> E1([종료])
+  policy -- PASS --> risk["🟢 risk\n결정론 리스크"]
+  risk -- READY_FOR_BE --> evaluator["🔵 evaluator\n결과 리포트"]
+  risk -- HOLD/NO_ORDER --> E2([종료])
+  evaluator --> E3([종료])
+
+  style policy fill:#1c4532,stroke:#48bb78,color:#9ae6b4
+  style risk fill:#1c4532,stroke:#48bb78,color:#9ae6b4
+  style evaluator fill:#1a365d,stroke:#4299e1,color:#90cdf4
+          </div>
+        </div>
+        <ul>
+          <li>3개 노드, LLM 1회 호출</li>
+          <li>사용자 입력 파싱 없음</li>
+          <li>트레이더 원칙 미반영</li>
+          <li>리스크는 하드코딩 룰만</li>
+        </ul>
+      </div>
+      <div>
+        <h3>새 에이전틱 그래프 (Phase 4+3c)</h3>
+        <div class="diagram-box">
+          <div class="mermaid">
+flowchart TD
+  S([시작]) --> intake["🔵 intake\nNL 파싱 / dict"]
+  intake -- FAILED --> E0([종료])
+  intake -- HOLD_AMBIGUOUS --> evaluator
+  intake -- PASS --> policy["🟢 policy\nRAG 정책 로드"]
+  policy -- FAILED --> E1([종료])
+  policy --> strategy["🔵 strategy\nLLM 전략 제안"]
+  strategy -- FAILED --> E2([종료])
+  strategy --> risk_agent["🟠 risk_agent\nReAct 도구 루프"]
+  risk_agent --> risk_gate["🟢 risk_gate\n결정론 7-체크"]
+  risk_gate --> evaluator["🔵 evaluator\n최종 리포트"]
+  evaluator --> E3([종료])
+
+  style intake fill:#1a365d,stroke:#4299e1,color:#90cdf4
+  style policy fill:#1c4532,stroke:#48bb78,color:#9ae6b4
+  style strategy fill:#1a365d,stroke:#4299e1,color:#90cdf4
+  style risk_agent fill:#7b341e,stroke:#ed8936,color:#fbd38d
+  style risk_gate fill:#1c4532,stroke:#48bb78,color:#9ae6b4
+  style evaluator fill:#1a365d,stroke:#4299e1,color:#90cdf4
+          </div>
+        </div>
+        <ul>
+          <li>6개 노드, LLM 3회 + ReAct 루프</li>
+          <li>자연어 입력 파싱 (한국어 지원)</li>
+          <li>트레이더 원칙 RAG 적용</li>
+          <li>리스크 에이전트가 도구 직접 호출</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Node Details -->
+  <section>
+    <h2>🔍 노드별 상세 설명</h2>
+    <table>
+      <tr>
+        <th>노드</th><th>타입</th><th>입력</th><th>출력</th><th>LLM 호출</th>
+      </tr>
+      <tr>
+        <td><code>intake</code></td>
+        <td><span class="tag tag-llm">LLM</span></td>
+        <td>user_input (text or dict)</td>
+        <td>normalized_order_intent, trader_id, persona</td>
+        <td>NL 입력 시 1회</td>
+      </tr>
+      <tr>
+        <td><code>policy</code></td>
+        <td><span class="tag tag-det">결정론</span></td>
+        <td>trader_id, persona</td>
+        <td>persona_bounds, trader_principles (RAG)</td>
+        <td>없음</td>
+      </tr>
+      <tr>
+        <td><code>strategy</code></td>
+        <td><span class="tag tag-llm">LLM</span></td>
+        <td>order_intent + trader_principles</td>
+        <td>llm_proposal (action, size_usd, conviction)</td>
+        <td>1회</td>
+      </tr>
+      <tr>
+        <td><code>risk_agent</code></td>
+        <td><span class="tag tag-react">ReAct</span></td>
+        <td>llm_proposal + tools</td>
+        <td>risk_tool_calls (thought + result)</td>
+        <td>최대 4회 (tool loop)</td>
+      </tr>
+      <tr>
+        <td><code>risk_gate</code></td>
+        <td><span class="tag tag-det">결정론</span></td>
+        <td>llm_proposal, persona_bounds</td>
+        <td>risk_assessment, lifecycle_status</td>
+        <td>없음</td>
+      </tr>
+      <tr>
+        <td><code>evaluator</code></td>
+        <td><span class="tag tag-llm">LLM</span></td>
+        <td>전체 state</td>
+        <td>evaluator_review (user_message)</td>
+        <td>1회</td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- ReAct Loop -->
+  <section>
+    <h2>🟠 risk_agent ReAct 루프 상세</h2>
+    <div class="diagram-box">
+      <div class="mermaid">
+sequenceDiagram
+  participant G as risk_agent
+  participant LLM as Gemini 2.5
+  participant T as Tool Registry
+
+  G->>LLM: 주문 정보 + 도구 목록 전달
+  LLM-->>G: FunctionCall(get_balance, {asset: USDT})
+  G->>T: dispatch("get_balance", {asset: USDT})
+  T-->>G: {free: 5000.0, locked: 0.0}
+  G->>LLM: 함수 결과 전달 (turn 2)
+  LLM-->>G: FunctionCall(get_volatility, {symbol: BTCUSDT})
+  G->>T: dispatch("get_volatility", {symbol: BTCUSDT})
+  T-->>G: {atr_pct: 0.03, verdict: normal}
+  G->>LLM: 함수 결과 전달 (turn 3)
+  LLM-->>G: is_final=True (텍스트 응답)
+  G->>G: risk_tool_calls 저장 → risk_gate 전달
+      </div>
+    </div>
+    <div class="highlight-box">
+      <strong>MAX_TOOL_CALLS = 4</strong> — LLM이 계속 도구를 호출해도 최대 4번에서 강제 종료.<br>
+      <strong>thought 필드</strong> — LLM이 도구 호출 전 내부 사고 과정을 기록. LangSmith에서 확인 가능.<br>
+      <strong>risk_gate가 최종 결정</strong> — ReAct 결과와 관계없이 결정론 7-체크가 최종 verdict를 결정.
+    </div>
+  </section>
+
+  <!-- Trader Principles Flow -->
+  <section>
+    <h2>📚 트레이더 원칙 흐름 (워뇨띠 / 리버모어)</h2>
+    <div class="diagram-box">
+      <div class="mermaid">
+flowchart LR
+  KB["📁 knowledge/\nwonyotti/principles.md\nlivermore/principles.md"]
+  RAG["🟢 RAG Retriever\n키워드 매칭"]
+  PC["policy_context.\ntrader_principles"]
+  ST["🔵 strategy\nLLM 프롬프트에 삽입"]
+  PR["llm_proposal.\nmatched_principle_titles"]
+  EV["🔵 evaluator\nsanity check #4\n(환각 감지)"]
+
+  KB --> RAG
+  RAG -- "상위 k개 원칙" --> PC
+  PC --> ST
+  ST -- "근거 원칙 제목" --> PR
+  PR --> EV
+
+  style KB fill:#2d3748,stroke:#4a5568,color:#e2e8f0
+  style RAG fill:#1c4532,stroke:#48bb78,color:#9ae6b4
+  style PC fill:#2d3748,stroke:#4a5568,color:#e2e8f0
+  style ST fill:#1a365d,stroke:#4299e1,color:#90cdf4
+  style PR fill:#2d3748,stroke:#4a5568,color:#e2e8f0
+  style EV fill:#1a365d,stroke:#4299e1,color:#90cdf4
+      </div>
+    </div>
+    <h3>워뇨띠 vs 리버모어 원칙 차이</h3>
+    <table>
+      <tr><th>트레이더</th><th>기본 페르소나</th><th>핵심 원칙</th><th>주요 HOLD 조건</th></tr>
+      <tr>
+        <td>워뇨띠</td>
+        <td>MODERATE</td>
+        <td>리스크 관리 최우선, 추세 확인 후 진입</td>
+        <td>변동성 높음, 충동 매매 감지, 확신도 낮음</td>
+      </tr>
+      <tr>
+        <td>리버모어</td>
+        <td>MODERATE</td>
+        <td>추세 추종, 피라미딩, 손실 인정</td>
+        <td>추세 없음, 역추세 진입 시도</td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- LangSmith Trace -->
+  <section>
+    <h2>📡 LangSmith 추적 구조</h2>
+    <div class="highlight-box">
+      <strong>프로젝트:</strong> <code>soma-ai53</code> | <strong>엔드포인트:</strong> <code>https://api.smith.langchain.com</code>
+    </div>
+    <div class="diagram-box">
+      <div class="mermaid">
+flowchart LR
+  LG["LangGraph Run\n(전체 그래프)"] --> N1["intake\n~0.00s"]
+  LG --> N2["policy\n~0.00s"]
+  LG --> N3["strategy\n~3~5s ⚡"]
+  LG --> N4["risk_agent\n~2~8s ⚡"]
+  LG --> N5["risk_gate\n~0.00s"]
+  LG --> N6["evaluator\n~3~5s ⚡"]
+
+  style N1 fill:#1c4532,stroke:#48bb78,color:#9ae6b4
+  style N2 fill:#1c4532,stroke:#48bb78,color:#9ae6b4
+  style N3 fill:#1a365d,stroke:#4299e1,color:#90cdf4
+  style N4 fill:#7b341e,stroke:#ed8936,color:#fbd38d
+  style N5 fill:#1c4532,stroke:#48bb78,color:#9ae6b4
+  style N6 fill:#1a365d,stroke:#4299e1,color:#90cdf4
+      </div>
+    </div>
+    <ul>
+      <li>⚡ 표시 노드만 LangSmith에서 latency가 찍힘 (Gemini API 호출 포함)</li>
+      <li>결정론 노드(policy, risk_gate)는 0.00s — 순수 Python 연산</li>
+      <li>risk_agent는 ReAct 루프 횟수에 따라 latency 가변</li>
+    </ul>
+  </section>
+
+  <!-- Real Scenarios -->
+  <section>
+    <h2>🧪 실제 실행 시나리오 (Gemini 2.5 실측)</h2>
+    <p style="margin-bottom:1.2rem;color:#94a3b8;font-size:0.88rem;">아래 두 시나리오는 실제 Gemini 2.5 API를 호출해 얻은 결과입니다.</p>
+
+    <div class="compare-grid">
+
+      <!-- Scenario 1: HOLD -->
+      <div>
+        <h3>시나리오 1 — HOLD <span class="tag" style="background:#3d2b00;color:#fbd38d;">HOLD</span></h3>
+        <div class="highlight-box" style="border-color:#ed8936;margin-bottom:0.8rem;">
+          <strong>입력 (워뇨띠):</strong><br>
+          <em>"비트코인 100달러치 시장가로 매수하고 싶어"</em>
+        </div>
+        <div class="diagram-box">
+          <div class="mermaid">
+flowchart TD
+  S([시작]) --> A["🔵 intake\nNL_PARSED\nBTCUSDT BUY MARKET $100"]
+  A --> B["🟢 policy\nPOLICY_GROUNDED\nwonyotti 원칙 로드"]
+  B --> C["🔵 strategy\n⚠️ action=HOLD\nconviction=0.80"]
+  C --> D["🟢 risk_gate\nHOLD_ACTION\n전략이 HOLD → 즉시 홀드"]
+  D --> E["🔵 evaluator\nHOLD_LOW_CONVICTION"]
+  E --> F([HOLD])
+
+  style A fill:#1a365d,stroke:#4299e1,color:#90cdf4
+  style B fill:#1c4532,stroke:#48bb78,color:#9ae6b4
+  style C fill:#4a2800,stroke:#ed8936,color:#fbd38d
+  style D fill:#1c4532,stroke:#48bb78,color:#9ae6b4
+  style E fill:#1a365d,stroke:#4299e1,color:#90cdf4
+  style F fill:#3d2b00,stroke:#ed8936,color:#fbd38d
+          </div>
+        </div>
+        <table>
+          <tr><th>항목</th><th>값</th></tr>
+          <tr><td>lifecycle</td><td><code>HOLD</code></td></tr>
+          <tr><td>strategy 판단</td><td>action=HOLD, conviction=0.80</td></tr>
+          <tr><td>risk tools</td><td>get_balance, get_volatility</td></tr>
+          <tr><td>risk verdict</td><td>HOLD (HOLD_ACTION)</td></tr>
+        </table>
+        <div class="highlight-box" style="border-color:#ed8936;margin-top:0.8rem;">
+          <strong>AI 응답:</strong><br>
+          현재 거래 신호에 대한 확신이 낮아 포지션을 유지합니다. 시스템은 시장 상황을 계속 주시하며 다음 기회를 모색할 예정입니다.
+        </div>
+      </div>
+
+      <!-- Scenario 2: READY_FOR_BE -->
+      <div>
+        <h3>시나리오 2 — 승인 <span class="tag" style="background:#1c4532;color:#9ae6b4;">READY_FOR_BE</span></h3>
+        <div class="highlight-box" style="border-color:#48bb78;margin-bottom:0.8rem;">
+          <strong>입력 (리버모어):</strong><br>
+          <em>"비트코인 상승 추세 확인됐어, 지금 바로 100달러 시장가 매수해줘"</em>
+        </div>
+        <div class="diagram-box">
+          <div class="mermaid">
+flowchart TD
+  S([시작]) --> A["🔵 intake\nNL_PARSED\nBTCUSDT BUY MARKET $100"]
+  A --> B["🟢 policy\nPOLICY_GROUNDED\nlivermore 원칙 로드"]
+  B --> C["🔵 strategy\n✅ action=BUY\nconviction=0.70"]
+  C --> D["🟠 risk_agent\nget_balance ✓\nget_volatility ✓"]
+  D --> E["🟢 risk_gate\nALL_CHECKS_PASSED\nverdict=ALLOW"]
+  E --> F["🔵 evaluator\nBUY_PROPOSED\nRISK_GATE_PASSED"]
+  F --> G([READY_FOR_BE])
+
+  style A fill:#1a365d,stroke:#4299e1,color:#90cdf4
+  style B fill:#1c4532,stroke:#48bb78,color:#9ae6b4
+  style C fill:#1a365d,stroke:#4299e1,color:#90cdf4
+  style D fill:#7b341e,stroke:#ed8936,color:#fbd38d
+  style E fill:#1c4532,stroke:#48bb78,color:#9ae6b4
+  style F fill:#1a365d,stroke:#4299e1,color:#90cdf4
+  style G fill:#1c4532,stroke:#48bb78,color:#9ae6b4
+          </div>
+        </div>
+        <table>
+          <tr><th>항목</th><th>값</th></tr>
+          <tr><td>lifecycle</td><td><code>READY_FOR_BE</code></td></tr>
+          <tr><td>strategy 판단</td><td>action=BUY, conviction=0.70</td></tr>
+          <tr><td>risk tools</td><td>get_balance, get_volatility</td></tr>
+          <tr><td>risk verdict</td><td>ALLOW (ALL_CHECKS_PASSED)</td></tr>
+        </table>
+        <div class="highlight-box" style="border-color:#48bb78;margin-top:0.8rem;">
+          <strong>AI 응답:</strong><br>
+          AI의 매수 제안이 위험 평가를 통과하여 승인되었습니다. 높은 확신도(0.7)와 '강한 종목만 선택' 원칙에 부합하여 거래가 진행될 예정입니다.
+        </div>
+      </div>
+
+    </div><!-- /compare-grid -->
+
+    <h3 style="margin-top:1.5rem;">두 시나리오 비교</h3>
+    <table>
+      <tr><th>항목</th><th>시나리오 1 (HOLD)</th><th>시나리오 2 (BUY)</th></tr>
+      <tr><td>트레이더</td><td>워뇨띠 (MODERATE)</td><td>리버모어 (MODERATE)</td></tr>
+      <tr><td>입력 방식</td><td>NL 텍스트</td><td>NL 텍스트</td></tr>
+      <tr><td>strategy 결과</td><td>HOLD (conviction 0.80)</td><td>BUY (conviction 0.70)</td></tr>
+      <tr><td>risk_agent 실행</td><td>미실행 (HOLD_ACTION 즉시)</td><td>실행 (도구 2회 호출)</td></tr>
+      <tr><td>risk_gate verdict</td><td>HOLD</td><td>ALLOW</td></tr>
+      <tr><td>최종 lifecycle</td><td><code>HOLD</code></td><td><code>READY_FOR_BE</code></td></tr>
+    </table>
+  </section>
+
+  <!-- Lifecycle State Machine -->
+  <section>
+    <h2>🔄 lifecycle_status 상태 전이</h2>
+    <div class="diagram-box">
+      <div class="mermaid">
+stateDiagram-v2
+  [*] --> RUNNING: start()
+  RUNNING --> FAILED: intake/policy/strategy 실패
+  RUNNING --> HOLD: ambiguity > 0.5 (intake)
+  RUNNING --> HOLD: conviction &lt; min_conviction (risk_gate)
+  RUNNING --> NO_ORDER: symbol 불허 / size 초과 (risk_gate)
+  RUNNING --> READY_FOR_BE: 모든 체크 통과
+  HOLD --> [*]: evaluator → user_message 생성
+  NO_ORDER --> [*]: evaluator → user_message 생성
+  READY_FOR_BE --> REPORT_READY: complete() 호출
+  FAILED --> [*]: 즉시 종료
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#1a365d',
+      primaryTextColor: '#e2e8f0',
+      primaryBorderColor: '#4299e1',
+      lineColor: '#4a5568',
+      secondaryColor: '#1c4532',
+      tertiaryColor: '#2d3748',
+    }
+  });
+</script>
+</body>
+</html>

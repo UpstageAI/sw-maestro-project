@@ -1,0 +1,18 @@
+[
+  {
+    "members_rnr": "팀장(기획/FE), 팀원1(BE), 팀원2(BE)",
+    "project_plan_tech_goals": "생성형 AI를 활용한 개인 맞춤형 법률 문서 요약 서비스, 마이크로서비스 아키텍처 도입",
+    "mentoring_needs": "비즈니스 모델의 시장성 검증과 초기 투자자 대상 피칭 전략에 대한 도움 필요, 대용량 트래픽 처리",
+    "fit_conditions": "스타트업 창업가 출신이나 VC 네트워크가 있으신 분",
+    "maestro_program_goals": "소마 과정을 통해 실제 법인 설립 및 시드 투자 유치를 목표로 함",
+    "skills": "React, Node.js, AWS, Java, Spring Boot"
+  },
+  {
+    "members_rnr": "리더(BE/Infra), 팀원1(BE/DB), 팀원2(FE/Design)",
+    "project_plan_tech_goals": "대규모 트래픽을 견디는 실시간 티켓 예매 시스템 아키텍처 구축",
+    "mentoring_needs": "분산 시스템에서의 데이터 정합성과 고가용성 인프라 구성에 대한 딥다이브 멘토링 희망",
+    "fit_conditions": "대형 IT 기업의 시니어 백엔드 엔지니어 혹은 아키텍트 선호",
+    "maestro_program_goals": "최종 15인 인증(Maestro)을 목표로 하며 기술적 챌린지 해결에 집중",
+    "skills": "Java, Spring Boot, Kafka, Kubernetes, Vue.js"
+  }
+]

@@ -1,0 +1,30 @@
+{
+  "name": "추천 부위 ↔ 레이더 차트 일치",
+  "description": "다양한 부위를 최근에 운동한 상태에서 새 스케줄 도출. proposal의 target_muscles가 fatigue_timeline 피로도와 일치하는지 — 피로도 높은 부위는 추천 X, 낮은 부위 위주 추천하는지 검증 (KPI 5).",
+  "calendar": [
+    {"start_at": "2026-05-04T09:00:00", "end_at": "2026-05-04T18:00:00", "title": "업무", "is_busy": true},
+    {"start_at": "2026-05-05T09:00:00", "end_at": "2026-05-05T18:00:00", "title": "업무", "is_busy": true},
+    {"start_at": "2026-05-06T09:00:00", "end_at": "2026-05-06T18:00:00", "title": "업무", "is_busy": true},
+    {"start_at": "2026-05-07T09:00:00", "end_at": "2026-05-07T18:00:00", "title": "업무", "is_busy": true},
+    {"start_at": "2026-05-08T09:00:00", "end_at": "2026-05-08T18:00:00", "title": "업무", "is_busy": true}
+  ],
+  "health": [
+    {"date": "2026-05-04", "sleep_hours": 7.5, "activity_minutes": 50, "resting_hr": 58},
+    {"date": "2026-05-05", "sleep_hours": 7.2, "activity_minutes": 45, "resting_hr": 59},
+    {"date": "2026-05-06", "sleep_hours": 7.0, "activity_minutes": 40, "resting_hr": 60},
+    {"date": "2026-05-07", "sleep_hours": 7.3, "activity_minutes": 42, "resting_hr": 59}
+  ],
+  "workouts": [
+    {"date": "2026-05-04", "type": "헬스", "duration_min": 60, "muscles": ["가슴", "삼두"], "intensity": 4},
+    {"date": "2026-05-05", "type": "러닝", "duration_min": 35, "muscles": ["하체", "코어"], "intensity": 3},
+    {"date": "2026-05-06", "type": "헬스", "duration_min": 55, "muscles": ["가슴", "삼두"], "intensity": 5},
+    {"date": "2026-05-07", "type": "헬스", "duration_min": 50, "muscles": ["가슴", "삼두"], "intensity": 4}
+  ],
+  "expected": {
+    "high_fatigue_muscles": ["가슴", "삼두"],
+    "proposal_must_not_target": ["가슴", "삼두"],
+    "proposal_should_target_any_of": ["어깨", "등", "하체", "코어"],
+    "fatigue_timeline_reflects_workouts": true,
+    "radar_chart_consistency": true
+  }
+}

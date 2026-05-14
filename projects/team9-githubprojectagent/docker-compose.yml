@@ -1,0 +1,29 @@
+services:
+  # Mermaid 렌더 전담 컨테이너
+  kroki-mermaid:
+    image: yuzutech/kroki-mermaid
+    restart: unless-stopped
+
+  # Kroki main — mermaid 요청을 kroki-mermaid로 forward
+  kroki:
+    image: yuzutech/kroki
+    environment:
+      - KROKI_MERMAID_HOST=kroki-mermaid
+    depends_on:
+      - kroki-mermaid
+    restart: unless-stopped
+
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - KROKI_URL=http://kroki:8000
+    volumes:
+      - ./output:/app/output
+      - ./.cache:/app/.cache
+    depends_on:
+      - kroki
+    restart: unless-stopped

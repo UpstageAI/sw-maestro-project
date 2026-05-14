@@ -1,0 +1,22 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+python-dotenv==1.0.1
+
+langchain==0.3.13
+langchain-core==0.3.28
+langchain-upstage==0.5.0
+langgraph==0.2.74
+
+PyGithub==2.5.0
+requests==2.32.3
+
+notion-client==2.2.1
+
+xhtml2pdf==0.2.16
+# svglib 1.5+는 rlpycairo→pycairo를 끌어와서 Linux Docker(slim)에서 빌드 실패.
+# 1.4.1은 rlpycairo 없이도 SVG 충분히 렌더하므로 핀 고정.
+svglib==1.4.1
+markdown==3.7
+
+httpx==0.28.1

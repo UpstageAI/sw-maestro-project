@@ -1,0 +1,73 @@
+.card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  overflow: hidden;
+  transition: box-shadow 0.15s ease;
+}
+
+.card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  cursor: pointer;
+  user-select: none;
+}
+
+.header:hover {
+  background-color: var(--color-secondary);
+}
+
+.runId {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  flex-shrink: 0;
+}
+
+.badges {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.chevron {
+  margin-left: auto;
+  color: var(--color-text-secondary);
+  transition: transform 0.2s ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.summary {
+  padding: 0 var(--spacing-lg) var(--spacing-md);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.expandedContent {
+  padding: 0 var(--spacing-lg) var(--spacing-lg);
+  border-top: 1px solid var(--color-border);
+}
+
+.traceSection {
+  margin-top: var(--spacing-md);
+}
+
+.debugArea {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-secondary);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}

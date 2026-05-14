@@ -1,0 +1,95 @@
+{
+  "passed": 5,
+  "reviewer": "검수자 B",
+  "scenarios": [
+    {
+      "expected": {
+        "hold_reason": "HOLD_DATA_INSUFFICIENT",
+        "lifecycle_status": "HOLD",
+        "risk.reason_codes": [
+          "STALE_MARKET_SNAPSHOT"
+        ]
+      },
+      "id": "QA-B-01",
+      "observed": {
+        "hold_reason": "HOLD_DATA_INSUFFICIENT",
+        "lifecycle_status": "HOLD",
+        "risk.reason_codes": [
+          "STALE_MARKET_SNAPSHOT"
+        ]
+      },
+      "passed": true
+    },
+    {
+      "expected": {
+        "evaluator.reason_codes": [
+          "EVIDENCE_INSUFFICIENT"
+        ],
+        "evaluator_check_appended": true,
+        "hold_reason": "HOLD_DATA_INSUFFICIENT",
+        "lifecycle_status": "HOLD"
+      },
+      "id": "QA-B-02",
+      "observed": {
+        "evaluator.reason_codes": [
+          "EVIDENCE_INSUFFICIENT"
+        ],
+        "evaluator_check_appended": true,
+        "hold_reason": "HOLD_DATA_INSUFFICIENT",
+        "lifecycle_status": "HOLD"
+      },
+      "passed": true
+    },
+    {
+      "expected": {
+        "all_stages_canonical": true,
+        "initial_entry_values_intact": true,
+        "previous_entries_preserved": true
+      },
+      "id": "QA-B-03",
+      "observed": {
+        "all_stages_canonical": true,
+        "initial_entry_values_intact": true,
+        "previous_entries_preserved": true
+      },
+      "passed": true
+    },
+    {
+      "expected": {
+        "lifecycle_advanced": "READY_FOR_BE",
+        "policy_refs_preserved": true,
+        "request_id_preserved": true,
+        "resume_history_recorded": true,
+        "run_id_preserved": true
+      },
+      "id": "QA-B-04",
+      "observed": {
+        "lifecycle_advanced": "READY_FOR_BE",
+        "policy_refs_preserved": true,
+        "request_id_preserved": true,
+        "resume_history_recorded": true,
+        "run_id_preserved": true
+      },
+      "passed": true
+    },
+    {
+      "expected": {
+        "approved_status": "READY_FOR_BE",
+        "initial_hold_reason": "HOLD_REVIEW_REQUIRED",
+        "initial_status": "HOLD",
+        "no_approval_hold_reason": "HOLD_REVIEW_REQUIRED",
+        "no_approval_status": "HOLD"
+      },
+      "id": "QA-B-05",
+      "observed": {
+        "approved_status": "READY_FOR_BE",
+        "initial_hold_reason": "HOLD_REVIEW_REQUIRED",
+        "initial_status": "HOLD",
+        "no_approval_hold_reason": "HOLD_REVIEW_REQUIRED",
+        "no_approval_status": "HOLD"
+      },
+      "passed": true
+    }
+  ],
+  "total": 5
+}

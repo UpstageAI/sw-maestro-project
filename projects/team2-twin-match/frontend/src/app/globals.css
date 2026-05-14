@@ -1,0 +1,84 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap");
+@import "tailwindcss";
+
+:root {
+  --coral: #ff5864;
+  --coral-deep: #ed3e5a;
+  --pink: #fd267a;
+  --apricot: #ffb199;
+  --peach: #ffe4d6;
+  --cream: #fff8f4;
+  --cream-2: #fbefe6;
+  --ink: #2c1810;
+  --ink-soft: #5c4438;
+  --ink-mute: #9a857a;
+  --line: #f2e2d4;
+  --white: #ffffff;
+  --ok: #36b37e;
+  --warn: #f5a623;
+
+  --shadow-sm: 0 1px 2px rgba(60, 30, 20, 0.05), 0 2px 6px rgba(255, 88, 100, 0.06);
+  --shadow-md: 0 6px 20px rgba(60, 30, 20, 0.06), 0 2px 8px rgba(255, 88, 100, 0.08);
+  --shadow-lg: 0 24px 60px -20px rgba(255, 88, 100, 0.35), 0 12px 30px rgba(60, 30, 20, 0.08);
+  --shadow-pop: 0 30px 60px -25px rgba(253, 38, 122, 0.45);
+
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --r-xl: 32px;
+
+  --font-sans: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-serif: "Instrument Serif", "Times New Roman", serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background: var(--cream);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, textarea { font-family: inherit; color: inherit; }
+::selection { background: var(--coral); color: white; }
+
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: rgba(255, 88, 100, 0.25); border-radius: 99px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+@keyframes tm-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.06); opacity: 0.85; }
+}
+@keyframes tm-pulseRing {
+  0% { transform: scale(0.6); opacity: 0.55; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+@keyframes tm-fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes tm-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes tm-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes tm-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes tm-typing {
+  0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-3px); }
+}
+@keyframes tm-orbit {
+  from { transform: rotate(0); }
+  to { transform: rotate(360deg); }
+}
+.tm-fade-up { animation: tm-fadeUp 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
