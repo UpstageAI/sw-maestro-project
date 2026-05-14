@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  scaffold:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate scaffold
+        run: python scripts/validate_scaffold.py
+
+      - name: Install Modules
+        run: pip install -r backend/requirements.txt
+
+      - name: Run backend unit tests
+        run: python -m unittest discover -s backend/tests -t .

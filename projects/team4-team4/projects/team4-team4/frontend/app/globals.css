@@ -1,0 +1,201 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 60 9% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --primary: 222 47% 11%;
+    --primary-foreground: 60 9% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 222 47% 11%;
+    --radius: 0.5rem;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  }
+}
+
+@layer components {
+  .shell {
+    @apply mx-auto max-w-5xl px-6 py-10 grid gap-10;
+  }
+
+  .workspace {
+    @apply grid gap-6;
+  }
+
+  .intro {
+    @apply grid gap-2;
+  }
+  .intro .eyebrow {
+    @apply text-xs uppercase tracking-widest text-muted-foreground;
+  }
+  .intro h1 {
+    @apply text-3xl font-semibold leading-tight;
+  }
+  .intro p {
+    @apply text-sm text-muted-foreground;
+  }
+
+  .composer {
+    @apply grid gap-3 p-5 rounded-lg border bg-card shadow-sm;
+  }
+  .composer label {
+    @apply text-sm font-medium;
+  }
+  .composer textarea {
+    @apply w-full resize-y rounded-md border bg-background px-3 py-2 text-sm
+      placeholder:text-muted-foreground focus-visible:outline-none
+      focus-visible:ring-2 focus-visible:ring-ring;
+  }
+  .composer button {
+    @apply justify-self-start inline-flex items-center rounded-md
+      bg-primary px-4 py-2 text-sm font-medium text-primary-foreground
+      hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed
+      transition-colors;
+  }
+  .composer .error {
+    @apply text-sm text-destructive;
+  }
+
+  .document {
+    @apply grid gap-5 p-6 rounded-lg border bg-card shadow-sm;
+  }
+  .documentHeader {
+    @apply grid gap-1 border-b pb-4;
+  }
+  .documentHeader span {
+    @apply text-xs uppercase tracking-widest text-muted-foreground;
+  }
+  .documentHeader strong {
+    @apply text-2xl font-semibold leading-snug;
+  }
+
+  .section {
+    @apply grid gap-2;
+  }
+  .section h2 {
+    @apply text-sm font-semibold uppercase tracking-wider text-muted-foreground;
+  }
+  .section p {
+    @apply text-base leading-relaxed;
+  }
+  .section ol,
+  .section ul {
+    @apply pl-5 grid gap-2 text-base leading-relaxed;
+  }
+  .section ol {
+    @apply list-decimal;
+  }
+  .section ul {
+    @apply list-disc;
+  }
+  .section.compact p,
+  .section.compact li {
+    @apply text-sm text-muted-foreground;
+  }
+  .section a {
+    @apply underline underline-offset-2 hover:text-primary;
+  }
+
+  .document footer {
+    @apply pt-4 border-t text-xs text-muted-foreground grid gap-1;
+  }
+
+  .chat {
+    @apply grid gap-4 p-5 rounded-lg border bg-card shadow-sm;
+  }
+  .chatHeader {
+    @apply grid gap-1;
+  }
+  .chatHeader h2 {
+    @apply text-base font-semibold;
+  }
+  .chatHint {
+    @apply text-xs text-muted-foreground;
+  }
+
+  .chatLog {
+    @apply grid gap-2 max-h-80 overflow-y-auto pr-1;
+  }
+  .chatEmpty {
+    @apply text-sm text-muted-foreground italic py-4 text-center;
+  }
+  .chatMessage {
+    @apply grid gap-1 px-3 py-2 rounded-md border bg-background;
+  }
+  .chatMessage .chatRole {
+    @apply text-[10px] uppercase tracking-widest text-muted-foreground;
+  }
+  .chatMessage p {
+    @apply text-sm leading-relaxed whitespace-pre-wrap;
+  }
+  .chatMessage--user {
+    @apply bg-secondary/60 border-secondary;
+  }
+  .chatMessage--assistant {
+    @apply bg-card;
+  }
+  .chatMessage--pending p {
+    @apply text-muted-foreground italic;
+  }
+
+  .chatComposer {
+    @apply grid grid-cols-[1fr_auto] gap-2;
+  }
+  .chatComposer textarea {
+    @apply resize-none rounded-md border bg-background px-3 py-2 text-sm
+      placeholder:text-muted-foreground focus-visible:outline-none
+      focus-visible:ring-2 focus-visible:ring-ring;
+  }
+  .chatComposer button {
+    @apply self-end inline-flex items-center rounded-md
+      bg-primary px-4 py-2 text-sm font-medium text-primary-foreground
+      hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed
+      transition-colors;
+  }
+}
+
+/* 인쇄(PDF로 저장) 시 UI 요소 숨김 */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+  }
+  main {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+  .document {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    break-inside: avoid;
+  }
+  .section,
+  .section.compact {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .documentHeader strong {
+    font-size: 22pt;
+  }
+}

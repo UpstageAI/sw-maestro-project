@@ -1,0 +1,19 @@
+.env
+node_modules/
+.next/
+.DS_Store
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Local vector data
+chroma_data
+backend/app/storage/ChormaDBdp/
+migration/.venv/
+migration/pydeps/
+
+migration/dumps/*.parquet
+migration/dumps/*.parquet.tmp
