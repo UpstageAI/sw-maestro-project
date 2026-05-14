@@ -1,4 +1,12 @@
-import type { AreaInfo, ContextInput, Language, Mission, Verdict } from './types';
+import type {
+  AgentMessageRequest,
+  AgentMessageResponse,
+  AreaInfo,
+  ContextInput,
+  Language,
+  Mission,
+  Verdict
+} from './types';
 
 const BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8000';
 
@@ -97,6 +105,17 @@ export async function generateMissions(
   });
   const data = await handle<{ missions: Mission[] }>(res);
   return data.missions;
+}
+
+export async function sendAgentMessage(
+  req: AgentMessageRequest
+): Promise<AgentMessageResponse> {
+  const res = await fetchWithTimeout(`${BASE}/api/agent/message`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(req)
+  });
+  return handle<AgentMessageResponse>(res);
 }
 
 export async function verifyPhoto(

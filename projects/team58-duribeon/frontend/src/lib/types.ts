@@ -105,6 +105,41 @@ export interface PanelMission {
 
 export const CHAT_STATE_VERSION = 4;
 
+/* ── Agent (free-text intent classification) ── */
+
+export interface AgentAction {
+  type: string;
+  payload: Record<string, unknown>;
+}
+
+export interface AgentMessageResponse {
+  bot_response: string;
+  actions: AgentAction[];
+}
+
+export interface AgentPanelSnapshot {
+  id: string;
+  place_id: string;
+  title: string;
+  category: string;
+  state: string;
+}
+
+export interface AgentChatTurn {
+  role: 'bot' | 'user';
+  text: string;
+}
+
+export interface AgentMessageRequest {
+  text: string;
+  step: Step;
+  language: Language;
+  context: Partial<ContextInput>;
+  panel: AgentPanelSnapshot[];
+  active_mission_id: string | null;
+  chat_history: AgentChatTurn[];
+}
+
 export interface QuickOption {
   label: string;
   payload: string;

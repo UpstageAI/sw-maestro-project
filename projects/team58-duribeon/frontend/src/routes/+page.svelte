@@ -1,6 +1,12 @@
 <script lang="ts">
   import { onDestroy, onMount, tick } from 'svelte';
-  import { fetchAreas, generateMissions, regenerateMission, verifyPhoto } from '$lib/api';
+  import {
+    fetchAreas,
+    generateMissions,
+    regenerateMission,
+    sendAgentMessage,
+    verifyPhoto
+  } from '$lib/api';
   import { I18N } from '$lib/i18n';
   import ChatBubble from '$lib/ChatBubble.svelte';
   import MissionPanel from '$lib/MissionPanel.svelte';
@@ -19,6 +25,9 @@
   } from '$lib/storage';
   import {
     CHAT_STATE_VERSION,
+    type AgentAction,
+    type AgentChatTurn,
+    type AgentPanelSnapshot,
     type Area,
     type AreaInfo,
     type ChatMessage,
@@ -666,138 +675,158 @@
   }
 
   /* ========================  free-text routing  ======================== */
+  /**
+   * Any free-text input goes through the LangGraph agent on the backend.
+   * The agent returns a short bot reply + a list of structured actions; we
+   * execute the actions against the existing handlers.
+   */
   async function handleSend() {
     const text = composerText.trim();
     if (!text || busy) return;
     composerText = '';
 
-    const lower = text.toLowerCase();
-
-    if (
-      /^(처음|리셋|새로|다시\s*시작)/.test(text) ||
-      /^(reset|start over|restart)\b/.test(lower)
-    ) {
-      pushUser(text);
-      await resetChat();
-      return;
-    }
-
-    if (step === 'ask_area') {
-      const matched = matchArea(text);
-      if (matched) {
-        await handleQuickReply({
-          label: areaLabel(matched),
-          intent: 'set_area',
-          payload: matched
-        });
-        return;
-      }
-    }
-    if (step === 'ask_group') {
-      pushUser(text);
-      context = { ...context, group: text };
-      await botTypeBriefly(280);
-      await botAskTime();
-      return;
-    }
-    if (step === 'ask_time') {
-      pushUser(text);
-      context = { ...context, timeBudget: text };
-      await botTypeBriefly(280);
-      await botAskMood();
-      return;
-    }
-    if (step === 'ask_mood') {
-      pushUser(text);
-      context = { ...context, mood: text };
-      await botTypeBriefly(280);
-      await botAskAvoid();
-      return;
-    }
-    if (step === 'ask_avoid') {
-      pushUser(text);
-      context = { ...context, avoid: text };
-      await botTypeBriefly(280);
-      await botGenerate();
-      return;
-    }
-
-    if (step === 'show_missions' || step === 'show_verdict') {
-      if (
-        /^(다른|다 별로|reroll|all again|nah)/.test(lower) ||
-        text.includes('다시')
-      ) {
-        pushUser(text);
-        if (step === 'show_missions') await rerollAll();
-        else await generateMore();
-        return;
-      }
-      const idx = parsePickIndex(text);
-      if (idx != null) {
-        const pool = panel.filter((p) => p.state === 'pool');
-        const target = pool[idx];
-        if (target) {
-          await pickFromPanel(target);
-          return;
-        }
-      }
-    }
-
-    if (step === 'await_photo') {
-      pushUser(text);
-      await botTypeBriefly(220);
-      pushBot({ kind: 'text', text: t.fallbackPhotoNeeded });
-      await scrollToBottom();
-      return;
-    }
-
-    if (step === 'verifying' || step === 'generating') {
-      pushUser(text);
-      await botTypeBriefly(220);
-      pushBot({ kind: 'text', text: t.fallbackBusy });
-      await scrollToBottom();
-      return;
-    }
-
+    // User echo immediately so the message lands in the thread before the
+    // network round-trip.
     pushUser(text);
-    await botTypeBriefly(260);
-    pushBot({ kind: 'text', text: t.fallbackUnknown });
+    consumeLastQuickReplies();
+    busy = true;
+    isBotTyping = true;
     await scrollToBottom();
+
+    try {
+      const panelSnapshot: AgentPanelSnapshot[] = panel.map((p) => ({
+        id: p.mission.id,
+        place_id: p.mission.place_id,
+        title: p.mission.title,
+        category: p.mission.category,
+        state: p.state
+      }));
+      const chatHistory: AgentChatTurn[] = messages.slice(-20).map((m) => ({
+        role: m.role,
+        text:
+          m.content.kind === 'text'
+            ? m.content.text
+            : m.content.kind === 'verdict'
+              ? `[verdict ${m.content.verdict.ok ? 'PASS' : 'FAIL'}: ${m.content.verdict.comment}]`
+              : `[${m.content.kind}]`
+      }));
+
+      const res = await sendAgentMessage({
+        text,
+        step,
+        language,
+        context,
+        panel: panelSnapshot,
+        active_mission_id: selectedMissionId,
+        chat_history: chatHistory
+      });
+
+      isBotTyping = false;
+      if (res.bot_response) {
+        pushBot({ kind: 'text', text: res.bot_response });
+      }
+
+      // Release busy before executing actions — some of them (botGenerate,
+      // pickFromPanel, etc.) check `busy` and short-circuit if true.
+      busy = false;
+
+      for (const action of res.actions) {
+        await executeAgentAction(action);
+      }
+    } catch (e) {
+      isBotTyping = false;
+      busy = false;
+      pushBot({ kind: 'text', text: `${t.errorPrefix}: ${(e as Error).message}` });
+    } finally {
+      isBotTyping = false;
+      await scrollToBottom();
+    }
   }
 
-  function parsePickIndex(text: string): number | null {
-    const m = text.match(/(\d+)/);
-    if (m) {
-      const n = parseInt(m[1], 10);
-      if (n >= 1 && n <= 5) return n - 1;
+  /** Resolve an agent payload reference to a concrete PanelMission. */
+  function resolvePanelRef(payload: Record<string, unknown>): PanelMission | null {
+    const panelId = payload.panel_id;
+    if (typeof panelId === 'string') {
+      const byId = panel.find((p) => p.mission.id === panelId);
+      if (byId) return byId;
     }
-    const koMap: Record<string, number> = {
-      첫: 0, 첫번째: 0, 두: 1, 두번째: 1, 세: 2, 세번째: 2,
-      네: 3, 네번째: 3, 다섯: 4, 다섯번째: 4
-    };
-    for (const [k, v] of Object.entries(koMap)) {
-      if (text.includes(k)) return v;
+    const placeId = payload.place_id;
+    if (typeof placeId === 'string') {
+      // Prefer a still-pickable card if both pool and rejected entries share place_id.
+      const pool = panel.find((p) => p.mission.place_id === placeId && p.state === 'pool');
+      if (pool) return pool;
+      const any = panel.find((p) => p.mission.place_id === placeId);
+      if (any) return any;
     }
-    const enMap: Record<string, number> = {
-      first: 0, second: 1, third: 2, fourth: 3, fifth: 4
-    };
-    for (const [k, v] of Object.entries(enMap)) {
-      if (text.toLowerCase().includes(k)) return v;
+    const index = payload.index;
+    if (typeof index === 'number' && index >= 1) {
+      const poolList = panel.filter((p) => p.state === 'pool');
+      const target = poolList[index - 1];
+      if (target) return target;
     }
     return null;
   }
 
-  function matchArea(text: string): Area | null {
-    const lower = text.toLowerCase();
-    for (const a of areas) {
-      for (const kw of a.match_ko) {
-        if (kw && text.includes(kw)) return a.id;
+  async function executeAgentAction(action: AgentAction) {
+    const p = action.payload || {};
+    switch (action.type) {
+      case 'set_context_area': {
+        const id = String(p.area_id ?? '');
+        if (id && areas.some((a) => a.id === id)) {
+          context = { ...context, area: id };
+        } else if (id) {
+          // Agent picked an area id that's not in the loaded seed. Surface a
+          // gentle hint instead of letting the backend Pydantic validator 500.
+          pushBot({
+            kind: 'text',
+            text:
+              language === 'ko'
+                ? `"${id}"는 우리 시드에 없어. 가능한 동네: ${areas.map((a) => a.name_ko).join(', ')}`
+                : `"${id}" isn't in our seed. Available: ${areas.map((a) => a.name_en).join(', ')}`
+          });
+        }
+        break;
       }
-      for (const kw of a.match_en) {
-        if (kw && lower.includes(kw.toLowerCase())) return a.id;
+      case 'set_context_group':
+        if (typeof p.value === 'string') context = { ...context, group: p.value };
+        break;
+      case 'set_context_time_budget':
+        if (typeof p.value === 'string') context = { ...context, timeBudget: p.value };
+        break;
+      case 'set_context_mood':
+        if (typeof p.value === 'string') context = { ...context, mood: p.value };
+        break;
+      case 'set_context_avoid':
+        if (typeof p.value === 'string') context = { ...context, avoid: p.value };
+        break;
+      case 'proceed_to_generate':
+        await botGenerate();
+        break;
+      case 'regenerate_mission': {
+        const pm = resolvePanelRef(p);
+        if (pm) await changeMissionAtSamePlace(pm);
+        break;
       }
+      case 'reject_mission': {
+        const pm = resolvePanelRef(p);
+        if (pm) rejectFromPanel(pm);
+        break;
+      }
+      case 'pick_mission': {
+        const pm = resolvePanelRef(p);
+        if (pm) await pickFromPanel(pm);
+        break;
+      }
+      case 'reroll_all':
+        await rerollAll();
+        break;
+      case 'generate_more':
+        await generateMore();
+        break;
+      case 'reset_chat':
+        await resetChat();
+        break;
     }
-    return null;
   }
 
   /* ========================  reset / journal  ======================== */

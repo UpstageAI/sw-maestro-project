@@ -23,7 +23,8 @@ from agent import (
     regenerate_mission_for_place,
     verify_photo,
 )
-from schemas import Context, Mission
+from llm_graphs import run_agent
+from schemas import AgentMessageRequest, Context, Mission
 from seed import load_areas
 
 
@@ -124,6 +125,19 @@ def api_regenerate(req: RegenerateRequest):
         )
         mission = regenerate_mission_for_place(ctx, req.place_id, req.previous_title)
         return {"mission": mission.model_dump()}
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {e}")
+
+
+@app.post("/api/agent/message")
+def api_agent_message(req: AgentMessageRequest):
+    """Free-text chat: LangGraph agent classifies intent and returns
+    (bot_response, actions). Frontend dispatches actions to existing handlers."""
+    try:
+        return run_agent(req).model_dump()
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:

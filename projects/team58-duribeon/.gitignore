@@ -17,6 +17,10 @@ desktop.ini
 !.vscode/settings.recommended.json
 .idea/
 *.iml
+.cursor/
+.cursorignore
+.aider*
+.claude/local/
 
 # ── Python (backend) ──────────────────────────────────────
 __pycache__/
@@ -27,10 +31,17 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.pyright/
 .venv/
 venv/
 env/
 .python-version
+uv.lock.local
+
+# ── LangGraph / LLM caches ────────────────────────────────
+.langgraph_api/
+langgraph_cache/
+.langchain.db
 
 # ── Node / SvelteKit (frontend) ───────────────────────────
 node_modules/
@@ -40,6 +51,9 @@ dist/
 .vite/
 .turbo/
 *.tsbuildinfo
+stats.html
+.vercel/
+.netlify/
 
 # ── Logs / temp ───────────────────────────────────────────
 *.log
@@ -60,6 +74,17 @@ htmlcov/
 
 # ── Streamlit (legacy from prototype's earlier UI) ────────
 .streamlit/secrets.toml
+
+# ── Local DBs / state files ───────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# ── direnv / asdf ─────────────────────────────────────────
+.envrc
+.direnv/
+.tool-versions
 
 # ── Optional artifacts ────────────────────────────────────
 *.tgz

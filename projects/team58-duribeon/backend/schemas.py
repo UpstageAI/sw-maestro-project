@@ -44,6 +44,39 @@ class Verdict(BaseModel):
     comment: str = Field(..., max_length=200)
 
 
+class AgentPanelMission(BaseModel):
+    id: str
+    place_id: str
+    title: str
+    category: str
+    state: str  # pool / active / passed / failed / rejected
+
+
+class AgentChatTurn(BaseModel):
+    role: str  # bot / user
+    text: str
+
+
+class AgentMessageRequest(BaseModel):
+    text: str
+    step: str
+    language: Language = "ko"
+    context: dict = Field(default_factory=dict)
+    panel: list[AgentPanelMission] = Field(default_factory=list)
+    active_mission_id: str | None = None
+    chat_history: list[AgentChatTurn] = Field(default_factory=list)
+
+
+class AgentAction(BaseModel):
+    type: str
+    payload: dict = Field(default_factory=dict)
+
+
+class AgentMessageResponse(BaseModel):
+    bot_response: str
+    actions: list[AgentAction] = Field(default_factory=list)
+
+
 class Context(BaseModel):
     area: Area
     group: str
