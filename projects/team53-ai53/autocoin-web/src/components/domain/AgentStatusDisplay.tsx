@@ -8,10 +8,6 @@ interface AgentStatusDisplayProps {
   reasonCodes?: string[];
   description?: string;
   onApprove?: () => void;
-  onReject?: () => void;
-  onEditInput?: () => void;
-  onRetry?: () => void;
-  onViewDetails?: () => void;
   onRefetch?: () => void;
 }
 
@@ -20,12 +16,10 @@ export function AgentStatusDisplay({
   reasonCodes = [],
   description,
   onApprove,
-  onReject,
-  onEditInput,
-  onRetry,
-  onViewDetails,
   onRefetch,
 }: AgentStatusDisplayProps) {
+  const holdReasonLabel = state.hold_reason ?? 'HOLD';
+
   if (state.lifecycle_status === 'NO_ORDER') {
     return (
       <div className={`${styles.container} ${styles.noOrder}`}>
@@ -45,11 +39,6 @@ export function AgentStatusDisplay({
             ))}
           </div>
         )}
-        <div className={styles.actions}>
-          <Button variant="secondary" size="sm" onClick={onEditInput}>
-            입력 수정
-          </Button>
-        </div>
       </div>
     );
   }
@@ -74,14 +63,13 @@ export function AgentStatusDisplay({
             ))}
           </div>
         )}
-        <div className={styles.actions}>
-          <Button variant="primary" size="sm" onClick={onApprove}>
-            승인
-          </Button>
-          <Button variant="danger" size="sm" onClick={onReject}>
-            거부
-          </Button>
-        </div>
+        {onApprove && (
+          <div className={styles.actions}>
+            <Button variant="primary" size="sm" onClick={onApprove}>
+              승인
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
@@ -106,11 +94,37 @@ export function AgentStatusDisplay({
             ))}
           </div>
         )}
-        <div className={styles.actions}>
-          <Button variant="secondary" size="sm" onClick={onRefetch}>
-            재조회/재입력
-          </Button>
+        {onRefetch && (
+          <div className={styles.actions}>
+            <Button variant="secondary" size="sm" onClick={onRefetch}>
+              재조회/재입력
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (state.lifecycle_status === 'HOLD') {
+    return (
+      <div className={`${styles.container} ${styles.holdFallback}`}>
+        <div className={styles.header}>
+          <span className={`${styles.statusIcon} ${styles.iconWarning}`}>
+            <AlertTriangle size={20} />
+          </span>
+          <span className={styles.title}>추가 확인 대기</span>
+          <Badge label={holdReasonLabel} variant="warning" />
         </div>
+        <p className={styles.description}>
+          {description ?? 'AI 에이전트가 추가 확인을 위해 실행을 보류했습니다. 상세 리포트를 확인해도 최종 주문 실행 권한은 백엔드에 있습니다.'}
+        </p>
+        {reasonCodes.length > 0 && (
+          <div className={styles.reasonCodes}>
+            {reasonCodes.map((code) => (
+              <span key={code} className={styles.reasonCode}>{code}</span>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
@@ -128,11 +142,6 @@ export function AgentStatusDisplay({
         <p className={styles.description}>
           {description ?? 'AI 에이전트는 통과 판단을 내렸으나, 백엔드 재검증에서 거부되었습니다.'}
         </p>
-        <div className={styles.actions}>
-          <button className={styles.detailLink} onClick={onViewDetails}>
-            상세 사유 보기
-          </button>
-        </div>
       </div>
     );
   }
@@ -152,11 +161,6 @@ export function AgentStatusDisplay({
         </p>
         <div className={styles.failedMeta}>
           run_id: {state.run_id}
-        </div>
-        <div className={styles.actions}>
-          <Button variant="secondary" size="sm" onClick={onRetry}>
-            재시도
-          </Button>
         </div>
       </div>
     );

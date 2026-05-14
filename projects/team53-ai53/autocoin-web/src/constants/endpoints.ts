@@ -8,11 +8,17 @@ export const API_BASE_URL =
 
 export const ENDPOINTS = {
   account: '/api/v1/testnet/account',
+  config: '/api/v1/testnet/config',
   tickerPrice: '/api/v1/testnet/ticker/price',
   tickerBook: '/api/v1/testnet/ticker/book',
   klines: '/api/v1/testnet/klines',
   orders: '/api/v1/testnet/orders',
+  ordersAuto: '/api/v1/testnet/orders/auto',
+  ordersAutoSessionStart: '/api/v1/testnet/orders/auto/session/start',
+  ordersAutoSessionStop: '/api/v1/testnet/orders/auto/session/stop',
+  ordersAutoSession: '/api/v1/testnet/orders/auto/session',
   ordersReport: '/api/v1/testnet/orders/report',
+  ordersReportCadence: '/api/v1/testnet/orders/report/cadence',
   ordersResume: '/api/v1/testnet/orders/resume',
   orderStatus: '/api/v1/testnet/orders/status',
   streamStatus: '/api/v1/testnet/stream/status',

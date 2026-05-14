@@ -10,14 +10,15 @@ export interface BalanceSnapshot {
   balances: Balance[];
 }
 
+export interface TestnetConfig {
+  restBaseUrl: string;
+  wsStreamUrl: string;
+  wsApiUrl: string;
+}
+
 export interface TickerPrice {
   symbol: string;
   price: string;
-}
-
-export interface DepthEntry {
-  price: string;
-  quantity: string;
 }
 
 export interface DepthSnapshot {
@@ -78,6 +79,28 @@ export interface SpotOrderRequest {
   timeInForce?: TimeInForce;
 }
 
+export interface AutoOrderRequest {
+  rawText: string;
+}
+
+export interface AutoSessionStartRequest {
+  rawText: string;
+}
+
+export type JsonPrimitive = string | number | boolean | null;
+export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
+
+export interface NormalizedOrderIntent {
+  symbol?: string | null;
+  side?: OrderSide | null;
+  type?: OrderType | null;
+  quantity?: string | null;
+  quoteOrderQty?: string | null;
+  price?: string | null;
+  timeInForce?: TimeInForce | null;
+  [key: string]: JsonValue | undefined;
+}
+
 export interface OrderRunResponse {
   runId: string;
   lifecycleStatus: OrderRunLifecycleStatus;
@@ -88,6 +111,31 @@ export interface OrderRunResponse {
   type?: OrderType | null;
   side?: OrderSide | null;
   reasonCodes: string[];
+}
+
+export interface AutoOrderRunResponse extends OrderRunResponse {
+  normalizedOrderIntent?: NormalizedOrderIntent | null;
+  traderId?: string | null;
+  inferredPersona?: string | null;
+}
+
+export type AutoTradingSessionStatus = 'IDLE' | 'ACTIVE' | 'STOPPING' | 'STOPPED';
+
+export interface AutoTradingSessionResponse {
+  sessionId?: string | null;
+  sessionStatus: AutoTradingSessionStatus;
+  stopRequested: boolean;
+  selectedTickIntervalSeconds?: number | null;
+  rawText?: string | null;
+  selectedTraderId?: string | null;
+  tickCount: number;
+  startedAt?: string | null;
+  stoppedAt?: string | null;
+  lastTickStartedAt?: string | null;
+  lastTickCompletedAt?: string | null;
+  stopReason?: string | null;
+  latestError?: string | null;
+  latestRun?: AutoOrderRunResponse | null;
 }
 
 export type PublishedRunLifecycleStatus = OrderRunLifecycleStatus | 'FAILED';
@@ -127,6 +175,18 @@ export interface PublishedRunReport {
 export interface RunReportResponse {
   runId: string;
   report: PublishedRunReport;
+}
+
+export interface ReportCadenceEventResponse {
+  runId: string;
+  eventType: string;
+  lifecycleStatus: PublishedRunLifecycleStatus;
+  createdAt: string;
+}
+
+export interface RunReportCadenceResponse {
+  runId: string;
+  events: ReportCadenceEventResponse[];
 }
 
 export interface ResumeCommandPayload {

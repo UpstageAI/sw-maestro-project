@@ -1,29 +1,39 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { Card, Banner } from '../../components/common';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { Card, Banner, Button, Skeleton } from '../../components/common';
 import { resumeOrder } from '../../api/testnet';
 import { AgentStatusDisplay } from '../../components/domain/AgentStatusDisplay';
 import { OrderForm } from '../../components/domain/OrderForm';
 import { OrderStatusPanel } from '../../components/domain/OrderStatusPanel';
 import { CancelOrderPanel } from '../../components/domain/CancelOrderPanel';
 import { OrderLogList } from '../../components/domain/OrderLogList';
+import { RunReportCard } from '../../components/domain/RunReportCard';
 import type { OrderLogEntry } from '../../components/domain/OrderLogList';
+import { useRunReport } from '../../hooks';
 import type { AgentRunState } from '../../types/agent';
 import type { ErrorResponse, OrderRunResponse, SpotOrderRequest } from '../../types/api';
+import { getErrorMessage } from '../../utils/error';
 import styles from './OrdersPage.module.css';
 
 export function OrdersPage() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [orderLog, setOrderLog] = useState<OrderLogEntry[]>([]);
   const [latestRun, setLatestRun] = useState<OrderRunResponse | null>(null);
   const [latestOrderRequest, setLatestOrderRequest] = useState<SpotOrderRequest | null>(null);
   const [resumeError, setResumeError] = useState<string | null>(null);
+  const latestReportQuery = useRunReport(latestRun?.runId ?? '');
 
   const resumeMutation = useMutation({
     mutationFn: resumeOrder,
-    onSuccess: (response) => {
+    onSuccess: async (response) => {
       setLatestRun(response);
       setResumeError(null);
       setOrderLog((prev) => [...prev, { timestamp: Date.now(), response }]);
+      await queryClient.invalidateQueries({
+        queryKey: ['runReport', response.runId],
+      });
     },
     onError: (err: unknown) => {
       const apiError = err as ErrorResponse;
@@ -44,8 +54,6 @@ export function OrdersPage() {
     return {
       run_id: response.runId,
       lifecycle_status: response.lifecycleStatus,
-      request_type: 'PLACE_ORDER_TEST',
-      final_action: response.lifecycleStatus,
       hold_reason: response.holdReason ?? undefined,
     };
   }
@@ -76,6 +84,13 @@ export function OrdersPage() {
           market_snapshot_fresh: true,
         },
       },
+    });
+  }
+
+  function handleOpenReport(runId: string) {
+    navigate({
+      pathname: '/reports',
+      search: `?${new URLSearchParams({ runId }).toString()}`,
     });
   }
 
@@ -120,6 +135,51 @@ export function OrdersPage() {
           <CancelOrderPanel />
         </Card>
       </div>
+
+      {latestRun && (
+        <div className={styles.reportSection}>
+          <Card
+            title="최신 AI 실행 리포트"
+            subtitle={`runId: ${latestRun.runId}`}
+            actions={(
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => handleOpenReport(latestRun.runId)}
+              >
+                Reports에서 열기
+              </Button>
+            )}
+          >
+            <p className={styles.reportHint}>
+              AI 리포트는 참고 정보이며 최종 주문 실행과 재검증 권한은 백엔드에 있습니다.
+            </p>
+
+            {latestReportQuery.isLoading && (
+              <div className={styles.reportLoading}>
+                <Skeleton height="20px" width="220px" />
+                <Skeleton height="16px" />
+                <Skeleton height="16px" width="88%" />
+                <Skeleton height="16px" width="72%" />
+              </div>
+            )}
+
+            {latestReportQuery.isError && (
+              <Banner variant="danger">
+                {getErrorMessage(latestReportQuery.error)}
+              </Banner>
+            )}
+
+            {latestReportQuery.report && !latestReportQuery.isLoading && !latestReportQuery.isError && (
+              <RunReportCard
+                runId={latestReportQuery.runId}
+                report={latestReportQuery.report}
+              />
+            )}
+          </Card>
+        </div>
+      )}
 
       <div className={styles.logSection}>
         <Card title="최근 주문 테스트 기록">

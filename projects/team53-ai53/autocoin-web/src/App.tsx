@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Layout } from './components/layout';
 import { SettingsPage } from './pages/Settings';
 import { DashboardPage } from './pages/Dashboard';
+import { AutoTradingPage } from './pages/AutoTrading';
 import { OrdersPage } from './pages/Orders';
 import { ReportsPage } from './pages/Reports';
 
@@ -24,6 +25,7 @@ export default function App() {
           <Route element={<Layout />}>
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/auto-trading" element={<AutoTradingPage />} />
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
