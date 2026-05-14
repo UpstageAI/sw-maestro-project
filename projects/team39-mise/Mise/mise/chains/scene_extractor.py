@@ -12,6 +12,7 @@ from mise.models.scene_schema import (
 )
 from mise.prompts.extraction_prompt import _prompt_template as extraction_template
 from mise.prompts.prompt_generator import _prompt_template as prompt_template
+from mise.prompts.focused_prompt_generator import _focused_prompt_template as focused_prompt_template
 from mise.prompts.fill_prompt import _prompt_template as fill_template
 from mise.prompts.verify_prompt import _prompt_template as verify_template
 
@@ -41,6 +42,7 @@ class PipelineState(TypedDict, total=False):
     novel_text: str
     mode: str
     prev_scene: Optional[dict]
+    changed_values: dict[str, object]
     elements: SceneElements
     source_type: dict[str, str]
     style: str
@@ -116,11 +118,22 @@ def verify_node(state: PipelineState) -> dict:
 def prompt_node(state: PipelineState) -> dict:
     llm = _create_llm()
     elements_json = json.dumps(state["elements"].model_dump(), ensure_ascii=False)
-    chain = prompt_template | llm.with_structured_output(PromptResult)
-    result = chain.invoke({
-        "elements_json": elements_json,
-        "style": state["style"],
-    })
+    changed_values = state.get("changed_values") or {}
+
+    if changed_values:
+        changed_json = json.dumps(changed_values, ensure_ascii=False)
+        chain = focused_prompt_template | llm.with_structured_output(PromptResult)
+        result = chain.invoke({
+            "elements_json": elements_json,
+            "changed_json": changed_json,
+            "style": state["style"],
+        })
+    else:
+        chain = prompt_template | llm.with_structured_output(PromptResult)
+        result = chain.invoke({
+            "elements_json": elements_json,
+            "style": state["style"],
+        })
     return {"prompt_result": result}
 
 
@@ -129,6 +142,7 @@ class _SceneState(TypedDict, total=False):
     novel_text: str
     mode: str
     prev_scene: Optional[dict]
+    changed_values: dict[str, object]
     elements: SceneElements
     source_type: dict[str, str]
     style: str
@@ -179,6 +193,7 @@ def extract_scene(
     novel_text: str,
     mode: str = "generate",
     prev_scene: Optional[dict] = None,
+    changed_values: Optional[dict] = None,
 ) -> SceneSchema:
     _validate_input(novel_text, mode, prev_scene)
 
@@ -186,6 +201,7 @@ def extract_scene(
         "novel_text": novel_text,
         "mode": mode,
         "prev_scene": prev_scene,
+        "changed_values": changed_values or {},
     })
 
     return SceneSchema(

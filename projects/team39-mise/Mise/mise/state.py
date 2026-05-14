@@ -145,6 +145,20 @@ def build_prev_scene_payload() -> Optional[dict[str, Any]]:
     }
 
 
+def compute_changed_values() -> dict[str, Any]:
+    """current_scene과 edited_elements를 비교해 사용자가 실제로 변경한 키만 추린다.
+
+    재생성 시 prompt_node에 focused 템플릿을 트리거하기 위한 입력.
+    변경이 없으면 빈 dict.
+    """
+    scene: Optional[SceneSchema] = st.session_state.get(Keys.CURRENT_SCENE)
+    edited: Optional[dict[str, Any]] = st.session_state.get(Keys.EDITED_ELEMENTS)
+    if scene is None or edited is None:
+        return {}
+    original = scene.elements.model_dump()
+    return {key: edited[key] for key in edited if edited.get(key) != original.get(key)}
+
+
 def get_style_value() -> str:
     """현재 선택된 스타일의 영문 키워드 값."""
     label = st.session_state.get(Keys.STYLE_LABEL, DEFAULT_STYLE_LABEL)

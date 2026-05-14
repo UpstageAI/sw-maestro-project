@@ -292,3 +292,96 @@ class TestGraphRegenerate:
 
         assert isinstance(result, SceneSchema)
         assert mock_create_llm.call_count == 1  # prompt_node만 호출
+
+
+# ── Node 5: prompt_node 분기 단위 테스트 ────────────────────────────
+
+class TestPromptNodeBranching:
+    """changed_values 유무에 따라 focused/basic 템플릿이 선택되는지 검증"""
+
+    @staticmethod
+    def _rendered_prompt(mock_chain) -> str:
+        """LangChain이 mock_chain을 RunnableLambda로 감싸 호출하므로
+        mock_chain.call_args[0][0]에 ChatPromptValue가 들어온다."""
+        return str(mock_chain.call_args[0][0])
+
+    @patch("mise.chains.scene_extractor._create_llm")
+    def test_uses_basic_template_when_no_changed_values(self, mock_create_llm):
+        mock_llm = _setup_mock_llm([
+            PromptResult(positive_prompt="ok", negative_prompt="blurry"),
+        ])
+        mock_chain = mock_llm.with_structured_output.return_value
+        mock_create_llm.return_value = mock_llm
+
+        prompt_node({
+            "elements": _make_filled_elements(),
+            "style": "cinematic",
+            "changed_values": {},
+        })
+
+        rendered = self._rendered_prompt(mock_chain)
+        assert "변경된 요소" not in rendered
+
+    @patch("mise.chains.scene_extractor._create_llm")
+    def test_uses_focused_template_when_changed_values_present(self, mock_create_llm):
+        mock_llm = _setup_mock_llm([
+            PromptResult(positive_prompt="ok", negative_prompt="blurry"),
+        ])
+        mock_chain = mock_llm.with_structured_output.return_value
+        mock_create_llm.return_value = mock_llm
+
+        prompt_node({
+            "elements": _make_filled_elements(),
+            "style": "cinematic",
+            "changed_values": {"character": "흰 갑옷의 기사"},
+        })
+
+        rendered = self._rendered_prompt(mock_chain)
+        assert "변경된 요소" in rendered
+        assert "흰 갑옷의 기사" in rendered
+
+    @patch("mise.chains.scene_extractor._create_llm")
+    def test_uses_basic_template_when_changed_values_missing_key(self, mock_create_llm):
+        mock_llm = _setup_mock_llm([
+            PromptResult(positive_prompt="ok", negative_prompt="blurry"),
+        ])
+        mock_chain = mock_llm.with_structured_output.return_value
+        mock_create_llm.return_value = mock_llm
+
+        prompt_node({
+            "elements": _make_filled_elements(),
+            "style": "cinematic",
+            # changed_values 키 자체가 없음
+        })
+
+        rendered = self._rendered_prompt(mock_chain)
+        assert "변경된 요소" not in rendered
+
+    @patch("mise.chains.scene_extractor._create_llm")
+    def test_extract_scene_passes_changed_values_through(self, mock_create_llm):
+        """공개 API extract_scene이 changed_values 인자를 받아 focused 경로로 흐른다."""
+        all_filled = SceneElements(
+            character="기사", background="성", time="저녁", place="성벽",
+            action="바라본다", emotion="경외", mood="장엄", color="붉은",
+            lighting="노을빛", camera_view="와이드", composition="배경 중심",
+        )
+        mock_llm = _setup_mock_llm([
+            PromptResult(positive_prompt="ok", negative_prompt="blurry"),
+        ])
+        mock_chain = mock_llm.with_structured_output.return_value
+        mock_create_llm.return_value = mock_llm
+
+        prev_scene = {
+            "elements": all_filled.model_dump(),
+            "source_type": {"character": "original"},
+        }
+        extract_scene(
+            "기사가 서 있었다.",
+            mode="regenerate",
+            prev_scene=prev_scene,
+            changed_values={"character": "흰 갑옷의 기사"},
+        )
+
+        rendered = self._rendered_prompt(mock_chain)
+        assert "변경된 요소" in rendered
+        assert "흰 갑옷의 기사" in rendered

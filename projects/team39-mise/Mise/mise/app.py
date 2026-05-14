@@ -85,10 +85,16 @@ def run_extract_scene(
     style_value: str,
     mode: str = "generate",
     prev_scene: dict[str, Any] | None = None,
+    changed_values: dict[str, Any] | None = None,
 ) -> SceneSchema:
     from mise.chains.scene_extractor import extract_scene
 
-    return extract_scene(novel_text, mode=mode, prev_scene=prev_scene)
+    return extract_scene(
+        novel_text,
+        mode=mode,
+        prev_scene=prev_scene,
+        changed_values=changed_values,
+    )
 
 
 def render_styles() -> None:
@@ -239,6 +245,11 @@ def render_regenerate_form(current: dict[str, Any], novel_text: str, style_value
             "source_type": current["scene"].get("source_type", {}),
             "prompt": {"style": style_value},
         }
+        changed_values = {
+            key: edited_elements[key]
+            for key in edited_elements
+            if edited_elements[key] != elements.get(key)
+        }
         try:
             with st.spinner("수정된 장면 요소로 프롬프트를 다시 생성하는 중입니다..."):
                 result = run_extract_scene(
@@ -246,6 +257,7 @@ def render_regenerate_form(current: dict[str, Any], novel_text: str, style_value
                     style_value,
                     mode="regenerate",
                     prev_scene=prev_scene,
+                    changed_values=changed_values,
                 )
             result = SceneSchema(
                 elements=result.elements,
