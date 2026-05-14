@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NewPick Components</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="components-page">
+    <main class="components-shell" aria-label="NewPick 컴포넌트 시안">
+      <header class="components-header">
+        <a class="components-back" href="./index.html" aria-label="시작 화면으로 돌아가기">
+          ‹
+        </a>
+        <div>
+          <p>Component Lab</p>
+          <h1>NewPick UI</h1>
+        </div>
+      </header>
+
+      <section class="component-section" aria-labelledby="button-title">
+        <div class="component-heading">
+          <h2 id="button-title">확정 버튼</h2>
+          <p>메인 CTA 컬러: #FF8A3D</p>
+        </div>
+        <button class="primary-button" type="button">서비스 시작하기</button>
+      </section>
+
+      <section class="component-section" aria-labelledby="icons-title">
+        <div class="component-heading">
+          <h2 id="icons-title">카테고리 아이콘</h2>
+          <p>기본 상태와 선택 상태를 함께 확인해요.</p>
+        </div>
+
+        <div class="icon-preview-grid">
+          <article class="icon-preview-card">
+            <div class="category-icon icon-sample" aria-hidden="true">
+              <svg viewBox="0 0 24 24" role="img">
+                <rect x="6" y="6" width="12" height="12" rx="3"></rect>
+                <path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"></path>
+                <path d="M10 12h.01M12 10h.01M14 12h.01"></path>
+              </svg>
+            </div>
+            <strong>테크</strong>
+            <span>AI 칩</span>
+          </article>
+
+          <article class="icon-preview-card is-selected">
+            <div class="category-icon icon-sample" aria-hidden="true">
+              <svg viewBox="0 0 24 24" role="img">
+                <circle cx="6.5" cy="17.5" r="3"></circle>
+                <path d="M4 13l4-4 4 3 6-7"></path>
+                <path d="M15 5h3v3"></path>
+              </svg>
+            </div>
+            <strong>경제</strong>
+            <span>상승 그래프 + 동전</span>
+          </article>
+
+          <article class="icon-preview-card">
+            <div class="category-icon icon-sample" aria-hidden="true">
+              <svg viewBox="0 0 24 24" role="img">
+                <rect x="3.25" y="3.25" width="17.5" height="17.5" rx="4"></rect>
+                <path d="M7.25 10.25h5.5"></path>
+                <path d="M7.25 15.25l2.75 2.75 6.75-7.5"></path>
+              </svg>
+            </div>
+            <strong>정치·정책</strong>
+            <span>문서 + 체크</span>
+          </article>
+
+          <article class="icon-preview-card is-selected">
+            <div class="category-icon icon-sample" aria-hidden="true">
+              <svg viewBox="0 0 24 24" role="img">
+                <path d="M5 6.5h11a4 4 0 0 1 4 4v1.5a4 4 0 0 1-4 4h-5l-4.5 3v-3H5a4 4 0 0 1-4-4v-1.5a4 4 0 0 1 4-4z"></path>
+                <circle cx="18.5" cy="5.5" r="2.5"></circle>
+              </svg>
+            </div>
+            <strong>사회 이슈</strong>
+            <span>말풍선 + 알림점</span>
+          </article>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

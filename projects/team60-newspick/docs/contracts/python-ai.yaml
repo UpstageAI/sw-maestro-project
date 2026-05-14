@@ -1,0 +1,47 @@
+openapi: 3.1.0
+info:
+  title: NewPick Python AI Service (FastAPI)
+  version: 0.1.0
+  description: |
+    Python AI 서비스의 내부 API. Spring 만 호출한다. 공개되지 않는다.
+    SSE 이벤트 스키마는 docs/contracts/sse-events.md 참조.
+
+servers:
+  - url: http://localhost:8000
+
+paths:
+  /health:
+    get:
+      summary: 헬스 체크
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [ok] }
+
+  /refresh-stream:
+    get:
+      summary: 기사 처리 파이프라인 실행 (SSE)
+      responses:
+        "200":
+          description: SSE stream (`step` / `warn` / `done` / `error`)
+          content:
+            text/event-stream: {}
+
+  /chat-stream:
+    get:
+      summary: RAG 챗 응답 스트리밍 (SSE)
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: SSE stream (`token` / `done` / `error`)
+          content:
+            text/event-stream: {}

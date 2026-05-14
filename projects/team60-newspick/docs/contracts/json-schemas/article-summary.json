@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "article-summary.json",
+  "title": "ArticleSummary (홈 피드 카드용 — 본문/퀴즈 제외)",
+  "type": "object",
+  "required": ["id", "title", "source", "category", "publishedAt", "status"],
+  "properties": {
+    "id":          { "type": "string" },
+    "title":       { "type": "string" },
+    "source":      { "type": "string" },
+    "category":    { "type": "string", "enum": ["테크", "경제", "정책", "이슈"] },
+    "publishedAt": { "type": "string", "format": "date-time" },
+    "summary":     { "type": "array", "items": { "type": "string" } },
+    "keywords":    { "type": "array", "items": { "type": "string" } },
+    "status":      { "type": "string", "enum": ["collected", "summarized", "review_required", "skip", "description_only"] }
+  }
+}

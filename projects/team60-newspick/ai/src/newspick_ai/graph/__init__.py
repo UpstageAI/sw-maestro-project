@@ -1,0 +1,1 @@
+"""Refresh graph components."""

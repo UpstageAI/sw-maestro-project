@@ -1,0 +1,31 @@
+{
+  "date": "2026-05-12",
+  "updatedAt": "2026-05-12T00:30:00Z",
+  "briefing": {
+    "headline": "오늘의 핵심",
+    "summary": "두 가지 흐름"
+  },
+  "timeline": [
+    {
+      "articleId": "article_001",
+      "category": "테크",
+      "timeLabel": "09:20",
+      "title": "AI 에이전트 확산",
+      "sourceCount": 4,
+      "summary": "업무 자동화가 빨라졌습니다"
+    }
+  ],
+  "flow": [
+    {
+      "label": "원인",
+      "category": "원인",
+      "description": "AI 활용이 일상 업무로 넓어졌습니다"
+    }
+  ],
+  "keywords": [
+    {
+      "text": "AI",
+      "weight": 5
+    }
+  ]
+}

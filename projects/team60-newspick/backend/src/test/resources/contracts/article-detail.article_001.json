@@ -1,0 +1,18 @@
+{
+  "id": "article_001",
+  "url": "https://example.com/article_001",
+  "title": "제목",
+  "source": "Example",
+  "category": "테크",
+  "publishedAt": "2026-05-12T00:00:00Z",
+  "status": "summarized",
+  "content": "본문 첫 문단\n\n본문 둘째 문단",
+  "rawText": "본문 첫 문단\n\n본문 둘째 문단",
+  "rawTextStatus": "full_text",
+  "summary": ["핵심 요약", "두 번째 요약", "세 번째 요약"],
+  "keywords": ["AI 에이전트", "오픈AI", "자동화"],
+  "importance": "중요한 이유",
+  "context": "추가 배경",
+  "importanceScore": 8,
+  "quiz": []
+}

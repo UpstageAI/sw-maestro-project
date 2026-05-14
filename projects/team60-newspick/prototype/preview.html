@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NewPick — Device Preview</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(1200px 700px at 50% -10%, #262a32 0%, #14161b 55%, #0b0d11 100%);
+        color: #e7eaf0;
+        font-family: -apple-system, "SF Pro", "Pretendard", system-ui, sans-serif;
+        display: grid;
+        place-items: center;
+        padding: 40px 20px;
+      }
+      .stage {
+        display: grid;
+        gap: 18px;
+        justify-items: center;
+      }
+      .label {
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #8a93a3;
+        font-weight: 700;
+      }
+      /* iframe is sized to match the inner .phone-frame's intended dimensions
+         (390 × 820, per styles.css) so it never gets squished by the host
+         viewport. The prototype already draws its own rounded phone shell. */
+      .stage-frame {
+        width: 430px;
+        height: 860px;
+        display: grid;
+        place-items: center;
+        border-radius: 44px;
+        background:
+          radial-gradient(circle at 30% 0%, rgba(255,255,255,0.04), transparent 60%),
+          rgba(255,255,255,0.02);
+        box-shadow:
+          inset 0 0 0 1px rgba(255,255,255,0.04),
+          0 30px 80px rgba(0,0,0,0.5);
+      }
+      iframe {
+        width: 390px;
+        height: 820px;
+        border: 0;
+        display: block;
+        background: transparent;
+        border-radius: 32px;
+        box-shadow: 0 18px 50px rgba(0,0,0,0.45);
+      }
+      .meta {
+        font-size: 13px;
+        color: #aab2c0;
+        font-weight: 500;
+        max-width: 460px;
+        text-align: center;
+      }
+      .meta b { color: #e7eaf0; font-weight: 700; }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="label">NewPick · 390 × 820 (실제 비율)</div>
+      <div class="stage-frame">
+        <iframe src="./index.html" title="NewPick prototype" scrolling="no"></iframe>
+      </div>
+      <div class="meta"><b>index.html</b>을 원래 디자인 비율 그대로 띄운 미리보기예요. 코드는 수정하지 않았습니다.</div>
+    </div>
+  </body>
+</html>

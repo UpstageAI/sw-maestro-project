@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Example Feed</title>
+    <item>
+      <title>AI 뉴스</title>
+      <link>https://example.com/ai-news</link>
+      <pubDate>Tue, 12 May 2026 00:00:00 GMT</pubDate>
+      <description>요약 후보</description>
+    </item>
+  </channel>
+</rss>
