@@ -6,7 +6,7 @@ from app.config import settings
 from app.services import ai_gateway_service
 
 
-def _mock_client(response_json: dict):
+def _mock_client(response_json: dict[str, object]):
     mock_resp = MagicMock()
     mock_resp.json.return_value = response_json
     mock_resp.raise_for_status = MagicMock()
@@ -41,6 +41,24 @@ async def test_resume_run_sends_correct_payload():
     assert body["run_id"] == "r1"
     assert body["resume_reason"] == "USER_APPROVED_ORDER"
     assert body["patch_fields"]["approval"]["approved"] is True
+
+
+@pytest.mark.asyncio
+async def test_start_agentic_run_sends_correct_payload():
+    ctx, mock_post = _mock_client({"lifecycle_status": "READY_FOR_BE", "run_id": "r1"})
+    with patch("app.services.ai_gateway_service.httpx.AsyncClient", return_value=ctx):
+        result = await ai_gateway_service.start_agentic_run(
+            "r1",
+            {"request_id": "r1", "user_input": {"raw_text": "buy btc"}},
+            {"policy_refs": []},
+            settings,
+        )
+    assert result["lifecycle_status"] == "READY_FOR_BE"
+    call_kwargs = mock_post.call_args
+    assert "runs/agentic/start" in call_kwargs.args[0]
+    body = call_kwargs.kwargs["json"]
+    assert body["run_id"] == "r1"
+    assert body["request_context"]["user_input"]["raw_text"] == "buy btc"
 
 
 @pytest.mark.asyncio

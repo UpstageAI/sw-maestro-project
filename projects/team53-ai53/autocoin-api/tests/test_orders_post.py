@@ -110,6 +110,13 @@ def test_create_order_hold(client: TestClient, db_session: Session):
         **_AI_READY,
         "lifecycle_status": "HOLD",
         "hold_reason": "HOLD_REVIEW_REQUIRED",
+        "decision_trace": {
+            "policy": {"reason_codes": ["ORDER_INTENT_NORMALIZED"], "evidence_refs": [], "final_action": "PASS"},
+            "risk": {"reason_codes": ["HOLD_REVIEW_REQUIRED"], "evidence_refs": [], "final_action": "HOLD"},
+            "evaluator": {"reason_codes": [], "evidence_refs": [], "final_action": ""},
+            "execution": {"reason_codes": [], "evidence_refs": [], "final_action": ""},
+            "run_summary": {"reason_codes": [], "evidence_refs": [], "final_action": ""},
+        },
         "evaluator_review": {"user_summary": "hold fallback summary"},
     }
     with patch("app.services.order_service.ai_gateway_service.start_run", new_callable=AsyncMock) as mock_start:
@@ -120,6 +127,7 @@ def test_create_order_hold(client: TestClient, db_session: Session):
     data = resp.json()
     assert data["lifecycleStatus"] == "HOLD"
     assert data["holdReason"] == "HOLD_REVIEW_REQUIRED"
+    assert data["reasonCodes"] == ["HOLD_REVIEW_REQUIRED"]
     assert data["runId"] is not None
 
     report = db_session.scalars(select(Report).where(Report.run_id == data["runId"])).one()

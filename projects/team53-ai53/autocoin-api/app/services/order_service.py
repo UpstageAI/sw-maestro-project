@@ -19,10 +19,18 @@ from app.db.crud import (
     update_spot_order_status,
 )
 from app.models.ai import ResumeCommandPayload
-from app.models.requests import CancelOrderRequest, SpotOrderRequest
-from app.models.responses import CancelOrderResponse, OrderRunResponse, OrderStatusResponse
+from app.models.requests import AutoOrderRequest, CancelOrderRequest, SpotOrderRequest
+from app.models.responses import (
+    AutoOrderRunResponse,
+    CancelOrderResponse,
+    NormalizedOrderIntentResponse,
+    OrderRunResponse,
+    OrderStatusResponse,
+)
 from app.services import ai_gateway_service
+from app.services.account_service import get_account
 from app.services.binance_auth_service import build_signed_params
+from app.services.market_service import get_book, get_klines, get_price
 from app.services.report_service import save_run_report
 
 logger = logging.getLogger(__name__)
@@ -31,12 +39,8 @@ _ALLOWED_SYMBOLS = {"BTCUSDT", "ETHUSDT"}
 _MAX_QUOTE_ORDER_QTY = "50"
 
 
-def _build_request_context(run_id: str, req: SpotOrderRequest) -> dict[str, Any]:
-    user_input: dict[str, Any] = {
-        "symbol": req.symbol,
-        "side": req.side,
-        "type": req.type,
-    }
+def _request_to_user_input(req: SpotOrderRequest) -> dict[str, Any]:
+    user_input: dict[str, Any] = {"symbol": req.symbol, "side": req.side, "type": req.type}
     if req.quantity:
         user_input["quantity"] = req.quantity
     if req.quote_order_qty:
@@ -45,12 +49,66 @@ def _build_request_context(run_id: str, req: SpotOrderRequest) -> dict[str, Any]
         user_input["price"] = req.price
     if req.time_in_force:
         user_input["timeInForce"] = req.time_in_force
+    return user_input
+
+
+def _build_request_context(run_id: str, user_input: dict[str, Any]) -> dict[str, Any]:
     return {
         "request_id": run_id,
         "request_type": "PLACE_ORDER_TEST",
         "requested_at": datetime.now(timezone.utc).isoformat(),
         "user_input": user_input,
     }
+
+
+def _extract_symbol_from_raw_text(raw_text: str) -> str | None:
+    normalized_text = raw_text.upper()
+    if "BTCUSDT" in normalized_text or "BTC" in normalized_text or "비트코인" in raw_text:
+        return "BTCUSDT"
+    if "ETHUSDT" in normalized_text or "ETH" in normalized_text or "이더리움" in raw_text:
+        return "ETHUSDT"
+    return None
+
+
+async def _build_auto_user_input(
+    db: Session,
+    req: AutoOrderRequest,
+    settings: Settings,
+) -> dict[str, Any]:
+    user_input: dict[str, Any] = {
+        "raw_text": req.raw_text,
+        "market_snapshot_fresh": False,
+    }
+    if req.trader_id:
+        user_input["trader_id"] = req.trader_id
+
+    symbol = _extract_symbol_from_raw_text(req.raw_text)
+    if symbol:
+        user_input["symbol_hint"] = symbol
+
+    try:
+        account = await get_account(db, settings)
+        user_input["account_balance"] = account.model_dump(by_alias=True)
+    except Exception:
+        logger.exception("Account snapshot fetch failed for auto order request")
+
+    if symbol:
+        try:
+            price = await get_price(db, symbol, settings)
+            book = await get_book(db, symbol, settings)
+            klines = await get_klines(db, symbol, interval="5m", limit=12, settings=settings)
+            user_input["market_snapshot"] = {
+                "symbol": symbol,
+                "capturedAt": datetime.now(timezone.utc).isoformat(),
+                "price": price.model_dump(by_alias=True),
+                "book": book.model_dump(by_alias=True),
+                "klines": klines.model_dump(by_alias=True),
+            }
+            user_input["market_snapshot_fresh"] = True
+        except Exception:
+            logger.exception("Market snapshot fetch failed for auto order request")
+
+    return user_input
 
 
 def _build_policy_context(symbol: str) -> dict[str, Any]:
@@ -64,7 +122,27 @@ def _build_policy_context(symbol: str) -> dict[str, Any]:
 
 
 def _extract_reason_codes(ai_state: dict[str, Any], stage: str) -> list[str]:
-    return ai_state.get("decision_trace", {}).get(stage, {}).get("reason_codes", [])
+    trace = ai_state.get("decision_trace", {})
+    if not isinstance(trace, dict):
+        return []
+
+    preferred_stages = [stage]
+    if stage in {"risk", "hold"}:
+        preferred_stages = ["risk", "evaluator", "policy", "run_summary"]
+    elif stage in {"execution", "report"}:
+        preferred_stages = ["execution", "run_summary", "evaluator"]
+
+    for preferred_stage in preferred_stages:
+        stage_trace = trace.get(preferred_stage)
+        if not isinstance(stage_trace, dict):
+            continue
+        reason_codes = stage_trace.get("reason_codes", [])
+        if isinstance(reason_codes, list):
+            filtered_codes = [code for code in reason_codes if isinstance(code, str)]
+            if filtered_codes:
+                return filtered_codes
+
+    return []
 
 
 def _user_input_to_request(user_input: dict[str, Any]) -> SpotOrderRequest:
@@ -76,6 +154,60 @@ def _user_input_to_request(user_input: dict[str, Any]) -> SpotOrderRequest:
         quote_order_qty=user_input.get("quoteOrderQty"),
         price=user_input.get("price"),
         time_in_force=user_input.get("timeInForce"),
+    )
+
+
+def _normalized_intent_to_request(ai_state: dict[str, Any]) -> SpotOrderRequest:
+    normalized_intent = ai_state.get("normalized_order_intent")
+    if not isinstance(normalized_intent, dict):
+        raise ValueError("normalized_order_intent missing")
+
+    allowed_fields = {
+        "symbol",
+        "side",
+        "type",
+        "quantity",
+        "quoteOrderQty",
+        "price",
+        "timeInForce",
+    }
+    payload = {
+        key: value
+        for key, value in normalized_intent.items()
+        if key in allowed_fields and value is not None
+    }
+    try:
+        return SpotOrderRequest.model_validate(payload)
+    except Exception as exc:
+        raise ValueError("normalized_order_intent invalid") from exc
+
+
+def _normalized_intent_response(ai_state: dict[str, Any]) -> NormalizedOrderIntentResponse | None:
+    normalized_intent = ai_state.get("normalized_order_intent")
+    if not isinstance(normalized_intent, dict):
+        return None
+
+    return NormalizedOrderIntentResponse(
+        symbol=normalized_intent.get("symbol"),
+        side=normalized_intent.get("side"),
+        type=normalized_intent.get("type"),
+        quantity=normalized_intent.get("quantity"),
+        quote_order_qty=normalized_intent.get("quoteOrderQty"),
+        price=normalized_intent.get("price"),
+        time_in_force=normalized_intent.get("timeInForce"),
+    )
+
+
+def _to_auto_order_response(base: OrderRunResponse, ai_state: dict[str, Any]) -> AutoOrderRunResponse:
+    return AutoOrderRunResponse(
+        **base.model_dump(),
+        normalized_order_intent=_normalized_intent_response(ai_state),
+        trader_id=ai_state.get("trader_id") if isinstance(ai_state.get("trader_id"), str) else None,
+        inferred_persona=(
+            ai_state.get("inferred_persona")
+            if isinstance(ai_state.get("inferred_persona"), str)
+            else None
+        ),
     )
 
 
@@ -197,6 +329,36 @@ async def _submit_to_binance(req: SpotOrderRequest, settings: Settings) -> dict[
         return resp.json()
 
 
+async def _finalize_rejection(
+    db: Session,
+    run_id: str,
+    ai_state: dict[str, Any],
+    rejection: dict[str, Any],
+    settings: Settings,
+    *,
+    always_save_report: bool = False,
+) -> dict[str, Any]:
+    reason_codes: list[str] = rejection["reason_codes"]
+    final_state = ai_state
+    try:
+        final_state = await ai_gateway_service.send_completion(
+            run_id, {"be_rejection_evidence": rejection}, settings
+        )
+    except Exception:
+        logger.exception("send_completion(BE_REJECTED) failed for run_id=%s", run_id)
+
+    if always_save_report or final_state.get("report") or final_state.get("lifecycle_status") == "BE_REJECTED":
+        save_run_report(db, run_id=run_id, ai_state=final_state, order_id=None, fallback_reason_codes=reason_codes)
+
+    save_or_update_checkpoint(
+        db, run_id,
+        final_state.get("lifecycle_status", "BE_REJECTED"),
+        final_state.get("hold_reason"),
+        final_state,
+    )
+    return final_state
+
+
 async def _execute_order(
     db: Session,
     run_id: str,
@@ -206,31 +368,7 @@ async def _execute_order(
 ) -> OrderRunResponse:
     rejection = await _revalidate(req, settings)
     if rejection:
-        final_state = ai_state
-        try:
-            final_state = await ai_gateway_service.send_completion(
-                run_id, {"be_rejection_evidence": rejection}, settings
-            )
-        except Exception:
-            logger.exception("send_completion(BE_REJECTED) failed for run_id=%s", run_id)
-
-        report_json = final_state.get("report", {})
-        if report_json or final_state.get("lifecycle_status") == "BE_REJECTED":
-            save_run_report(
-                db,
-                run_id=run_id,
-                ai_state=final_state,
-                order_id=None,
-                fallback_reason_codes=rejection["reason_codes"],
-            )
-
-        save_or_update_checkpoint(
-            db,
-            run_id,
-            final_state.get("lifecycle_status", "BE_REJECTED"),
-            final_state.get("hold_reason"),
-            final_state,
-        )
+        final_state = await _finalize_rejection(db, run_id, ai_state, rejection, settings)
         return OrderRunResponse(
             run_id=run_id,
             lifecycle_status=final_state.get("lifecycle_status", "BE_REJECTED"),
@@ -313,6 +451,7 @@ async def _process_lifecycle(
             run_id=run_id,
             lifecycle_status="HOLD",
             hold_reason=ai_state.get("hold_reason"),
+            reason_codes=_extract_reason_codes(ai_state, "hold"),
         )
     if lifecycle == "NO_ORDER":
         save_run_report(db, run_id=run_id, ai_state=ai_state)
@@ -327,7 +466,7 @@ async def _process_lifecycle(
 
 async def create_order(db: Session, req: SpotOrderRequest, settings: Settings) -> OrderRunResponse:
     run_id = f"run_{uuid.uuid4().hex}"
-    request_context = _build_request_context(run_id, req)
+    request_context = _build_request_context(run_id, _request_to_user_input(req))
     policy_context = _build_policy_context(req.symbol)
 
     try:
@@ -339,6 +478,58 @@ async def create_order(db: Session, req: SpotOrderRequest, settings: Settings) -
     lifecycle = ai_state.get("lifecycle_status", "FAILED")
     save_or_update_checkpoint(db, run_id, lifecycle, ai_state.get("hold_reason"), ai_state)
     return await _process_lifecycle(db, run_id, req, ai_state, lifecycle, settings)
+
+
+async def create_auto_order(
+    db: Session,
+    req: AutoOrderRequest,
+    settings: Settings,
+) -> AutoOrderRunResponse:
+    run_id = f"run_{uuid.uuid4().hex}"
+    user_input = await _build_auto_user_input(db, req, settings)
+    request_context = _build_request_context(run_id, user_input)
+    policy_context = _build_policy_context("BTCUSDT")
+
+    try:
+        ai_state = await ai_gateway_service.start_agentic_run(run_id, request_context, policy_context, settings)
+    except Exception:
+        logger.exception("AI start_agentic_run failed for run_id=%s", run_id)
+        raise HTTPException(status_code=500, detail="AI service unavailable")
+
+    lifecycle = ai_state.get("lifecycle_status", "FAILED")
+    save_or_update_checkpoint(db, run_id, lifecycle, ai_state.get("hold_reason"), ai_state)
+
+    if lifecycle == "READY_FOR_BE":
+        try:
+            normalized_request = _normalized_intent_to_request(ai_state)
+        except ValueError:
+            rejection_reason_codes = ["NORMALIZED_INTENT_INVALID"]
+            rejection: dict[str, Any] = {
+                "reason_codes": rejection_reason_codes,
+                "notes": "AI normalized_order_intent could not be converted into an executable Spot order.",
+            }
+            final_state = await _finalize_rejection(db, run_id, ai_state, rejection, settings, always_save_report=True)
+            return _to_auto_order_response(
+                OrderRunResponse(
+                    run_id=run_id,
+                    lifecycle_status=final_state.get("lifecycle_status", "BE_REJECTED"),
+                    reason_codes=rejection_reason_codes,
+                ),
+                final_state,
+            )
+
+        response = await _process_lifecycle(db, run_id, normalized_request, ai_state, lifecycle, settings)
+        return _to_auto_order_response(response, ai_state)
+
+    response = await _process_lifecycle(
+        db,
+        run_id,
+        SpotOrderRequest.model_construct(symbol="BTCUSDT", side="BUY", type="MARKET", quote_order_qty="1"),
+        ai_state,
+        lifecycle,
+        settings,
+    )
+    return _to_auto_order_response(response, ai_state)
 
 
 async def resume_order(db: Session, payload: ResumeCommandPayload, settings: Settings) -> OrderRunResponse:

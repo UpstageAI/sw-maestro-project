@@ -92,6 +92,42 @@ class OrderRunResponse(_CamelModel):
     reason_codes: list[str] = []
 
 
+class NormalizedOrderIntentResponse(_CamelModel):
+    symbol: str | None = None
+    side: str | None = None
+    type: str | None = None
+    quantity: str | None = None
+    quote_order_qty: str | None = None
+    price: str | None = None
+    time_in_force: str | None = None
+
+
+class AutoOrderRunResponse(OrderRunResponse):
+    normalized_order_intent: NormalizedOrderIntentResponse | None = None
+    trader_id: str | None = None
+    inferred_persona: str | None = None
+
+
+_AutoSessionStatus = Literal["IDLE", "ACTIVE", "STOPPING", "STOPPED"]
+
+
+class AutoTradingSessionResponse(_CamelModel):
+    session_id: str | None = None
+    session_status: _AutoSessionStatus
+    stop_requested: bool = False
+    selected_tick_interval_seconds: int | None = None
+    raw_text: str | None = None
+    selected_trader_id: str | None = None
+    tick_count: int = 0
+    started_at: str | None = None
+    stopped_at: str | None = None
+    last_tick_started_at: str | None = None
+    last_tick_completed_at: str | None = None
+    stop_reason: str | None = None
+    latest_error: str | None = None
+    latest_run: AutoOrderRunResponse | None = None
+
+
 class DecisionTraceStageResponse(_CamelModel):
     reason_codes: list[str] = []
     evidence_refs: list[str] = []
@@ -127,6 +163,18 @@ class PublishedRunReport(_CamelModel):
 class RunReportResponse(_CamelModel):
     run_id: str
     report: PublishedRunReport
+
+
+class ReportCadenceEventResponse(_CamelModel):
+    run_id: str
+    event_type: str
+    lifecycle_status: str
+    created_at: str
+
+
+class RunReportCadenceResponse(_CamelModel):
+    run_id: str
+    events: list[ReportCadenceEventResponse]
 
 
 class StreamStatusResponse(_CamelModel):

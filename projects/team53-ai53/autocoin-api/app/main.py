@@ -14,7 +14,7 @@ from app.database import create_tables
 from app.models.health import HealthResponse
 from app.models.responses import ErrorResponse
 from app.routers import account, config, klines, orders, stream, ticker
-from app.services import stream_service
+from app.services import auto_session_service, stream_service
 
 logging.basicConfig(level=settings.log_level)
 logger = logging.getLogger(__name__)
@@ -26,6 +26,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("DB tables created. App env: %s", settings.app_env)
     stream_service.start_stream(settings.binance_testnet_ws_stream_url)
     yield
+    await auto_session_service.shutdown_auto_session()
     await stream_service.stop_stream()
 
 

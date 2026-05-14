@@ -29,6 +29,27 @@ async def start_run(
         return resp.json()
 
 
+async def start_agentic_run(
+    run_id: str,
+    request_context: dict[str, Any],
+    policy_context: dict[str, Any],
+    settings: Settings,
+) -> dict[str, Any]:
+    state: dict[str, Any] = {
+        "run_id": run_id,
+        "request_context": request_context,
+        "policy_context": policy_context,
+    }
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            f"{settings.ai_service_http_url}/runs/agentic/start",
+            json=state,
+            timeout=30,
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+
 async def resume_run(
     run_id: str,
     resume_reason: str,
