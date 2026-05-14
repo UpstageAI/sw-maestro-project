@@ -82,6 +82,7 @@ class DashboardViewModel(
     }
 
     private fun navigateToDetail(issueId: String) {
+        _state.update { it.copy(readIssueIds = it.readIssueIds + issueId) }
         viewModelScope.launch {
             _effect.send(DashboardEffect.NavigateToDetail(issueId))
         }

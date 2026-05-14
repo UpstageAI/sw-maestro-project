@@ -10,6 +10,7 @@ class TikiTalkaApp : Application() {
         super.onCreate()
         initKoin(
             baseUrl = BuildConfig.BASE_URL,
+            footballApiKey = BuildConfig.FOOTBALL_API_KEY,
             isDebug = BuildConfig.DEBUG,
             extraModules = listOf(appModule),
         ) {

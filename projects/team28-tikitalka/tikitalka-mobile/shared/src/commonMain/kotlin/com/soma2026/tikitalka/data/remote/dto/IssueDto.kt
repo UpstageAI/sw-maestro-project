@@ -13,6 +13,7 @@ data class IssueDto(
     val hotnessScore: Int,
     val url: String,
     val source: String,
+    val imageUrl: String? = null,
     val originalContent: String? = null,
 )
 
@@ -25,6 +26,7 @@ fun IssueDto.toDomain(): Issue = Issue(
     hotnessScore = hotnessScore,
     url = url,
     source = source,
+    imageUrl = imageUrl,
     originalContent = originalContent,
 )
 

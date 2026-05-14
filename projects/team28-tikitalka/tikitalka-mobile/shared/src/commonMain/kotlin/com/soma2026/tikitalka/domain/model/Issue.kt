@@ -9,5 +9,6 @@ data class Issue(
     val hotnessScore: Int,
     val url: String,
     val source: String,
-    val originalContent: String? = null, // 상세 조회 시만 포함
+    val imageUrl: String? = null,
+    val originalContent: String? = null,
 )

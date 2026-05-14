@@ -1,0 +1,6 @@
+// local.properties와 동일한 역할 — 이 파일을 복사해서 LocalConfig.swift 로 이름 변경 후 값을 채울 것
+// LocalConfig.swift 는 .gitignore 에 포함되어 있어 커밋되지 않음
+enum LocalConfig {
+    static let baseUrl = "http://localhost:8080/"
+    static let footballApiKey = "your_football_api_key_here"
+}

@@ -6,6 +6,7 @@ import org.koin.core.module.Module
 
 fun initKoin(
     baseUrl: String,
+    footballApiKey: String,
     isDebug: Boolean = false,
     extraModules: List<Module> = emptyList(),
     appDeclaration: KoinApplication.() -> Unit = {},
@@ -14,6 +15,7 @@ fun initKoin(
     modules(
         platformModule,
         networkModule(baseUrl, isDebug),
+        footballNetworkModule(footballApiKey),
         repositoryModule,
         useCaseModule,
         viewModelModule,

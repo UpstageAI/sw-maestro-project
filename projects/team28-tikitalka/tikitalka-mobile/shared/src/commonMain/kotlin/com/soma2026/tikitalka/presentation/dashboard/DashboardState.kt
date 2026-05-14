@@ -9,4 +9,5 @@ data class DashboardState(
     val currentPage: Int = 0,
     val isLastPage: Boolean = false,
     val errorMessage: String? = null,
+    val readIssueIds: Set<String> = emptySet(),
 )

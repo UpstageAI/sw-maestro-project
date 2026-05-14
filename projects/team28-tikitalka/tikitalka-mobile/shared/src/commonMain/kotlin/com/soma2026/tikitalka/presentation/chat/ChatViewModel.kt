@@ -14,16 +14,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
 
 class ChatViewModel(
     private val sendChatMessage: SendChatMessageUseCase,
     private val getChatHistory: GetChatHistoryUseCase,
     private val getDeviceId: GetDeviceIdUseCase,
 ) : ViewModel() {
-
     private var deviceId: String = ""
 
     private val _state = MutableStateFlow(ChatState())
@@ -59,8 +58,7 @@ class ChatViewModel(
                             state.copy(isLoadingHistory = false)
                         }
                     }
-                }
-                .onFailure { error ->
+                }.onFailure { error ->
                     _state.update { it.copy(isLoadingHistory = false) }
                     _effect.send(ChatEffect.ShowError(error.message ?: "대화 이력을 불러오지 못했습니다"))
                 }
@@ -95,8 +93,7 @@ class ChatViewModel(
                             isSending = false,
                         )
                     }
-                }
-                .onFailure { error ->
+                }.onFailure { error ->
                     _state.update { it.copy(isSending = false) }
                     _effect.send(ChatEffect.ShowError(error.message ?: "메시지 전송에 실패했습니다"))
                 }

@@ -35,8 +35,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil3.compose.SubcomposeAsyncImage
 import com.soma2026.tikitalka.domain.model.Issue
 import com.soma2026.tikitalka.domain.service.TranslationLanguage
 import com.soma2026.tikitalka.presentation.issuedetail.IssueDetailEffect
@@ -44,11 +46,13 @@ import com.soma2026.tikitalka.presentation.issuedetail.IssueDetailIntent
 import com.soma2026.tikitalka.presentation.issuedetail.IssueDetailState
 import com.soma2026.tikitalka.presentation.issuedetail.IssueDetailViewModel
 import com.soma2026.tikitalka.ui.theme.TikiTalkaTheme
+import com.soma2026.tikitalka.ui.util.estimatedReadingMinutes
 import com.soma2026.tikitalka.ui.util.toRelativeTimeString
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 import tikitalka.composeapp.generated.resources.Res
 import tikitalka.composeapp.generated.resources.ico_btn_back
+import tikitalka.composeapp.generated.resources.ico_issue_eye
 
 @Composable
 fun IssueDetailScreen(
@@ -197,6 +201,33 @@ private fun IssueDetailBody(
             color = MaterialTheme.colorScheme.onSurface,
         )
 
+        if (!issue.imageUrl.isNullOrBlank()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            SubcomposeAsyncImage(
+                model = issue.imageUrl,
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Crop,
+                loading = {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                    )
+                },
+                error = {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                    )
+                },
+            )
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
         Spacer(modifier = Modifier.height(16.dp))
@@ -214,12 +245,13 @@ private fun IssueDetailBody(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
-        if (!issue.originalContent.isNullOrBlank()) {
+        val originalContent = issue.originalContent
+        if (!originalContent.isNullOrBlank()) {
             Spacer(modifier = Modifier.height(20.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
             Spacer(modifier = Modifier.height(20.dp))
 
-            // 본문 헤더 + 언어 토글
+            // 본문 헤더 + 읽기 시간 + 언어 토글
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -228,6 +260,17 @@ private fun IssueDetailBody(
                     text = "본문",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
+                )
+                Icon(
+                    painter = painterResource(Res.drawable.ico_issue_eye),
+                    contentDescription = null,
+                    modifier = Modifier.padding(start = 6.dp).size(12.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = " ${estimatedReadingMinutes(originalContent)}분 읽기",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 LanguageToggle(
@@ -244,7 +287,7 @@ private fun IssueDetailBody(
                 }
             } else {
                 Text(
-                    text = translatedContent ?: issue.originalContent ?: "",
+                    text = translatedContent ?: originalContent,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -327,6 +370,7 @@ private val previewIssue =
         hotnessScore = 98,
         url = "https://example.com/article",
         source = "L'Equipe",
+        imageUrl = "https://example.com/image.jpg",
         originalContent =
             "음바페는 지난 시즌 레알 마드리드에서 기대 이하의 성적을 기록했다. " +
                 "팀 내 불화설이 끊이지 않는 가운데 현지 매체들은 그의 파리 복귀 가능성을 잇달아 보도하고 있다. " +

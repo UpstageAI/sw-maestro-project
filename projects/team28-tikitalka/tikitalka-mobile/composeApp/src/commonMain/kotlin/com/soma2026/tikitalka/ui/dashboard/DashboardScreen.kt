@@ -34,9 +34,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil3.compose.SubcomposeAsyncImage
 import com.soma2026.tikitalka.domain.model.Issue
 import com.soma2026.tikitalka.presentation.dashboard.DashboardEffect
 import com.soma2026.tikitalka.presentation.dashboard.DashboardIntent
@@ -154,6 +156,7 @@ internal fun DashboardContent(
                         items(state.issues, key = { it.id }) { issue ->
                             IssueCard(
                                 issue = issue,
+                                isRead = issue.id in state.readIssueIds,
                                 onClick = { onIssueClick(issue.id) },
                             )
                         }
@@ -180,6 +183,7 @@ internal fun DashboardContent(
 @Composable
 private fun IssueCard(
     issue: Issue,
+    isRead: Boolean = false,
     onClick: () -> Unit,
 ) {
     Surface(
@@ -188,10 +192,35 @@ private fun IssueCard(
             .padding(horizontal = 16.dp)
             .clickable(onClick = onClick),
         shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 2.dp,
+        color = if (isRead) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surface,
+        shadowElevation = if (isRead) 0.dp else 2.dp,
     ) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp)) {
+        Column {
+            if (!issue.imageUrl.isNullOrBlank()) {
+                SubcomposeAsyncImage(
+                    model = issue.imageUrl,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp),
+                    contentScale = ContentScale.Crop,
+                    loading = {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                        )
+                    },
+                    error = {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                        )
+                    },
+                )
+            }
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp)) {
                 // 태그 + 시간
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -211,7 +240,7 @@ private fun IssueCard(
                 Text(
                     text = issue.title,
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = if (isRead) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -229,7 +258,7 @@ private fun IssueCard(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // 출처 + 요약 보기
+                // 출처 + 읽어 보기
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -243,9 +272,10 @@ private fun IssueCard(
                     Text(
                         text = "읽어 보기 →",
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = if (isRead) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
                     )
                 }
+            }
         }
     }
 }
@@ -279,6 +309,7 @@ private val previewIssues = listOf(
         hotnessScore = 98,
         url = "",
         source = "L'Equipe",
+        imageUrl = "https://example.com/image.jpg",
     ),
     Issue(
         id = "2",
@@ -299,6 +330,7 @@ private val previewIssues = listOf(
         hotnessScore = 85,
         url = "",
         source = "UEFA",
+        imageUrl = "https://example.com/image2.jpg",
     ),
 )
 
@@ -319,6 +351,17 @@ private fun DashboardContentDarkPreview() {
     TikiTalkaTheme(darkTheme = true) {
         DashboardContent(
             state = DashboardState(issues = previewIssues),
+            onIssueClick = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun DashboardContentWithReadPreview() {
+    TikiTalkaTheme {
+        DashboardContent(
+            state = DashboardState(issues = previewIssues, readIssueIds = setOf("1", "3")),
             onIssueClick = {},
         )
     }

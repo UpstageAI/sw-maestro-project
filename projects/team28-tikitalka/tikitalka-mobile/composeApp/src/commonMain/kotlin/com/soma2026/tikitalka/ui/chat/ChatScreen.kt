@@ -1,5 +1,12 @@
 package com.soma2026.tikitalka.ui.chat
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -107,11 +114,22 @@ internal fun ChatContent(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = "티키 ChatBot",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Text(
+                            text = "티키 ChatBot",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        PulsingLiveIndicator()
+                        Text(
+                            text = "LIVE",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color(0xFF4CAF50),
+                        )
+                    }
                 },
                 colors =
                     TopAppBarDefaults.topAppBarColors(
@@ -177,6 +195,37 @@ internal fun ChatContent(
                 onSend = onSend,
             )
         }
+    }
+}
+
+@Composable
+private fun PulsingLiveIndicator(modifier: Modifier = Modifier) {
+    val infiniteTransition = rememberInfiniteTransition(label = "live_pulse")
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 2.5f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "pulse_scale",
+    )
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "pulse_alpha",
+    )
+    val liveGreen = Color(0xFF4CAF50)
+
+    Canvas(modifier = modifier.size(20.dp)) {
+        val center = androidx.compose.ui.geometry.Offset(size.width / 2, size.height / 2)
+        val innerRadius = 4.dp.toPx()
+        drawCircle(color = liveGreen.copy(alpha = pulseAlpha), radius = innerRadius * pulseScale, center = center)
+        drawCircle(color = liveGreen, radius = innerRadius, center = center)
     }
 }
 

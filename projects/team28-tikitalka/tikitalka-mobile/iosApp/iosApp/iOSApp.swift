@@ -4,9 +4,10 @@ import ComposeApp
 @main
 struct iOSApp: App {
     init() {
-        // local.properties 역할 — 실제 서버 주소로 교체할 것
-        let baseUrl = "http://localhost:8080/"
-        MainViewControllerKt.startKoinIos(baseUrl: baseUrl)
+        MainViewControllerKt.startKoinIos(
+            baseUrl: LocalConfig.baseUrl,
+            footballApiKey: LocalConfig.footballApiKey
+        )
     }
 
     var body: some Scene {

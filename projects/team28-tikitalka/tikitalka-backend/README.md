@@ -4,6 +4,56 @@ Tikitalka 프로젝트의 백엔드 시스템입니다. Google Sheets를 데이�
 
 ---
 
+## 0. [Frontend] 로컬 개발 환경 세팅
+
+프론트엔드 개발 시 백엔드 + AI 서비스를 로컬에서 함께 띄우는 방법입니다.
+
+### 1단계 — 레포 받기
+
+```bash
+git clone https://github.com/soma17th-ai28/tikitalka-backend.git
+cd tikitalka-backend
+git checkout integration
+```
+
+### 2단계 — AI 서비스 실행 (터미널 1)
+
+```bash
+cp .env.example .env   # UPSTAGE_API_KEY, NEWSDATA_API_KEY 값 채우기
+pip install -r requirements.txt
+python -m uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+> `http://localhost:8000` 에서 AI 서비스가 실행됩니다.
+
+### 3단계 — 백엔드 실행 (터미널 2)
+
+```bash
+./gradlew bootRun
+```
+
+> `http://localhost:8080` 에서 백엔드 API가 실행됩니다.
+
+### 4단계 — 프론트에서 호출
+
+프론트는 **`localhost:8080`** 으로만 요청하면 됩니다. AI 서비스 호출은 백엔드가 내부적으로 처리합니다.
+
+```
+프론트 → localhost:8080 (Spring Boot) → localhost:8000 (FastAPI)
+```
+
+---
+
+## 0-1. [AI] 서비스 빠른 시작
+
+```bash
+cp .env.example .env  # UPSTAGE_API_KEY, NEWSDATA_API_KEY 입력
+pip install -r requirements.txt
+python -m uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+---
+
 ## 1. [Frontend] 채팅 API 통합 가이드
 
 프론트엔드에서 축구 챗봇 기능을 구현하기 위한 API 명세입니다.
