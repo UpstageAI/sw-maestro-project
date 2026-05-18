@@ -146,7 +146,109 @@
 
 ## 4. 실행 방법
 
-### 사전 요구사항
+> Docker(권장) 와 로컬 직접 실행 두 가지 방식을 모두 지원한다. Docker 쪽이 의존성 격리·운영과 가까운 환경을 보장한다.
+
+### 4.1 Docker로 로컬 환경 구성 (권장)
+
+#### 사전 요구사항
+
+| 도구 | 버전 | 설치 |
+|---|---|---|
+| Docker | 24+ (Compose v2 내장) | <https://www.docker.com/products/docker-desktop/> (Windows/macOS) · `apt install docker.io docker-compose-plugin` (Linux) |
+| **Upstage Solar API 키** | — | <https://console.upstage.ai> 에서 발급. `up_...` 형태 |
+| (선택) Tavily API 키 | — | <https://tavily.com>. RAG 자료 빈약 시 웹 검색 폴백용 |
+| (선택) GitHub PAT | — | <https://github.com/settings/personal-access-tokens>. GitHub 레포 자료 인입 시 60→5,000회/h 상승 |
+
+#### 1) 저장소 클론
+
+```bash
+git clone https://github.com/SoTaeHo/tail-question.git
+cd tail-question
+```
+
+#### 2) 환경 변수 파일 준비
+
+```bash
+cp backend/.env.example backend/.env
+cp frontend/.env.local.example frontend/.env.local   # 선택 (mock 모드 사용 시)
+```
+
+`backend/.env`를 열어 최소한 `UPSTAGE_API_KEY` 를 채운다. `ALLOWED_ORIGINS=http://localhost:3000` 를 유지하면 docker-compose 환경에서 그대로 동작한다.
+
+> Solar 호출 없이 UI만 확인할 거라면 `USE_MOCK_LLM=true` 로 시작해도 된다. 비용 0, 가짜 응답.
+
+#### 3) 컨테이너 빌드 & 실행
+
+```bash
+# 개발 모드 (--reload + npm run dev). docker-compose.override.yml이 자동 적용됨
+docker compose up --build
+
+# 백그라운드로 띄우기
+docker compose up --build -d
+
+# 운영과 동일한 빌드(--reload 미적용, next start)로 띄우기
+docker compose -f docker-compose.yml up --build -d
+```
+
+처음 빌드는 `chromadb`/`hnswlib` C 확장 컴파일 때문에 3 ~ 5분 정도 걸린다. 이후에는 의존성 캐시가 재사용되어 30초 내외.
+
+#### 4) 동작 확인
+
+| 대상 | URL | 기대값 |
+|---|---|---|
+| Backend health | <http://localhost:8000/health> | `{"status":"ok","boot_id":"..."}` |
+| Frontend | <http://localhost:3000> | `/login`으로 리다이렉트 |
+| Backend → Frontend rewrite | 프론트엔드 내부에서 `/api/backend/*` | 200 (compose DNS로 `backend:8000` 해석) |
+
+`docker compose ps` 로 `tq-backend` 가 `healthy` 가 될 때까지 기다리면 `tq-frontend` 가 자동으로 기동된다 (`depends_on: service_healthy`).
+
+#### 5) 자주 쓰는 명령어
+
+```bash
+docker compose logs -f backend          # backend 실시간 로그 (stage emoji 로그 그대로)
+docker compose logs -f frontend         # Next.js dev 서버 로그
+docker compose exec backend bash        # 컨테이너 안으로 진입
+docker compose exec backend python -m app.scripts.migrate_users   # 레거시 사용자 마이그레이션 등
+docker compose down                     # 정지 + 네트워크 정리 (볼륨은 유지)
+docker compose down -v                  # 볼륨까지 삭제 — SQLite/Chroma 초기화 시
+docker compose build --no-cache backend # 의존성 변경 후 강제 재빌드
+```
+
+#### 6) 볼륨 & 데이터 영속화
+
+`docker-compose.yml` 이 호스트 디렉토리를 마운트해 컨테이너 재기동 후에도 데이터가 유지된다.
+
+| 호스트 경로 | 컨테이너 경로 | 용도 |
+|---|---|---|
+| `./data/` | `/app/data` | SQLite DB (`tail_question.db`) — 사용자·세션·턴 |
+| `./.chroma/` | `/app/.chroma` | Chroma 벡터 컬렉션 (사용자별 격리) |
+| `./.materials/` | `/app/.materials` | 업로드된 md/pdf 원본 |
+
+#### 7) 운영과의 차이 — `docker-compose.override.yml`
+
+로컬 개발 시 자동으로 합쳐지는 override가 다음을 바꾼다:
+- backend: `uvicorn --reload` + `./backend/app` 호스트 바인드 마운트 → 코드 수정 즉시 반영
+- backend: 포트 바인드를 `0.0.0.0:8000` 로 풀어 호스트 브라우저에서 접근 가능
+- frontend: `npm run dev` + `./frontend` 바인드 마운트, `node_modules`/`.next` 는 익명 볼륨으로 보호
+
+운영 빌드(`docker compose -f docker-compose.yml up`)에서는 override가 무시되어 127.0.0.1 바인딩 + 빌드된 정적 자원만 서빙된다 (EC2 nginx 앞단 가정).
+
+#### 8) 트러블슈팅
+
+| 증상 | 원인 / 해결 |
+|---|---|
+| `backend` 가 health check 실패하며 재기동 반복 | `backend/.env` 누락 또는 `UPSTAGE_API_KEY` 미설정. `docker compose logs backend` 로 401/SOLAR 에러 확인 |
+| 빌드 시 `hnswlib` / `chroma-hnswlib` 컴파일 에러 | Docker Desktop의 메모리 한도(기본 2GB)에서 OOM. Settings → Resources에서 4GB+ 로 상향 |
+| 프론트에서 `/api/backend/*` 호출이 502 | `BACKEND_URL` 이 `next build` 시점에 박힘. `frontend` 만 재빌드: `docker compose build --no-cache frontend` |
+| Windows에서 변경한 코드가 reload 되지 않음 | WSL2 백엔드 사용 시 `CHOKIDAR_USEPOLLING=true` 를 `frontend` 환경 변수에 추가하거나 코드 트리를 WSL 파일시스템(`\\wsl$\...`)에 두기 |
+| 포트 충돌 (`8000` / `3000` already in use) | 호스트의 기존 프로세스 종료 또는 override에서 포트 매핑 변경 (`"8001:8000"` 등) |
+| Chroma 벡터 검색 결과가 비어 있음 | `./.chroma` 볼륨이 사용자 컬렉션을 캐싱하지 못함. `docker compose down -v` 후 자료를 다시 인입 |
+
+---
+
+### 4.2 로컬 직접 실행 (Docker 없이)
+
+#### 사전 요구사항
 
 | 도구 | 버전 | 설치 |
 |---|---|---|
@@ -157,7 +259,7 @@
 | (선택) Tavily API 키 | — | <https://tavily.com>. RAG 자료 빈약 시 웹 검색 폴백용 |
 | (선택) GitHub PAT | — | <https://github.com/settings/personal-access-tokens>. GitHub 레포 자료 인입 시 60→5,000회/h 상승 |
 
-### Backend (port 8000)
+#### Backend (port 8000)
 
 ```powershell
 cd backend
@@ -193,7 +295,7 @@ uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 
 검증: `curl http://127.0.0.1:8000/health` → `{"status":"ok",...,"boot_id":"..."}`.
 
-### Frontend (port 3000)
+#### Frontend (port 3000)
 
 ```powershell
 cd frontend
@@ -205,7 +307,7 @@ npm run dev
 
 > **Mock 전용 UI 작업**: 백엔드 없이 UI만 검증하려면 `frontend/.env.local` 에 `NEXT_PUBLIC_USE_MOCK=true` 를 추가하고 `npm run dev`. 모든 API 호출이 로컬 mock 데이터로 응답.
 
-### 시연 / 디버깅용 stage 로그
+#### 시연 / 디버깅용 stage 로그
 
 `backend/app/log_format.py` 가 LangGraph 노드 진입·종료, Solar 호출 시간, Tavily 검색 등을 emoji-marked 한 줄씩 출력한다.
 
