@@ -37,6 +37,15 @@ def _start_agentic_run(client: TestClient, payload: dict | None = None):
         return client.post("/runs/agentic/start", json=payload or allowed_request())
 
 
+def test_http_app_loads_dotenv_on_startup():
+    with patch("autocoin_ai.http_api.load_dotenv") as mock_load_dotenv:
+        temp_app = create_app()
+        with TestClient(temp_app):
+            pass
+
+    mock_load_dotenv.assert_called_once()
+
+
 def test_start_endpoint_returns_canonical_agent_state():
     with TestClient(app) as client:
         response = client.post("/runs/start", json=allowed_request())

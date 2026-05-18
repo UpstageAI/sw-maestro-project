@@ -1,0 +1,1 @@
+export { AutoTradingPage } from './AutoTradingPage';

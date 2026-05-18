@@ -18,6 +18,11 @@
   border: 1px solid color-mix(in srgb, var(--color-warning) 25%, transparent);
 }
 
+.holdFallback {
+  background-color: color-mix(in srgb, var(--color-warning) 4%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-border-strong) 70%, var(--color-warning));
+}
+
 .beRejected {
   background-color: color-mix(in srgb, var(--color-danger) 6%, var(--color-surface));
   border: 1px solid color-mix(in srgb, var(--color-danger) 25%, transparent);

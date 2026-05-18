@@ -11,29 +11,11 @@ from app.db.models import (
     PriceSnapshot,
     Report,
     SpotOrder,
-    StreamEvent,
-    TestnetConfig,
 )
 
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
-
-
-def save_testnet_config(db: Session, rest_base_url: str, ws_stream_url: str, ws_api_url: str) -> TestnetConfig:
-    config = TestnetConfig(
-        rest_base_url=rest_base_url,
-        ws_stream_url=ws_stream_url,
-        ws_api_url=ws_api_url,
-    )
-    db.add(config)
-    db.commit()
-    db.refresh(config)
-    return config
-
-
-def get_latest_testnet_config(db: Session) -> TestnetConfig | None:
-    return db.scalars(select(TestnetConfig).order_by(TestnetConfig.created_at.desc())).first()
 
 
 def save_balance_snapshot(db: Session, snapshot_json: dict[str, object], config_id: str | None = None) -> BalanceSnapshot:
@@ -112,14 +94,6 @@ def save_cancel_log(db: Session, order_id: str, cancel_json: dict[str, object]) 
     db.commit()
     db.refresh(log)
     return log
-
-
-def save_stream_event(db: Session, stream_name: str, event_json: dict[str, object], config_id: str | None = None) -> StreamEvent:
-    event = StreamEvent(stream_name=stream_name, event_json=event_json, config_id=config_id)
-    db.add(event)
-    db.commit()
-    db.refresh(event)
-    return event
 
 
 def save_or_update_report(

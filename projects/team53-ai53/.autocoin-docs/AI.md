@@ -2,145 +2,94 @@
 
 ## 문서 목적
 
-이 문서는 AI 계층의 실제 구현 형태와 canonical 책임 경계를 정의한다. 기준은 stateful run orchestration, fail-closed, execution authority 분리다.
+이 문서는 현재 구현 기준의 AI 계층 책임과 HTTP 계약을 설명한다. 핵심은 AI가 Binance 제출 권한이 없는 판단/trace 서비스라는 사실, 그리고 자연어 입력에서 trader/persona 를 추론해 같은 세션의 판단 스타일 힌트를 만드는 역할까지 맡는다는 점을 분명히 유지하는 것이다.
 
 ## 1. AI의 역할
 
-AI는 주문 테스트 요청을 구조화하고, 정책과 리스크를 근거로 보류 또는 진행 제안을 만들고, 실행 후 결과 설명을 보강한다. 하지만 실제 주문 제출 권한은 없다.
+- 자연어 또는 구조화 입력을 주문 의도로 정규화
+- 정책과 trader 원칙 기반 strategy/risk 판단
+- 자연어 문장에서 trader style 을 읽고 `traderId`, `inferredPersona` 를 추론
+- hold/no-order/ready-for-be 분기 생성
+- BE completion payload 기반 결과 해석과 report 보강
 
 ## 2. 권한 경계
 
 - AI는 Binance를 직접 호출하지 않는다.
-- AI는 Binance 요청에 서명하지 않는다.
-- AI는 API Key, Secret, signature를 다루지 않는다.
-- AI는 실행 승인자가 아니다.
-- BE만 실행 승인과 제출을 수행한다.
+- AI는 서명을 생성하지 않는다.
+- AI는 최종 실행 승인자가 아니다.
+- 실제 제출은 BE만 수행한다.
 
 ## 3. 현재 구현 형태
 
-- AI는 standalone HTTP 서비스다.
-- 공개 엔드포인트는 `/runs/start`, `/runs/resume`, `/runs/complete` 다.
-- 현재 기본 run 저장소는 로컬 JSON 파일 기반이다.
-- 같은 저장소 파일을 유지하는 한 프로세스 재시작 이후에도 non-agentic run 상태를 다시 읽을 수 있다.
-- 현재 구현에는 `/runs/agentic/start` 엔드포인트도 존재한다.
+- standalone HTTP 서비스
+- non-agentic graph 와 agentic graph 둘 다 제공
+- 로컬 JSON run store 사용
+- HTTP startup 시 `.env` 로드
 
-## 4. AI HTTP 계약
+## 4. HTTP 엔드포인트
 
-### `POST /runs/start`
+| 메서드 | 경로 | 설명 |
+|---|---|---|
+| POST | `/runs/start` | non-agentic run 시작 |
+| POST | `/runs/agentic/start` | 자연어/agentic run 시작 |
+| POST | `/runs/resume` | non-agentic hold run 재개 |
+| POST | `/runs/complete` | BE execution/rejection 결과 반영 |
+| GET | `/runs/{run_id}/checkpoints/order` | order graph checkpoint evidence |
+| GET | `/runs/{run_id}/checkpoints/completion` | completion graph checkpoint evidence |
 
-입력:
+## 5. agentic graph 요약
 
-- `run_id`
-- `request_context`
-- `policy_context`
+- `intake`
+- `policy`
+- `strategy`
+- `risk_agent`
+- `risk_gate`
+- `evaluator`
 
-출력:
+현재 주요 구현 사실:
 
-- 전체 agent state
-- 최소 `lifecycle_status`, `decision_trace`, `verification_checks`, `hold_reason`, `report`
+- intake 는 natural language parse, heuristic fallback, ambiguity HOLD 처리
+- intake / strategy 단계에서는 사용자의 문장에서 trader/persona 단서를 읽어 이후 판단 스타일에 반영할 수 있다.
+- strategy 는 live snapshot 을 prompt에 포함해 판단
+- strategy LLM 실패 시 deterministic fallback 가능
+- risk_gate 는 live account/market snapshot 이 있으면 그것을 우선 사용하고, 없으면 mock tool fallback 사용
 
-### `POST /runs/resume`
+## 6. 상태와 제약
 
-입력:
+주요 상태:
 
-- `run_id`
-- `resume_reason`
-- `patch_fields`
+- `HOLD`
+- `READY_FOR_BE`
+- `NO_ORDER`
+- `BE_REJECTED`
+- `FAILED`
+- `REPORT_READY`
 
-출력:
+주요 hold reason 예시:
 
-- 같은 `run_id` 의 새 agent state
+- `HOLD_INPUT_AMBIGUOUS`
+- `HOLD_LOW_CONVICTION`
+- `HOLD_RISK_AGENT_FLAGGED`
+- `HOLD_DATA_INSUFFICIENT`
 
-### `POST /runs/complete`
+이 상태 구조는 evidence 가 약하거나 충돌할 때 억지 제출보다 `HOLD` 또는 `NO_ORDER` 를 선호하는 현재 구현 원칙과 맞물린다.
 
-입력:
+중요 제약:
 
-- `run_id`
-- `completion_payload`
+- agentic run resume 는 현재 지원되지 않는다.
+- `complete()` 는 `READY_FOR_BE` 에서만 허용된다.
+- checkpoint completion evidence 는 completion 이후에만 조회 가능하다.
 
-출력:
+## 7. BE handoff 의미
 
-- completion 반영 후 agent state
+- AI가 `READY_FOR_BE` 를 반환해도 그것은 제출 완료가 아니다.
+- BE는 그 뒤 `normalized_order_intent` 를 실제 주문 요청으로 변환하고, defensive rule base 와 deterministic 재검증 후에만 Binance Testnet에 제출한다.
+- `execution.py` 는 completion payload 를 해석할 뿐, 직접 제출하지 않는다.
 
-## 5. `policy_context` 의 canonical 의미
+## 8. 현재 문서화 시 주의할 오해
 
-`policy_context` 는 BE가 조합해 AI에 주입하는 grounding 입력이다. 현재 구현 기준에서 AI는 이 객체를 받아 해석한다. AI가 정책 아티팩트를 내부에서 직접 조회해 완성하는 구조로 문서화하면 안 된다.
-
-즉, 현재 canonical 문장은 다음과 같다.
-
-- 정책 retrieval과 조합 책임은 BE에 있다.
-- AI는 주입된 `policy_context` 를 해석하고 trace에 반영한다.
-
-## 6. 상태 모델 핵심 필드
-
-- `run_id`
-- `request_context`
-- `policy_context`
-- `normalized_order_intent`
-- `lifecycle_status`
-- `hold_reason`
-- `decision_trace`
-- `verification_checks`
-- `completion_payload`
-- `execution_result`
-- `be_rejection_evidence`
-- `report`
-- `resume_history`
-- `decision_trace_history`
-
-## 7. canonical 상태 의미
-
-| 상태 | 의미 |
-|---|---|
-| `RECEIVED` | run 수신 |
-| `NORMALIZING` | 의도 정규화 중 |
-| `RISK_REVIEW` | 리스크 판단 중 |
-| `HOLD` | 승인 또는 추가 데이터 필요 |
-| `READY_FOR_BE` | AI 기준 통과, BE 재검증 대기 |
-| `BE_REJECTED` | BE가 최종 차단 |
-| `REPORT_READY` | 결과 보고 준비 완료 |
-| `NO_ORDER` | 주문 미생성 종료 |
-| `FAILED` | 기술 실패 또는 복구 불가 |
-
-## 8. resume의 실제 구현 의미
-
-현재 구현에서 resume는 다음처럼 동작한다.
-
-1. 기존 run 상태를 현재 run 저장소에서 읽는다.
-2. 현재 상태가 `HOLD` 인지 확인한다.
-3. `resume_history` 에 `resume_reason`, `patch_fields` 를 추가한다.
-4. `decision_trace_history` 에 재개 직전 trace와 check 개수를 저장한다.
-5. 그 상태를 다시 `start()` 경로로 실행한다.
-
-이 동작에서 중요한 사실은 두 가지다.
-
-- 이전 이력은 보존된다.
-- 재개 후 현재 `decision_trace` 와 현재 `verification_checks` 는 재계산되어 overwrite될 수 있다.
-
-따라서 현재 구현의 resume는 append-only current trace 모델이 아니다. 과거 상태는 history로 보존하고, 현재 상태는 새 계산 결과로 덮어쓴다.
-
-추가 제약도 있다.
-
-- 현재 MVP 구현에서 agentic run resume 는 지원하지 않는다.
-- 현재 공개 BE 주문 흐름에서 사용하는 resume 는 non-agentic run 을 기준으로 동작한다.
-
-## 9. completion의 실제 구현 의미
-
-- `complete()` 는 `READY_FOR_BE` 상태에만 허용된다.
-- BE가 주입한 `execution_result` 또는 `be_rejection_evidence` 를 기반으로 completion graph를 실행한다.
-- 최종 상태는 보통 `REPORT_READY` 로 수렴한다.
-
-## 10. 문서화 시 금지할 오해
-
-- AI가 Binance 주문을 직접 넣는다고 쓰면 안 된다.
-- AI가 Binance 서명을 생성한다고 쓰면 안 된다.
-- AI가 정책 아티팩트를 내부 시스템에서 스스로 회수한다고 쓰면 안 된다.
-- resume가 이전 trace를 그대로 누적 유지한다고 단순화하면 안 된다. 현재 trace는 재계산된다.
-
-## 11. 현재 구현 메모
-
-- AI 서비스는 public BE API가 아니라 내부 서비스 역할이지만, 별도 HTTP 프로세스다.
-- 현재 risk/account/policy tool 호출은 로컬 mock 데이터 기반 평가를 포함한다.
-- 오류는 HTTP 400 또는 404 성격으로 매핑될 수 있다.
-- 같은 `run_id` 로 `FAILED` run 을 resume 할 수 없다.
-- 같은 `run_id` 로 `HOLD` 가 아닌 run 을 resume 할 수 없다.
+- AI가 주문을 직접 넣는다고 쓰면 안 된다.
+- AI가 live market/account 데이터의 유일한 source 라고 쓰면 안 된다. 최신 auto-trading path 에서는 BE가 live snapshot 을 수집해 AI에 주입한다.
+- agentic resume 가 되는 것처럼 쓰면 안 된다.
+- persona 전용 화면 선택기가 이미 있는 것처럼 쓰면 안 된다. 현재 persona 는 자연어 입력과 AI 추론 결과로 드러나는 개념이다.
+- 시간 누적 report history 를 AI가 이미 계산하는 것처럼 쓰면 안 된다. 현재는 run 단위 report 보강이 기준이다.

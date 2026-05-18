@@ -5,7 +5,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from autocoin_ai.constants import LIFECYCLE_FAILED, LIFECYCLE_HOLD
-from autocoin_ai.models import ensure_state_shape
+from autocoin_ai.models import AgentState, ensure_state_shape
 from autocoin_ai.nodes.strategy import strategy_node
 
 PRINCIPLES = [
@@ -31,7 +31,7 @@ BASE_STATE = {
 }
 
 
-def _make_state(extra: dict | None = None) -> dict:
+def _make_state(extra: dict | None = None) -> AgentState:
     base = dict(BASE_STATE)
     base["trader_principles"] = list(PRINCIPLES)
     if extra:
@@ -95,3 +95,71 @@ def test_strategy_invalid_principles():
         result = strategy_node(_make_state())
     assert "schema_warning" in result["llm_proposal"]
     assert "존재하지 않는 원칙 제목" in result["llm_proposal"]["schema_warning"]
+
+
+def test_strategy_prompt_includes_live_snapshots():
+    state = _make_state({
+        "request_context": {
+            "request_id": "req_strat",
+            "request_type": "PLACE_ORDER_TEST",
+            "requested_at": "2026-05-10T10:00:00+09:00",
+            "user_input": {
+                "raw_text": "BTC 100 USDT 매수",
+                "market_snapshot": {
+                    "capturedAt": "2026-05-12T00:00:00+09:00",
+                    "price": {"symbol": "BTCUSDT", "price": "68000"},
+                },
+                "account_balance": {
+                    "balances": [
+                        {"asset": "USDT", "free": "500", "locked": "0"},
+                    ]
+                },
+            },
+        }
+    })
+
+    def _capture_prompt(prompt: str, response_schema: dict, system_instruction: str):
+        assert "Live market snapshot: price=68000" in prompt
+        assert "Live account snapshot: USDT free=500 locked=0" in prompt
+        return {
+            "action": "BUY",
+            "size_usd": "100",
+            "conviction": 0.8,
+            "rationale": "추세 확인 후 진입 원칙에 부합.",
+            "matched_principle_titles": ["추세 확인 후 진입"],
+        }
+
+    with patch("autocoin_ai.nodes.strategy.gemini_generate", side_effect=_capture_prompt):
+        result = strategy_node(state)
+
+    assert result["llm_proposal"]["action"] == "BUY"
+
+
+def test_strategy_uses_fallback_proposal_when_llm_errors():
+    state = _make_state({
+        "request_context": {
+            "request_id": "req_strat",
+            "request_type": "PLACE_ORDER_TEST",
+            "requested_at": "2026-05-10T10:00:00+09:00",
+            "user_input": {
+                "raw_text": "BTCUSDT를 100 USDT만큼 시장가 매수해줘",
+                "market_snapshot": {
+                    "capturedAt": "2026-05-12T00:00:00+09:00",
+                    "price": {"symbol": "BTCUSDT", "price": "68000"},
+                },
+                "account_balance": {
+                    "balances": [
+                        {"asset": "USDT", "free": "500", "locked": "0"},
+                    ]
+                },
+            },
+        }
+    })
+
+    with patch("autocoin_ai.nodes.strategy.gemini_generate", side_effect=RuntimeError("gemini down")):
+        result = strategy_node(state)
+
+    assert result["lifecycle_status"] != LIFECYCLE_FAILED
+    assert result["llm_proposal"]["action"] == "BUY"
+    assert result["llm_proposal"]["size_usd"] == "100"
+    assert result["llm_proposal"]["conviction"] >= 0.7

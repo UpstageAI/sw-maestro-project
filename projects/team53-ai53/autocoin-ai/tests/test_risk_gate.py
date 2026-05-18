@@ -13,7 +13,7 @@ from autocoin_ai.constants import (
     LIFECYCLE_NO_ORDER,
     LIFECYCLE_READY_FOR_BE,
 )
-from autocoin_ai.models import ensure_state_shape
+from autocoin_ai.models import AgentState, ensure_state_shape
 from autocoin_ai.nodes.risk_gate import risk_gate_node
 
 PERSONA_MODERATE_BOUNDS = {
@@ -23,7 +23,7 @@ PERSONA_MODERATE_BOUNDS = {
 }
 
 
-def _make_state(proposal: dict, symbol: str = "BTCUSDT", extra: dict | None = None) -> dict:
+def _make_state(proposal: dict, symbol: str = "BTCUSDT", extra: dict | None = None) -> AgentState:
     state = {
         "run_id": "test_rg",
         "request_context": {
@@ -105,6 +105,38 @@ def test_risk_gate_volatility_high():
     bounds["allowed_symbols"] = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "DOGEUSDT"]  # allow DOGE
     state["policy_context"]["persona_bounds"] = bounds
     state["normalized_order_intent"]["symbol"] = "DOGEUSDT"
+    result = risk_gate_node(ensure_state_shape(state))
+    assert result["lifecycle_status"] == LIFECYCLE_HOLD
+    assert result["hold_reason"] == HOLD_RISK_AGENT_FLAGGED
+    assert result["risk_assessment"]["fail_reason"] == "VOLATILITY_HIGH"
+
+
+def test_risk_gate_uses_live_account_balance_when_available():
+    proposal = {"action": "BUY", "size_usd": "100", "conviction": 0.80, "matched_principle_titles": []}
+    state = _make_state(proposal)
+    state["request_context"]["user_input"]["account_balance"] = {
+        "balances": [
+            {"asset": "USDT", "free": "20", "locked": "0"},
+        ]
+    }
+    result = risk_gate_node(ensure_state_shape(state))
+    assert result["lifecycle_status"] == LIFECYCLE_HOLD
+    assert result["hold_reason"] == HOLD_DATA_INSUFFICIENT
+    assert result["risk_assessment"]["fail_reason"] == "INSUFFICIENT_BALANCE"
+
+
+def test_risk_gate_uses_live_market_snapshot_volatility_when_available():
+    proposal = {"action": "BUY", "size_usd": "100", "conviction": 0.80, "matched_principle_titles": []}
+    state = _make_state(proposal)
+    state["request_context"]["user_input"]["market_snapshot"] = {
+        "klines": {
+            "items": [
+                {"close": "100"},
+                {"close": "112"},
+                {"close": "108"},
+            ]
+        }
+    }
     result = risk_gate_node(ensure_state_shape(state))
     assert result["lifecycle_status"] == LIFECYCLE_HOLD
     assert result["hold_reason"] == HOLD_RISK_AGENT_FLAGGED

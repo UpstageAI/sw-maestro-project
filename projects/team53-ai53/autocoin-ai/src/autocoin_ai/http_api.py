@@ -7,6 +7,7 @@ from typing import Any
 
 from fastapi import APIRouter, FastAPI, HTTPException, Request
 from pydantic import BaseModel, ConfigDict
+from dotenv import load_dotenv
 
 from autocoin_ai.app import AutocoinAgentApp
 from autocoin_ai.run_store import JsonFileRunStore
@@ -44,6 +45,7 @@ router = APIRouter()
 def create_app(run_store: JsonFileRunStore | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
+        load_dotenv()
         app.state.agent_app = AutocoinAgentApp(run_store=run_store or JsonFileRunStore.from_env())
         yield
 
