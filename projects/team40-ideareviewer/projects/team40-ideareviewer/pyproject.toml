@@ -10,7 +10,7 @@ dependencies = [
     "langgraph==0.2.74",
     "pydantic==2.11.3",
     "python-dotenv==1.1.0",
-    "streamlit==1.44.1",
+    "streamlit==1.54.0",
 ]
 
 [dependency-groups]
